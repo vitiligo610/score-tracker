@@ -70,3 +70,21 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@keyframes gradientMove {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animated-gradient {
+  background: linear-gradient(270deg, #36256E, #E73493);
+  background-size: 400% 400%;
+  animation: gradientMove 15s ease infinite;
+}
