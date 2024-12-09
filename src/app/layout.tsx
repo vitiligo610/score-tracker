@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { Navbar } from "@/components/layout/navbar";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -26,7 +27,12 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <div className="min-h-screen flex flex-col bg-background">
+            <Navbar />
+            <main className="flex-1 container mx-auto px-4 py-16">
+              {children}
+            </main>
+          </div>
         </ThemeProvider>
       </body>
     </html>
