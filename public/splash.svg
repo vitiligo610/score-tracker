@@ -1,0 +1,79 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <!-- Definition for animations -->
+  <defs>
+    <linearGradient id="fieldGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#4CAF50;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#388E3C;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Ball animation -->
+    <animateMotion id="ballPath" dur="2s" repeatCount="indefinite">
+      <mpath href="#motionPath"/>
+    </animateMotion>
+  </defs>
+
+  <!-- Cricket field background -->
+  <rect width="800" height="600" fill="url(#fieldGradient)"/>
+
+  <!-- Wickets -->
+  <g transform="translate(600, 300)">
+    <rect x="-5" y="-50" width="10" height="100" fill="#f4f4f4"/>
+    <rect x="-25" y="-50" width="10" height="100" fill="#f4f4f4"/>
+    <rect x="15" y="-50" width="10" height="100" fill="#f4f4f4"/>
+  </g>
+
+  <!-- Batsman -->
+  <g transform="translate(500, 300)">
+    <animateTransform
+      attributeName="transform"
+      type="rotate"
+      from="0 500 300"
+      to="45 500 300"
+      dur="0.5s"
+      begin="ballPath.begin+1s"
+      fill="freeze"
+    />
+    <!-- Body -->
+    <rect x="-10" y="-40" width="20" height="60" fill="#1976D2"/>
+    <!-- Head -->
+    <circle cx="0" y="-50" r="15" fill="#FFA726"/>
+    <!-- Bat -->
+    <rect x="-5" y="-30" width="80" height="10" 
+          fill="#8D6E63" transform="rotate(-45)"/>
+  </g>
+
+  <!-- Bowler -->
+  <g transform="translate(200, 300)">
+    <!-- Body -->
+    <rect x="-10" y="-40" width="20" height="60" fill="#E53935"/>
+    <!-- Head -->
+    <circle cx="0" y="-50" r="15" fill="#FFA726"/>
+    <!-- Bowling arm -->
+    <line x1="10" y1="-20" x2="40" y2="-40" 
+          stroke="#E53935" stroke-width="8">
+      <animateTransform
+        attributeName="transform"
+        type="rotate"
+        from="0 0 -20"
+        to="90 0 -20"
+        dur="2s"
+        repeatCount="indefinite"
+      />
+    </line>
+  </g>
+
+  <!-- Ball -->
+  <circle r="8" fill="#ffffff">
+    <animateMotion
+      dur="2s"
+      repeatCount="indefinite"
+      path="M 240,-20 L 580,300"
+    />
+  </circle>
+
+  <!-- Shadow effects -->
+  <ellipse cx="500" cy="370" rx="30" ry="10" 
+           fill="rgba(0,0,0,0.3)" opacity="0.5"/>
+  <ellipse cx="200" cy="370" rx="30" ry="10" 
+           fill="rgba(0,0,0,0.3)" opacity="0.5"/>
+</svg>
