@@ -20,7 +20,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <div className="min-h-screen flex flex-col animated-gradient">
+        <div className="min-h-screen flex flex-col bg-background">
           <Navbar />
           <main className="flex-1 container mx-auto px-4 py-16">
             {children}

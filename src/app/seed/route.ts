@@ -1,4 +1,4 @@
-import { createConnection } from "@/lib/db";
+import { createConnection } from "../../lib/db";
 import { players, teams } from "@/lib/placeholder-data";
 import { NextResponse } from "next/server";
 
@@ -19,15 +19,18 @@ const seedTeams = async () => {
 
   const insertedTeams = await Promise.all(
     teams.map(async (team) => {
-      return db.query(`
+      return db.query(
+        `
         INSERT INTO teams(name, logo_url, founded_year, description)
         VALUES(?, ?, ?, ?)
-        `, [team.name, team.logo_url, team.founded_year, team.description]);
+        `,
+        [team.name, team.logo_url, team.founded_year, team.description]
+      );
     })
   );
 
   return insertedTeams;
-}
+};
 
 const seedPlayers = async () => {
   const query = `
@@ -47,20 +50,31 @@ const seedPlayers = async () => {
 
   const insertedPlayers = await Promise.all(
     players.map(async (player) => {
-      return db.query(`
+      return db.query(
+        `
         INSERT INTO players(first_name, last_name, date_of_birth, batting_style, bowling_style, player_role, jersey_number)
         VALUES(?, ?, ?, ?, ?, ? ,?)
-        `, [player.first_name, player.last_name, player.date_of_birth, player.batting_style, player.bowling_style, player.player_role, player.jersey_number]);
+        `,
+        [
+          player.first_name,
+          player.last_name,
+          player.date_of_birth,
+          player.batting_style,
+          player.bowling_style,
+          player.player_role,
+          player.jersey_number,
+        ]
+      );
     })
   );
 
   return insertedPlayers;
-}
+};
 
 const dropTables = async () => {
   await db.query("DROP TABLE IF EXISTS teams");
   await db.query("DROP TABLE IF EXISTS players");
-}
+};
 
 export const GET = async () => {
   try {
@@ -72,4 +86,4 @@ export const GET = async () => {
   } catch (error) {
     return NextResponse.json({ error, message: "An error occured" });
   }
-}
+};

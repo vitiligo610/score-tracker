@@ -4,7 +4,7 @@ export default function Home() {
   return (
     <div className="max-w-5xl mx-auto space-y-16">
       <div className="text-center space-y-4">
-        <h1 className="text-2xl font-bold tracking-tighter sm:text-3xl md:text-4xl lg:text-5xl text-white">
+        <h1 className="text-2xl font-bold tracking-tighter sm:text-3xl md:text-4xl lg:text-5xl text-primary">
           Get Started...
         </h1>
       </div>
