@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { ThemeProvider } from "@/components/theme-provider";
 import { Navbar } from "@/components/layout/navbar";
 
 const inter = Inter({
@@ -21,19 +20,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="dark"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <div className="min-h-screen flex flex-col bg-background">
-            <Navbar />
-            <main className="flex-1 container mx-auto px-4 py-16">
-              {children}
-            </main>
-          </div>
-        </ThemeProvider>
+        <div className="min-h-screen flex flex-col animated-gradient">
+          <Navbar />
+          <main className="flex-1 container mx-auto px-4 py-16">
+            {children}
+          </main>
+        </div>
       </body>
     </html>
   );

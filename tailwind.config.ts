@@ -1,7 +1,6 @@
 import type { Config } from "tailwindcss";
 
 export default {
-    darkMode: ["class"],
     content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -10,6 +9,34 @@ export default {
   theme: {
   	extend: {
   		colors: {
+        jacarta: {
+          DEFAULT: '#36256E',
+          50: '#DBD4F1',
+          100: '#CEC5EC',
+          200: '#B4A7E1',
+          300: '#9A88D7',
+          400: '#8169CD',
+          500: '#674BC2',
+          600: '#543AAB',
+          700: '#452F8D',
+          800: '#36256E',
+          900: '#211744',
+          950: '#17102F'
+        },
+        cerise: {
+          DEFAULT: '#E73493',
+          50: '#FAD8EA',
+          100: '#F8C6E1',
+          200: '#F4A1CD',
+          300: '#F07DBA',
+          400: '#EB58A6',
+          500: '#E73493',
+          600: '#CB1877',
+          700: '#99125A',
+          800: '#670C3C',
+          900: '#34061F',
+          950: '#1B0310'
+        },
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {
