@@ -1,10 +1,9 @@
-import { createConnection } from "@/lib/db";
+import { pool } from "@/lib/db";
 import { players, teams } from "@/lib/placeholder-data";
-import { Connection } from "mysql2/promise";
 
-const seedTeams = async (db: Connection) => {
+const seedTeams = async () => {
   console.log('Creating teams table...');
-  await db.query(`
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS teams (
       id INT PRIMARY KEY AUTO_INCREMENT,
       name VARCHAR(100) NOT NULL,
@@ -17,7 +16,7 @@ const seedTeams = async (db: Connection) => {
   console.log('Seeding teams...');
   await Promise.all(
     teams.map((team) =>
-      db.query(
+      pool.query(
         `INSERT INTO teams (name, logo_url, founded_year, description)
           VALUES (?, ?, ?, ?)`,
         [team.name, team.logo_url, team.founded_year, team.description]
@@ -26,9 +25,9 @@ const seedTeams = async (db: Connection) => {
   );
 };
 
-const seedPlayers = async (db: Connection) => {
+const seedPlayers = async () => {
   console.log('Creating players table...');
-    await db.query(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS players (
         player_id INT PRIMARY KEY AUTO_INCREMENT,
         first_name VARCHAR(50) NOT NULL,
@@ -44,7 +43,7 @@ const seedPlayers = async (db: Connection) => {
     console.log('Seeding players...');
     await Promise.all(
       players.map((player) =>
-        db.query(
+        pool.query(
           `INSERT INTO players (first_name, last_name, date_of_birth, batting_style, bowling_style, player_role, jersey_number)
           VALUES (?, ?, ?, ?, ?, ?, ?)`,
           [
@@ -65,13 +64,11 @@ const main = async () => {
   console.log('🌱 Starting database seed...');
   
   try {
-    const db = await createConnection();
-    
     console.log('Dropping existing tables...');
-    await db.query('DROP TABLE IF EXISTS players, teams');
+    await pool.query('DROP TABLE IF EXISTS players, teams');
     
-    await seedTeams(db);
-    await seedPlayers(db);
+    await seedTeams();
+    await seedPlayers();
     
     console.log('✅ Database seeded successfully');
     process.exit(0);
