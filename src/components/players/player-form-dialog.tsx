@@ -25,8 +25,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { insertPlayer } from "@/lib/actions";
+import { insertPlayer, updatePlayer } from "@/lib/actions";
 import { BATTING_STYLES, BOWLING_STYLES, PLAYER_ROLES } from "@/lib/constants";
+import { Player } from "@/lib/definitons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { PlusIcon, UserRound } from "lucide-react";
@@ -45,10 +46,15 @@ const formSchema = z.object({
   batting_style: z.enum(BATTING_STYLES),
   bowling_style: z.enum(BOWLING_STYLES),
   player_role: z.enum(PLAYER_ROLES),
-  jersey_number: z.string().transform(Number),
+  jersey_number: z.string().transform((str) => parseInt(str, 10)),
 });
 
-const AddPlayerDialog = () => {
+interface PlayerDialogProps {
+  player?: Player;
+  children: React.ReactNode;
+}
+
+const PlayerFormDialog = ({ player, children }: PlayerDialogProps) => {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -56,13 +62,17 @@ const AddPlayerDialog = () => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      first_name: "",
-      last_name: "",
-      date_of_birth: new Date(),
-      batting_style: "Right-hand",
-      bowling_style: "Right-arm Spin",
-      player_role: "Batsman",
-      jersey_number: 0,
+      first_name: player?.first_name ?? "",
+      last_name: player?.last_name ?? "",
+      // @ts-ignore
+      date_of_birth: player?.date_of_birth 
+        ? format(new Date(player.date_of_birth), 'yyyy-MM-dd')
+        : format(new Date(), 'yyyy-MM-dd'),
+      batting_style: player?.batting_style ?? "Right-hand",
+      bowling_style: player?.bowling_style ?? "Right-arm Spin",
+      player_role: player?.player_role ?? "Batsman",
+      // @ts-ignore
+      jersey_number: player?.jersey_number?.toString() ?? "0",
     },
   });
 
@@ -71,12 +81,12 @@ const AddPlayerDialog = () => {
 
     setIsSubmitting(true);
     try {
-      const result = await insertPlayer(values);
+      const result = !player ? await insertPlayer(values) : await updatePlayer({ player_id: player.player_id, ...values });
       if (result.success) {
         setOpen(false);
         form.reset();
         toast({
-          description: "Player added successfully!",
+          description: `Player ${!player ? "added" : "updated"} successfully!`,
         });
       } else {
         throw new Error(result.error);
@@ -84,7 +94,7 @@ const AddPlayerDialog = () => {
     } catch (error) {
       toast({
         variant: "destructive",
-        description: "Failed to add player",
+        description: `Failed to ${!player ? "add" : "update"} player`,
       });
     } finally {
       setIsSubmitting(false);
@@ -94,13 +104,11 @@ const AddPlayerDialog = () => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button>
-          <PlusIcon className="mr-2 h-4 w-4" /> Add Player
-        </Button>
+        {children}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Add New Player</DialogTitle>
+          <DialogTitle>{!player ? "Add New" : "Edit"} Player</DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
@@ -116,8 +124,9 @@ const AddPlayerDialog = () => {
                       <FormLabel>Jersey #</FormLabel>
                       <FormControl>
                         <Input
-                          type="text"
+                          type="number"
                           {...field}
+                          value={field.value}
                           className="text-center"
                           placeholder="00"
                         />
@@ -168,11 +177,7 @@ const AddPlayerDialog = () => {
                         <Input
                           type="date"
                           {...field}
-                          value={
-                            field.value
-                              ? format(new Date(field.value), "yyyy-MM-dd")
-                              : ""
-                          }
+                          value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
                           max={format(new Date(), "yyyy-MM-dd")}
                           min="1900-01-01"
                           className="w-full"
@@ -271,7 +276,7 @@ const AddPlayerDialog = () => {
             </div>
 
             <Button type="submit" className="w-full">
-              Add Player
+              {!player ? "Add" : "Update"} Player
             </Button>
           </form>
         </Form>
@@ -280,4 +285,4 @@ const AddPlayerDialog = () => {
   );
 };
 
-export default AddPlayerDialog;
+export default PlayerFormDialog;

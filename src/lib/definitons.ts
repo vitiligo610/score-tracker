@@ -13,7 +13,7 @@ type BowlingStyle = typeof BOWLING_STYLES[number];
 type PlayerRole = typeof PLAYER_ROLES[number];
 
 export type Player = {
-  id: number;
+  player_id: number;
   first_name: string;
   last_name: string;
   date_of_birth: Date;
@@ -23,4 +23,4 @@ export type Player = {
   jersey_number: number;
 };
 
-export type PlayerWithoutId = Omit<Player, "id">;
+export type PlayerWithoutId = Omit<Player, "player_id">;

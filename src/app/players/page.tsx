@@ -1,9 +1,11 @@
-import AddPlayerDialog from "@/components/players/add-player-dialog";
+import PlayerFormDialog from "@/components/players/player-form-dialog";
 import FilterPlayers from "@/components/players/filter-players";
 import PlayersInfo from "@/components/players/players-info";
 import SearchInput from "@/components/ui/search-input";
 import PlayersSkeleton from "@/components/ui/skeletons/players-skeleton";
 import { Suspense } from "react";
+import { PlusIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const Players = async ({
   searchParams
@@ -29,7 +31,11 @@ const Players = async ({
     <div className="container mx-auto py-8 space-y-8">
       <div className="w-full flex justify-between items-center mb-12">
         <h1 className="text-7xl text-primary font-bold">Players</h1>
-        <AddPlayerDialog />
+        <PlayerFormDialog>
+          <Button>
+            <PlusIcon className="mr-2 h-4 w-4" /> Add Player
+          </Button>
+        </PlayerFormDialog>
       </div>
       <div className="flex gap-2">
         <SearchInput placeholder="Search players..." />
