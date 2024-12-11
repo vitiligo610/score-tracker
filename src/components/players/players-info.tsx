@@ -1,4 +1,4 @@
-import { fetchPlayers } from "@/lib/data";
+import { fetchPlayers } from "@/lib/actions";
 import { PlayerInfo } from "@/components/players/player-info";
 import {
   Pagination,
@@ -18,7 +18,13 @@ interface Props {
 }
 
 const PlayersInfo = async ({ query, page, roles, battingStyles, bowlingStyles }: Props) => {
-  const { players, count } = await fetchPlayers(query, page, roles, battingStyles, bowlingStyles);
+  const result = await fetchPlayers(query, page, roles, battingStyles, bowlingStyles);
+
+  if (!result.success) {
+    throw new Error(result.error || "Failed to fetch players.");
+  }
+
+  const { players, count } = result;
 
   const totalPages = Math.ceil(count / PLAYERS_PER_PAGE);
   const isFirstPage = page == 1;

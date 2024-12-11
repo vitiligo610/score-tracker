@@ -25,12 +25,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { createPlayer } from "@/lib/actions";
+import { insertPlayer } from "@/lib/actions";
 import { BATTING_STYLES, BOWLING_STYLES, PLAYER_ROLES } from "@/lib/constants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { PlusIcon, UserRound } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
@@ -41,7 +41,7 @@ const formSchema = z.object({
   last_name: z.string().min(2, {
     message: "Last name must be at least 2 characters.",
   }),
-  date_of_birth: z.string().transform(str => new Date(str)),
+  date_of_birth: z.string().transform((str) => new Date(str)),
   batting_style: z.enum(BATTING_STYLES),
   bowling_style: z.enum(BOWLING_STYLES),
   player_role: z.enum(PLAYER_ROLES),
@@ -50,6 +50,7 @@ const formSchema = z.object({
 
 const AddPlayerDialog = () => {
   const [open, setOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -57,33 +58,38 @@ const AddPlayerDialog = () => {
     defaultValues: {
       first_name: "",
       last_name: "",
-      date_of_birth: undefined,
+      date_of_birth: new Date(),
       batting_style: "Right-hand",
       bowling_style: "Right-arm Spin",
       player_role: "Batsman",
-      jersey_number: undefined,
+      jersey_number: 0,
     },
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
     try {
-      const result = await createPlayer(values)
+      const result = await insertPlayer(values);
       if (result.success) {
-        setOpen(false)
-        form.reset()
+        setOpen(false);
+        form.reset();
         toast({
           description: "Player added successfully!",
-        })
+        });
       } else {
-        throw new Error(result.error)
+        throw new Error(result.error);
       }
     } catch (error) {
       toast({
         variant: "destructive",
         description: "Failed to add player",
-      })
+      });
+    } finally {
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -113,6 +119,7 @@ const AddPlayerDialog = () => {
                           type="text"
                           {...field}
                           className="text-center"
+                          placeholder="00"
                         />
                       </FormControl>
                       <FormMessage />
@@ -158,11 +165,15 @@ const AddPlayerDialog = () => {
                     <FormItem>
                       <FormLabel>Date of Birth</FormLabel>
                       <FormControl>
-                        <Input 
+                        <Input
                           type="date"
                           {...field}
-                          value={field.value ? format(new Date(field.value), 'yyyy-MM-dd') : ''}
-                          max={format(new Date(), 'yyyy-MM-dd')}
+                          value={
+                            field.value
+                              ? format(new Date(field.value), "yyyy-MM-dd")
+                              : ""
+                          }
+                          max={format(new Date(), "yyyy-MM-dd")}
                           min="1900-01-01"
                           className="w-full"
                         />
@@ -267,6 +278,6 @@ const AddPlayerDialog = () => {
       </DialogContent>
     </Dialog>
   );
-}
+};
 
 export default AddPlayerDialog;
