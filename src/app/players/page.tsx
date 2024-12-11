@@ -1,8 +1,9 @@
-import PlayersSkeleton from "@/components/ui/skeletons/players-skeleton";
-import { Suspense } from "react";
+import AddPlayerDialog from "@/components/players/add-player-dialog";
+import FilterPlayers from "@/components/players/filter-players";
 import PlayersInfo from "@/components/players/players-info";
 import SearchInput from "@/components/ui/search-input";
-import FilterPlayers from "@/components/players/filter-players";
+import PlayersSkeleton from "@/components/ui/skeletons/players-skeleton";
+import { Suspense } from "react";
 
 const Players = async ({
   searchParams
@@ -26,7 +27,10 @@ const Players = async ({
 
   return (
     <div className="container mx-auto py-8 space-y-8">
-      <h1 className="text-4xl text-primary font-bold text-center mb-12">Players</h1>
+      <div className="w-full flex justify-between items-center mb-12">
+        <h1 className="text-7xl text-primary font-bold">Players</h1>
+        <AddPlayerDialog />
+      </div>
       <div className="flex gap-2">
         <SearchInput placeholder="Search players..." />
         <FilterPlayers />
@@ -41,6 +45,7 @@ const Players = async ({
         />
       </Suspense>
     </div>
-  )
+  );
 }
-export default Players
+
+export default Players;

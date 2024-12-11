@@ -1,3 +1,5 @@
+import { BATTING_STYLES, BOWLING_STYLES, PLAYER_ROLES } from "@/lib/constants";
+
 export type Team = {
   id: number;
   name: string;
@@ -6,13 +8,19 @@ export type Team = {
   description: string;
 }
 
+type BattingStyle = typeof BATTING_STYLES[number];
+type BowlingStyle = typeof BOWLING_STYLES[number];
+type PlayerRole = typeof PLAYER_ROLES[number];
+
 export type Player = {
   id: number;
   first_name: string;
   last_name: string;
   date_of_birth: Date;
-  batting_style: 'Right-hand' | 'Left-hand';
-  bowling_style: 'Right-arm Fast' | 'Left-arm Fast' | 'Right-arm Spin' | 'Left-arm Spin' | 'Right-arm Medium' | 'Left-arm Medium' | 'No';
-  player_role: 'Batsman' | 'Bowler' | 'All-rounder' | 'Wicket-keeper';
+  batting_style: BattingStyle;
+  bowling_style: BowlingStyle;
+  player_role: PlayerRole;
   jersey_number: number;
 };
+
+export type PlayerWithoutId = Omit<Player, "id">;

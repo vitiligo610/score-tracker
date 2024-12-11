@@ -1,9 +1,9 @@
 import { createConnection } from "./db";
-import { Player } from "./definitons";
+import { Player, PlayerWithoutId } from "./definitons";
 import { PLAYERS_PER_PAGE } from "@/lib/constants";
 
 export const fetchPlayers = async (
-  query: string, 
+  query: string,
   page: number,
   roles: string[],
   battingStyles: string[],
@@ -11,7 +11,7 @@ export const fetchPlayers = async (
 ) => {
   try {
     const db = await createConnection();
-    
+
     const conditions = [];
     const params = [];
 
@@ -35,9 +35,8 @@ export const fetchPlayers = async (
       params.push(`%${query}%`, `%${query}%`);
     }
 
-    const whereClause = conditions.length > 0 
-      ? `WHERE ${conditions.join(' AND ')}` 
-      : '';
+    const whereClause =
+      conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
     let sqlQuery = `
       SELECT * FROM players 
@@ -49,7 +48,7 @@ export const fetchPlayers = async (
     params.push(PLAYERS_PER_PAGE, (page - 1) * PLAYERS_PER_PAGE);
 
     const [players] = await db.query(sqlQuery, params);
-  
+
     sqlQuery = `
       SELECT COUNT(*) AS count FROM players 
       ${whereClause}
@@ -61,7 +60,31 @@ export const fetchPlayers = async (
       count: data[0].count as number,
     };
   } catch (error) {
-    console.error('Database Error:', error);
-    throw new Error('Failed to fetch players data.');
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch players data.");
+  }
+};
+
+export const insertPlayer = async (player: PlayerWithoutId) => {
+  try {
+    const db = await createConnection();
+
+    await db.query(
+      `INSERT INTO players (first_name, last_name, date_of_birth, batting_style, bowling_style, player_role, jersey_number)
+      VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        player.first_name,
+        player.last_name,
+        player.date_of_birth,
+        player.batting_style,
+        player.bowling_style,
+        player.player_role,
+        player.jersey_number,
+      ]
+    );
+
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to insert player");
   }
 };
