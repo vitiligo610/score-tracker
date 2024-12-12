@@ -29,9 +29,6 @@ export function PlayerInfo({ player }: PlayerInfoProps) {
               <EditIcon />
             </Button>
           </PlayerFormDialog>
-          {/* <Button variant="secondary" size="icon">
-            <TrashIcon />
-          </Button> */}
           <DeletePlayerButton player_id={player.player_id} />
         </div>
       </CardHeader>

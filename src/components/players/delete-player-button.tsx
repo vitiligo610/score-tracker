@@ -1,4 +1,3 @@
-// components/players/delete-player-button.tsx
 "use client";
 
 import { useState } from "react";

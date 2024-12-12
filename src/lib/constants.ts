@@ -10,3 +10,5 @@ export const BOWLING_STYLES = [
   "Left-arm Medium",
   "No",
 ] as const;
+
+export const TEAMS_PER_PAGE = 9;

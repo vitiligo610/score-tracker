@@ -5,7 +5,7 @@ const seedTeams = async () => {
   console.log('Creating teams table...');
   await pool.query(`
     CREATE TABLE IF NOT EXISTS teams (
-      id INT PRIMARY KEY AUTO_INCREMENT,
+      team_id INT PRIMARY KEY AUTO_INCREMENT,
       name VARCHAR(100) NOT NULL,
       logo_url VARCHAR(255),
       founded_year INT,

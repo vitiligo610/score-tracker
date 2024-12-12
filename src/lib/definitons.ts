@@ -1,12 +1,14 @@
 import { BATTING_STYLES, BOWLING_STYLES, PLAYER_ROLES } from "@/lib/constants";
 
 export type Team = {
-  id: number;
+  team_id: number;
   name: string;
   logo_url: string;
   founded_year: number;
   description: string;
 }
+
+export type TeamWithoutId = Omit<Team, "team_id">;
 
 type BattingStyle = typeof BATTING_STYLES[number];
 type BowlingStyle = typeof BOWLING_STYLES[number];

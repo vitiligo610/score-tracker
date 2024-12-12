@@ -1,9 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { Player, PlayerWithoutId } from "@/lib/definitons";
+import { Player, PlayerWithoutId, Team } from "@/lib/definitons";
 import { pool } from "@/lib/db";
-import { PLAYERS_PER_PAGE } from "@/lib/constants";
+import { PLAYERS_PER_PAGE, TEAMS_PER_PAGE } from "@/lib/constants";
 
 export const fetchPlayers = async (
   query: string,
@@ -131,5 +131,45 @@ export const deletePlayer = async (player_id: number) => {
     return { success: true, message: "Player removed successfully!" };
   } catch (error) {
     return { success: false, error: "Failed to delete player." };
+  }
+}
+
+export const fetchTeams = async (query: string, page: number) => {
+  try {
+    const conditions = [];
+    const params = [];
+
+    if (query) {
+      conditions.push("name LIKE ? OR founded_year LIKE ? OR description LIKE ?");
+      params.push(`%${query}%`, `%${query}%`, `%${query}%`)
+    }
+
+    const whereClause =
+      conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
+
+    params.push(TEAMS_PER_PAGE, (page - 1) * TEAMS_PER_PAGE);
+
+    const [teams] = await pool.query(
+      `SELECT * FROM teams
+      ${whereClause}
+      LIMIT ?
+      OFFSET ?`,
+      params
+    );
+
+    const [data]: any = await pool.query(`
+      SELECT COUNT(*) AS count FROM teams
+      ${whereClause}`,
+      params
+    );
+
+    return {
+      success: true as const,
+      teams: teams as Team[],
+      count: data[0].count as number,
+    };
+  } catch (error) {
+    console.log("error is ", error);
+    return { success: false as const, error: "Failed to fetch teams." };
   }
 }

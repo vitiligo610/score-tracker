@@ -25,8 +25,6 @@ const Players = async ({
   const battingStyles = params?.batting || [];
   const bowlingStyles = params?.bowling || [];
 
-  console.log("roles", roles);
-
   return (
     <div className="container mx-auto py-8 space-y-8">
       <div className="w-full flex justify-between items-center mb-12">
