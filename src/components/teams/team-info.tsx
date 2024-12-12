@@ -1,8 +1,10 @@
-import { Team } from "@/lib/definitons";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Building2, CalendarRange, Edit, EditIcon, Trash, TrashIcon } from "lucide-react";
+import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { Team } from "@/lib/definitons";
+import { Building2, CalendarRange, EditIcon, TrashIcon } from "lucide-react";
+import TeamFormDialog from "./team-form-dialog";
+import DeleteTeamButton from "./delete-team-button";
 
 interface TeamInfoProps {
   team: Team;
@@ -23,22 +25,22 @@ const TeamInfo = ({ team }: TeamInfoProps) => {
         </div>
       </CardHeader>
       
-      <CardContent className="pt-6 h-24">
+      <CardContent className="pt-6 min-h-24">
         <div className="flex items-start space-x-4">
           <Building2 className="w-5 h-5 text-primary mt-1" />
-          <p className="text-sm leading-relaxed">
+          <p className="text-sm">
             {team.description}
           </p>
         </div>
       </CardContent>
 
       <CardFooter className="flex justify-end space-x-2">
-        <Button variant="default">
-          <EditIcon /> Edit
-        </Button>
-        <Button variant="secondary">
-          <TrashIcon className="h-4 w-4" /> Delete
-        </Button>
+        <TeamFormDialog team={team}>
+          <Button variant="default">
+            <EditIcon /> Edit
+          </Button>
+        </TeamFormDialog>
+        <DeleteTeamButton team_id={team.team_id} />
       </CardFooter>
     </Card>
   );

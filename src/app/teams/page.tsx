@@ -1,3 +1,4 @@
+import TeamFormDialog from "@/components/teams/team-form-dialog";
 import TeamsInfo from "@/components/teams/teams-info";
 import { Button } from "@/components/ui/button";
 import SearchInput from "@/components/ui/search-input";
@@ -21,9 +22,11 @@ const Teams = async ({
     <div className="container mx-auto py-8 space-y-8">
       <div className="w-full flex justify-between items-center mb-12">
         <h1 className="text-7xl text-primary font-bold">Teams</h1>
-        <Button>
-          <PlusIcon className="mr-2 h-4 w-4" /> Add Team
-        </Button>
+        <TeamFormDialog>
+          <Button>
+            <PlusIcon className="mr-2 h-4 w-4" /> Add Team
+          </Button>
+        </TeamFormDialog>
       </div>
       <div className="flex gap-2">
         <SearchInput placeholder="Search teams..." />

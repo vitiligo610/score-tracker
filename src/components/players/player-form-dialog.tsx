@@ -30,8 +30,9 @@ import { BATTING_STYLES, BOWLING_STYLES, PLAYER_ROLES } from "@/lib/constants";
 import { Player } from "@/lib/definitons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { PlusIcon, UserRound } from "lucide-react";
-import { useState, useEffect } from "react";
+import { UserRound } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
@@ -58,7 +59,8 @@ const PlayerFormDialog = ({ player, children }: PlayerDialogProps) => {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
-
+  const router = useRouter();
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -88,6 +90,7 @@ const PlayerFormDialog = ({ player, children }: PlayerDialogProps) => {
         toast({
           description: `Player ${!player ? "added" : "updated"} successfully!`,
         });
+        router.refresh();
       } else {
         throw new Error(result.error);
       }

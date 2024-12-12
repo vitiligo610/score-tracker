@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { Player, PlayerWithoutId, Team } from "@/lib/definitons";
+import { Player, PlayerWithoutId, Team, TeamWithoutId } from "@/lib/definitons";
 import { pool } from "@/lib/db";
 import { PLAYERS_PER_PAGE, TEAMS_PER_PAGE } from "@/lib/constants";
 
@@ -82,7 +82,7 @@ export const insertPlayer = async (player: PlayerWithoutId) => {
         player.jersey_number,
       ]
     );
-    revalidatePath("/players");
+    // revalidatePath("/players");
     return { success: true };
   } catch (error) {
     return { success: false, error: "Failed to insert player" };
@@ -113,7 +113,7 @@ export const updatePlayer = async (player: Player) => {
         player.player_id,
       ]
     );
-    revalidatePath("/players");
+    // revalidatePath("/players");
     return { success: true };
   } catch (error) {
     console.log("error is ", error);
@@ -171,5 +171,59 @@ export const fetchTeams = async (query: string, page: number) => {
   } catch (error) {
     console.log("error is ", error);
     return { success: false as const, error: "Failed to fetch teams." };
+  }
+}
+
+export const insertTeam = async (team: TeamWithoutId) => {
+  try {
+    await pool.query(
+      `INSERT INTO teams (name, founded_year, description)
+      VALUES (?, ?, ?)`,
+      [
+        team.name,
+        team.founded_year,
+        team.description
+      ]
+    );
+    // revalidatePath("/teams");
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: "Failed to insert team" };
+  }
+}
+
+export const updateTeam = async (team: Team) => {
+  try {
+    await pool.query(
+      `UPDATE teams
+      SET name = ?,
+          founded_year = ?,
+          description = ?
+      WHERE team_id = ?`,
+      [
+        team.name,
+        team.founded_year,
+        team.description,
+        team.team_id
+      ]
+    );
+    // revalidatePath("/teams");
+    return { success: true };
+  } catch (error) {
+    console.log("error is ", error);
+    return { success: false, error: "Failed to update team" };
+  }
+}
+
+export const deleteTeam = async (team_id: number) => {
+  try {
+    await pool.query(
+      `DELETE FROM teams WHERE team_id = ?`,
+      [team_id]
+    );
+    revalidatePath("/teams");
+    return { success: true, message: "Team removed successfully!" };
+  } catch (error) {
+    return { success: false, error: "Failed to delete team." };
   }
 }

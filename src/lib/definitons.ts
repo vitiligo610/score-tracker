@@ -3,7 +3,7 @@ import { BATTING_STYLES, BOWLING_STYLES, PLAYER_ROLES } from "@/lib/constants";
 export type Team = {
   team_id: number;
   name: string;
-  logo_url: string;
+  logo_url?: string;
   founded_year: number;
   description: string;
 }
