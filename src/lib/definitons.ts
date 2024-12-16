@@ -1,4 +1,4 @@
-import { BATTING_STYLES, BOWLING_STYLES, PLAYER_ROLES } from "@/lib/constants";
+import { BATTING_STYLES, BOWLING_STYLES, PLAYER_ROLES, TOURNAMENT_FORMATS } from "@/lib/constants";
 
 export type Team = {
   team_id: number;
@@ -34,4 +34,16 @@ export interface PlayerWithTeam extends Player {
 export interface TeamPlayer {
   team_id: number;
   player_id: number;
+}
+
+type TournamentFormat = typeof TOURNAMENT_FORMATS[number];
+
+export type Tournament = {
+  tournament_id: number;
+  name: string;
+  start_date: Date;
+  end_date: Date;
+  format: TournamentFormat;
+  locations?: string[];
+  teams?: Team[];
 }

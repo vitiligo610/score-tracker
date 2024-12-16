@@ -8,7 +8,9 @@ export const BOWLING_STYLES = [
   "Left-arm Spin",
   "Right-arm Medium",
   "Left-arm Medium",
-  "No",
+  "None",
 ] as const;
 
 export const TEAMS_PER_PAGE = 9;
+
+export const TOURNAMENT_FORMATS = ["League", "Knockout", "Round-robin"] as const;
