@@ -4,7 +4,12 @@ import { Button } from "@/components/ui/button";
 import SearchInput from "@/components/ui/search-input";
 import TeamsSkeleton from "@/components/ui/skeletons/teams-skeleton";
 import { PlusIcon } from "lucide-react";
+import { Metadata } from "next";
 import { Suspense } from "react";
+
+export const metadata: Metadata = {
+  title: "Teams",
+};
 
 const Teams = async ({
   searchParams

@@ -2,13 +2,37 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Player } from "@/lib/definitons";
-import { CalendarDays, EditIcon, ShirtIcon, User2 } from "lucide-react";
+import {
+  CalendarDays,
+  EditIcon,
+  ShirtIcon,
+  User2,
+  Swords, // for batsman
+  CircleDot, // for bowler
+  Shield, // for wicket keeper
+  SwordsIcon, // for all-rounder
+} from "lucide-react";
 import DeletePlayerButton from "./delete-player-button";
 import PlayerFormDialog from "./player-form-dialog";
 
 interface PlayerInfoProps {
   player: Player;
 }
+
+const getPlayerRoleIcon = (role: string) => {
+  switch (role.toLowerCase()) {
+    case "batsman":
+      return <Swords className="w-5 h-5 text-primary ml-2" />;
+    case "bowler":
+      return <CircleDot className="w-5 h-5 text-primary ml-2" />;
+    case "wicket-keeper":
+      return <Shield className="w-5 h-5 text-primary ml-2" />;
+    case "all-rounder":
+      return <SwordsIcon className="w-5 h-5 text-primary ml-2" />;
+    default:
+      return null;
+  }
+};
 
 export function PlayerInfo({ player }: PlayerInfoProps) {
   return (
@@ -19,7 +43,10 @@ export function PlayerInfo({ player }: PlayerInfoProps) {
             <User2 className="w-6 h-6 text-primary" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold">{`${player.first_name} ${player.last_name}`}</h2>
+            <div className="flex items-center">
+              <h2 className="text-2xl font-bold">{`${player.first_name} ${player.last_name}`}</h2>
+              {getPlayerRoleIcon(player.player_role)}
+            </div>
             <p className="text-muted-foreground">#{player.jersey_number}</p>
           </div>
         </div>
@@ -37,7 +64,7 @@ export function PlayerInfo({ player }: PlayerInfoProps) {
           <CalendarDays className="w-4 h-4 text-primary" />
           <span>{player.date_of_birth.toLocaleDateString()}</span>
         </div>
-        
+
         <div className="grid gap-2">
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">Player Role</span>
@@ -45,14 +72,14 @@ export function PlayerInfo({ player }: PlayerInfoProps) {
               {player.player_role}
             </Badge>
           </div>
-          
+
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">Batting Style</span>
             <Badge variant="outline" className="font-semibold">
               {player.batting_style}
             </Badge>
           </div>
-          
+
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium">Bowling Style</span>
             <Badge variant="outline" className="font-semibold">
@@ -63,7 +90,9 @@ export function PlayerInfo({ player }: PlayerInfoProps) {
 
         <div className="flex items-center justify-center space-x-2 pt-4">
           <ShirtIcon className="w-5 h-5 text-primary" />
-          <span className="text-xl font-bold text-primary">#{player.jersey_number}</span>
+          <span className="text-xl font-bold text-primary">
+            #{player.jersey_number}
+          </span>
         </div>
       </CardContent>
     </Card>

@@ -5,6 +5,7 @@ import { Team } from "@/lib/definitons";
 import { Building2, CalendarRange, EditIcon, TrashIcon } from "lucide-react";
 import TeamFormDialog from "./team-form-dialog";
 import DeleteTeamButton from "./delete-team-button";
+import Link from "next/link";
 
 interface TeamInfoProps {
   team: Team;
@@ -15,7 +16,9 @@ const TeamInfo = ({ team }: TeamInfoProps) => {
     <Card className="group overflow-hidden transition-all duration-300 hover:shadow-lg">
       <CardHeader className="border-b">
         <div className="">
-          <h3 className="text-3xl font-bold text-primary mb-2">{team.name}</h3>
+          <Link href={`/teams/${team.team_id}`} className="text-primary transition-all hover:text-primary/90">
+            <h3 className="text-3xl font-bold mb-2">{team.name}</h3>
+          </Link>
           <div className="flex items-center space-x-2">
             <Badge variant="secondary" className="bg-accent backdrop-blur-sm">
               <CalendarRange className="w-3 h-3 mr-1" />

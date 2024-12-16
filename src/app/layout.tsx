@@ -9,8 +9,12 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "CricScore - Cricket Score Management System",
+  title: {
+    template: "%s - CricScore",
+    default: "CricScore - Cricket Score Management System",
+  },
   description: "Professional cricket tournament and series management system",
+  
 };
 
 export default function RootLayout({

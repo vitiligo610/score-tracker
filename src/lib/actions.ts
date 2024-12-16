@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { Player, PlayerWithoutId, Team, TeamWithoutId } from "@/lib/definitons";
+import { Player, PlayerWithoutId, PlayerWithTeam, Team, TeamPlayer, TeamWithoutId } from "@/lib/definitons";
 import { pool } from "@/lib/db";
 import { PLAYERS_PER_PAGE, TEAMS_PER_PAGE } from "@/lib/constants";
 
@@ -66,6 +66,19 @@ export const fetchPlayers = async (
     return { success: false as const, error: "Failed to fetch players" };
   }
 };
+
+export const fetchAllPlayers = async () => {
+  try {
+    const [players] = await pool.query(
+      `SELECT * FROM players`
+    );
+
+    return { allPlayers: players as Player[] };
+  } catch (error) {
+    console.log("Error is: ", error);
+    throw new Error("Failed to fetch all players.");
+  }
+}
 
 export const insertPlayer = async (player: PlayerWithoutId) => {
   try {
@@ -174,6 +187,21 @@ export const fetchTeams = async (query: string, page: number) => {
   }
 }
 
+export const fetchTeamById = async (team_id: number) => {
+  try {
+    const [data]: any = await pool.query(
+      `SELECT * FROM teams
+      WHERE team_id = ?`,
+      [team_id]
+    );
+
+    return { team: data[0] as Team };
+  } catch (error) {
+    console.log("Error fetching team having id", team_id);
+    throw new Error("Failed to fetch team by id");
+  }
+}
+
 export const insertTeam = async (team: TeamWithoutId) => {
   try {
     await pool.query(
@@ -225,5 +253,47 @@ export const deleteTeam = async (team_id: number) => {
     return { success: true, message: "Team removed successfully!" };
   } catch (error) {
     return { success: false, error: "Failed to delete team." };
+  }
+}
+
+export const fetchTeamPlayers = async (team_id: number) => {
+  try {
+    const [players] = await pool.query(
+      `SELECT * FROM team_players
+      NATURAL JOIN players
+      WHERE team_id = ?`,
+      [team_id]
+    );
+
+    return { teamPlayers: players as PlayerWithTeam[] };
+  } catch (error) {
+    console.log("Error fetching team players having team id", team_id);
+    throw new Error("Failed to fetch team players");
+  }
+}
+
+export const fetchAddedPlayers = async () => {
+  try {
+    const [players] = await pool.query(
+      `SELECT * FROM team_players`
+    );
+
+    return { addedPlayers: players as TeamPlayer[] };
+  } catch (error) {
+    console.log("Error fetching added players", error);
+    throw new Error("Failed to fetch team players");
+  }
+}
+
+export const removePlayerFromTeam = async (team_id: number, player_id: number) => {
+  try {
+    await pool.query(
+      `DELETE FROM team_players 
+      WHERE team_id = ? AND player_id = ?`,
+      [team_id, player_id]
+    );
+  } catch (error) {
+    console.log("Failed to delete player: ", error);
+    throw new Error("Failed to delete player");
   }
 }

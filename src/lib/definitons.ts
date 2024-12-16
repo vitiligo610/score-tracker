@@ -26,3 +26,12 @@ export type Player = {
 };
 
 export type PlayerWithoutId = Omit<Player, "player_id">;
+
+export interface PlayerWithTeam extends Player {
+  team_id: number;
+}
+
+export interface TeamPlayer {
+  team_id: number;
+  player_id: number;
+}
