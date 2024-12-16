@@ -70,10 +70,11 @@ export const fetchPlayers = async (
 export const fetchAllPlayers = async () => {
   try {
     const [players] = await pool.query(
-      `SELECT * FROM players`
+      `SELECT * FROM players
+      LEFT JOIN team_players USING (player_id)`
     );
 
-    return { allPlayers: players as Player[] };
+    return { allPlayers: players as PlayerWithTeam[] };
   } catch (error) {
     console.log("Error is: ", error);
     throw new Error("Failed to fetch all players.");
@@ -197,7 +198,7 @@ export const fetchTeamById = async (team_id: number) => {
 
     return { team: data[0] as Team };
   } catch (error) {
-    console.log("Error fetching team having id", team_id);
+    console.log("Error fetching team having id", team_id, error);
     throw new Error("Failed to fetch team by id");
   }
 }
@@ -282,6 +283,23 @@ export const fetchAddedPlayers = async () => {
   } catch (error) {
     console.log("Error fetching added players", error);
     throw new Error("Failed to fetch team players");
+  }
+}
+
+export const addPlayersToTeam = async (team_id: number, player_ids: number[]) => {
+  try {
+    await Promise.all(
+      player_ids.map(player_id => 
+        pool.query(
+          `INSERT INTO team_players (team_id, player_id)
+          VALUES (?, ?)`,
+          [team_id, player_id]
+        )
+      )
+    );
+  } catch (error) {
+    console.log("Error adding players to team: ", error);
+    throw new Error("Error adding players to team.");
   }
 }
 

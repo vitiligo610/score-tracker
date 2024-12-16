@@ -1,26 +1,28 @@
 "use client";
 
-import { XIcon } from "lucide-react";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   TooltipTrigger,
+  TooltipProvider,
+  TooltipContent,
+  Tooltip,
 } from "@/components/ui/tooltip";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { removePlayerFromTeam } from "@/lib/actions";
+import { XIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { removePlayerFromTeam } from "@/lib/actions";
 
 interface Props {
   player_id: number;
@@ -32,7 +34,7 @@ const RemovePlayerButton = ({ player_id, team_id }: Props) => {
   const { toast } = useToast();
   const router = useRouter();
 
-  const handleClick = async () => {
+  const handleRemove = async () => {
     try {
       await removePlayerFromTeam(team_id, player_id);
       router.refresh();
@@ -45,52 +47,40 @@ const RemovePlayerButton = ({ player_id, team_id }: Props) => {
         description: error.message,
       });
     }
-  }
+  };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger>
+    <AlertDialog open={open} onOpenChange={setOpen}>
+      <AlertDialogTrigger asChild>
         <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button size="icon" variant="ghost">
-                <XIcon />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Remove player</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      </DialogTrigger>
-
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Remove Player</DialogTitle>
-          <DialogDescription>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="icon" variant="ghost">
+                  <XIcon />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Remove player</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Remove Player</AlertDialogTitle>
+          <AlertDialogDescription>
             Are you sure you want to remove this player from the team? 
             This action cannot be undone.
-          </DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => setOpen(false)}
-          >
-            Cancel
-          </Button>
-          <Button
-            variant="destructive"
-            onClick={async () => {
-              await handleClick();
-              setOpen(false);
-            }}
-          >
-            Remove
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={handleRemove}>
+            Remove Player
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 };
 

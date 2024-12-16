@@ -1,3 +1,4 @@
+import AddTeamPlayer from "@/components/teams/add-team-player";
 import TeamPlayersList from "@/components/teams/team-players-list";
 import { fetchTeamById, fetchTeamPlayers } from "@/lib/actions";
 import { Metadata } from "next";
@@ -25,12 +26,18 @@ const TeamPage = async ({
   }
 
   return (
-    <div className="container mx-auto py-6 px-4">
-      <div>
-        <span className="text-secondary text-sm tracking-widest uppercase">
-          Team
-        </span>
-        <h1 className="text-4xl font-bold text-primary">{team.name}</h1>
+    <div className="container mx-auto py-6">
+      <div className="flex flex-col gap-3 sm:flex-row justify-between items-start sm:items-center">
+        <div>
+          <span className="text-secondary text-sm tracking-widest uppercase">
+            Team
+          </span>
+          <h1 className="text-4xl font-bold text-primary">{team.name}</h1>
+        </div>
+        <AddTeamPlayer
+          teamId={team_id}
+          existingPlayerIds={teamPlayers.map(p => p.player_id)}
+        />
       </div>
       <TeamPlayersList
         players={teamPlayers}
