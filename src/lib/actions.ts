@@ -404,12 +404,13 @@ export const insertTournament = async (tournament: TournamentWithoutId) => {
     await Promise.all(
       tournament.team_ids.map(team_id => 
         pool.query(
-          `INSERT INTO tournament_teams (tournament_id, team_id)
-          VALUES (?, ?)`,
+          `CALL AddTeamToTournament(?, ?)`,
           [tournament_id, team_id]
         )
       )
     );
+
+    await pool.query("CALL SetTournamentRounds(?)", [tournament_id]);
   } catch (error) {
     console.log("Error adding new tournament: ", error);
     throw new Error("Failed creating new tournament!");
