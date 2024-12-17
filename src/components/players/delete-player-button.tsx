@@ -25,18 +25,14 @@ const DeletePlayerButton = ({ player_id }: { player_id: number }) => {
     
     setIsDeleting(true);
     try {
-      const result = await deletePlayer(player_id);
-      if (result.success) {
-        toast({
-          description: "Player deleted successfully",
-        });
-      } else {
-        throw new Error(result.error);
-      }
-    } catch (error) {
+      await deletePlayer(player_id);
+      toast({
+        description: "Player deleted successfully",
+      });
+    } catch (error: any) {
       toast({
         variant: "destructive",
-        description: "Failed to delete player",
+        description: error.message,
       });
     } finally {
       setIsDeleting(false);

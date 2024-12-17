@@ -97,9 +97,8 @@ export const insertPlayer = async (player: PlayerWithoutId) => {
       ]
     );
     // revalidatePath("/players");
-    return { success: true };
   } catch (error) {
-    return { success: false, error: "Failed to insert player" };
+    throw new Error("Failed to add player!");
   }
 };
 
@@ -128,10 +127,9 @@ export const updatePlayer = async (player: Player) => {
       ]
     );
     // revalidatePath("/players");
-    return { success: true };
   } catch (error) {
     console.log("error is ", error);
-    return { success: false, error: "Failed to update player" };
+    throw new Error("Failed to update player!");
   }
 }
 
@@ -142,9 +140,8 @@ export const deletePlayer = async (player_id: number) => {
       [player_id]
     );
     revalidatePath("/players");
-    return { success: true, message: "Player removed successfully!" };
   } catch (error) {
-    return { success: false, error: "Failed to delete player." };
+    throw new Error("Failed to delete player!");
   }
 }
 
@@ -178,13 +175,12 @@ export const fetchTeams = async (query: string, page: number) => {
     );
 
     return {
-      success: true as const,
       teams: teams as Team[],
       count: data[0].count as number,
     };
   } catch (error) {
     console.log("error is ", error);
-    return { success: false as const, error: "Failed to fetch teams." };
+    throw new Error("Failed to fetch teams!");
   }
 }
 
@@ -215,9 +211,8 @@ export const insertTeam = async (team: TeamWithoutId) => {
       ]
     );
     // revalidatePath("/teams");
-    return { success: true };
   } catch (error) {
-    return { success: false, error: "Failed to insert team" };
+    throw new Error("Failed to insert team!");
   }
 }
 
@@ -237,10 +232,9 @@ export const updateTeam = async (team: Team) => {
       ]
     );
     // revalidatePath("/teams");
-    return { success: true };
   } catch (error) {
     console.log("error is ", error);
-    return { success: false, error: "Failed to update team" };
+    throw new Error("Failed to update team!");
   }
 }
 
@@ -250,10 +244,9 @@ export const deleteTeam = async (team_id: number) => {
       `DELETE FROM teams WHERE team_id = ?`,
       [team_id]
     );
-    revalidatePath("/teams");
-    return { success: true, message: "Team removed successfully!" };
+    // revalidatePath("/teams");
   } catch (error) {
-    return { success: false, error: "Failed to delete team." };
+    throw new Error("Failed to delete team!");
   }
 }
 

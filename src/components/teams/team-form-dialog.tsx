@@ -68,24 +68,19 @@ const TeamFormDialog = ({ team, children }: TeamDialogProps) => {
 
     setIsSubmitting(true);
     try {
-      const result = !team
+      !team
         ? await insertTeam(values)
         : await updateTeam({ team_id: team?.team_id, ...values });
-      if (result.success) {
-        setOpen(false);
-        form.reset();
-        toast({
-          description: `Team ${!team ? "added" : "updated"} successfully!`,
-        });
-        router.refresh();
-      } else {
-        throw new Error(result.error);
-      }
-    } catch (error) {
-      console.log("error is ", error);
+      setOpen(false);
+      form.reset();
+      toast({
+        description: `Team ${!team ? "added" : "updated"} successfully!`,
+      });
+      router.refresh();
+    } catch (error: any) {
       toast({
         variant: "destructive",
-        description: `Failed to ${!team ? "add" : "update"} team`,
+        description: error.message,
       });
     } finally {
       setIsSubmitting(false);

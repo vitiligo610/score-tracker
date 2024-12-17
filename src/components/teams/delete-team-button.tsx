@@ -15,28 +15,27 @@ import {
 import { Button } from "@/components/ui/button";
 import { deleteTeam } from "@/lib/actions";
 import { TrashIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const DeleteTeamButton = ({ team_id }: { team_id: number }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
+  const router = useRouter();
 
   const handleDelete = async () => {
     if (isDeleting) return;
     
     setIsDeleting(true);
     try {
-      const result = await deleteTeam(team_id);
-      if (result.success) {
-        toast({
-          description: "Team deleted successfully",
-        });
-      } else {
-        throw new Error(result.error);
-      }
-    } catch (error) {
+      await deleteTeam(team_id);
+      toast({
+        description: "Team deleted successfully!",
+      });
+      router.refresh();
+    } catch (error: any) {
       toast({
         variant: "destructive",
-        description: "Failed to delete team",
+        description: error.message,
       });
     } finally {
       setIsDeleting(false);

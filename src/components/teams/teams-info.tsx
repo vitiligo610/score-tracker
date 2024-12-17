@@ -11,10 +11,6 @@ interface Props {
 const TeamsInfo = async ({ query, page }: Props) => {
   const result = await fetchTeams(query, page);
 
-  if (!result.success) {
-    throw new Error(result.error || "Failed to fetch teams.");
-  }
-
   const { teams, count } = result;
 
   return (

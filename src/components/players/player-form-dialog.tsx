@@ -83,21 +83,19 @@ const PlayerFormDialog = ({ player, children }: PlayerDialogProps) => {
 
     setIsSubmitting(true);
     try {
-      const result = !player ? await insertPlayer(values) : await updatePlayer({ player_id: player.player_id, ...values });
-      if (result.success) {
-        setOpen(false);
-        form.reset();
-        toast({
-          description: `Player ${!player ? "added" : "updated"} successfully!`,
-        });
-        router.refresh();
-      } else {
-        throw new Error(result.error);
-      }
-    } catch (error) {
+      !player
+        ? await insertPlayer(values)
+        : await updatePlayer({ player_id: player.player_id, ...values });
+      setOpen(false);
+      form.reset();
+      toast({
+        description: `Player ${!player ? "added" : "updated"} successfully!`,
+      });
+      router.refresh();
+    } catch (error: any) {
       toast({
         variant: "destructive",
-        description: `Failed to ${!player ? "add" : "update"} player`,
+        description: error.message,
       });
     } finally {
       setIsSubmitting(false);
