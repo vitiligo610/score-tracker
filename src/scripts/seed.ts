@@ -92,7 +92,8 @@ const seedTournaments = async () => {
       name VARCHAR(100) NOT NULL,
       start_date DATE,
       end_date DATE,
-      format ENUM('League', 'Knockout', 'Round-robin')
+      format ENUM('League', 'Knockout', 'Round-robin'),
+      finished BOOLEAN DEFAULT FALSE
     )
   `);
 

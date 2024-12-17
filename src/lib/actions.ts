@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { Player, PlayerWithoutId, PlayerWithTeam, Team, TeamPlayer, TeamWithoutId } from "@/lib/definitons";
+import { Player, PlayerWithoutId, PlayerWithTeam, Team, TeamPlayer, TeamWithoutId, Tournament, TournamentWithoutId } from "@/lib/definitons";
 import { pool } from "@/lib/db";
 import { PLAYERS_PER_PAGE, TEAMS_PER_PAGE } from "@/lib/constants";
 
@@ -184,6 +184,18 @@ export const fetchTeams = async (query: string, page: number) => {
   }
 }
 
+export const fetchAllTeams = async () => {
+  try {
+    const [teams] = await pool.query(
+      `SELECT * FROM teams`
+    );
+
+    return { allTeams: teams as Team[] };
+  } catch (error) {
+    throw new Error("Failed to fetch all teams!");
+  }
+}
+
 export const fetchTeamById = async (team_id: number) => {
   try {
     const [data]: any = await pool.query(
@@ -306,5 +318,100 @@ export const removePlayerFromTeam = async (team_id: number, player_id: number) =
   } catch (error) {
     console.log("Failed to delete player: ", error);
     throw new Error("Failed to delete player");
+  }
+}
+
+export const fetchTournaments = async (filter: string) => {
+  try {
+    const whereClause = !filter || filter === "all"
+      ? ""
+      : `WHERE finished IS ${filter === 'finished' ? 'TRUE' : 'FALSE'}`;
+    const [data]: any = await pool.query(
+      `SELECT * FROM tournaments
+      LEFT JOIN tournament_teams USING (tournament_id)
+      LEFT JOIN tournament_locations USING (tournament_id)
+      ${whereClause}`
+    );
+
+    const dataSet = data.reduce((acc: any[], current: any) => {
+      const key = current.tournament_id;
+      if (acc[key] == undefined) {
+        console.log("inside: dsdfsfd")
+        acc[key] = {
+          tournament_id: current.tournament_id,
+          name: current.name,
+          start_date: current.start_date,
+          end_date: current.end_date,
+          format: current.format,
+          finished: current.finished,
+          locations: new Set(),
+          team_ids: new Set(),
+        }
+      }
+
+      acc[key].locations.add(current.location_name);
+      acc[key].team_ids.add(current.team_id);
+
+      return acc;
+    }, {});
+
+    const tournaments = Object.values(dataSet).map((tournament: any) => ({
+      ...tournament,
+      locations: Array.from(tournament.locations),
+      team_ids: Array.from(tournament.team_ids),
+    }))
+
+    return { tournaments: tournaments as Tournament[] };
+  } catch (error) {
+    console.log("Failed to fetch tournaments: ", error);
+    throw new Error("Failed to fetch tournaments!");
+  }
+}
+
+const getLastInsertedId = async () => {
+  const [data]: any = await pool.query(
+    `SELECT LAST_INSERT_ID() AS last_id`
+  );
+
+  return data[0].last_id as number;
+}
+
+export const insertTournament = async (tournament: TournamentWithoutId) => {
+  try {
+    await pool.query(
+      `INSERT INTO tournaments (name, start_date, end_date, format)
+      VALUES (?, ?, ?, ?)`,
+      [
+        tournament.name,
+        tournament.start_date,
+        tournament.end_date,
+        tournament.format,
+      ]
+    );
+
+    const tournament_id = await getLastInsertedId();
+
+    await Promise.all(
+      tournament.locations.map(location => 
+        pool.query(
+          `INSERT INTO tournament_locations (tournament_id, location_name)
+          VALUES (?, ?)`,
+          [tournament_id, location]
+        )
+      )
+    );
+
+    await Promise.all(
+      tournament.team_ids.map(team_id => 
+        pool.query(
+          `INSERT INTO tournament_teams (tournament_id, team_id)
+          VALUES (?, ?)`,
+          [tournament_id, team_id]
+        )
+      )
+    );
+  } catch (error) {
+    console.log("Error adding new tournament: ", error);
+    throw new Error("Failed creating new tournament!");
   }
 }

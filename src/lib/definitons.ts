@@ -44,6 +44,9 @@ export type Tournament = {
   start_date: Date;
   end_date: Date;
   format: TournamentFormat;
-  locations?: string[];
-  teams?: Team[];
+  finished?: boolean;
+  locations: string[] | [];
+  team_ids: number[] | [];
 }
+
+export type TournamentWithoutId = Omit<Tournament, "tournament_id">;
