@@ -13,4 +13,4 @@ export const BOWLING_STYLES = [
 
 export const TEAMS_PER_PAGE = 9;
 
-export const TOURNAMENT_FORMATS = ["League", "Knockout", "Round-robin"] as const;
+export const TOURNAMENT_FORMATS = ["T20", "ODI", "Test"] as const;

@@ -56,30 +56,12 @@ const tournamentFormSchema = z
     end_date: z.date({
       required_error: "End date is required",
     }),
-    team_ids: z.array(z.number()).min(2, "At least 2 teams are required"),
+    team_ids: z.array(z.number()).min(4, "At least 4 teams are required"),
     locations: z.array(z.string()).min(1, "At least 1 location is required"),
   })
   .refine((data) => data.end_date >= data.start_date, {
     message: "End date must be after start date",
     path: ["end_date"],
-  })
-  .superRefine((data, ctx) => {
-    if (data.format === "Knockout" && data.team_ids.length < 4) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Knockout format requires at least 4 teams",
-        path: ["team_ids"],
-      });
-    } else if (
-      ["League", "Round-robin"].includes(data.format) &&
-      data.team_ids.length < 2
-    ) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "At least 2 teams are required",
-        path: ["team_ids"],
-      });
-    }
   });
 
 type TournamentFormValues = z.infer<typeof tournamentFormSchema>;
@@ -94,7 +76,7 @@ export default function CreateTournamentDialog() {
     resolver: zodResolver(tournamentFormSchema),
     defaultValues: {
       name: "",
-      format: "League",
+      format: "T20",
       start_date: new Date(),
       end_date: new Date(),
       team_ids: [],

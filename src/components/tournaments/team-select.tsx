@@ -20,6 +20,7 @@ import { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fetchAllTeams } from "@/lib/actions";
 import { Team } from "@/lib/definitons";
+import { ScrollArea } from "../ui/scroll-area";
 
 interface TeamSelectProps {
   value: number[];
@@ -55,52 +56,56 @@ const TeamSelect = ({ value, onChange }: TeamSelectProps) => {
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[400px] p-0">
-      <Command>
+        <Command>
           <CommandInput placeholder="Search teams..." />
           <CommandList>
             <CommandEmpty>No teams found.</CommandEmpty>
           </CommandList>
           <CommandList>
-            <CommandGroup className="max-h-[300px] overflow-auto">
-              {loading ? (
-                Array(3).fill(0).map((_, i) => (
-                  <div key={i} className="p-2">
-                    <Skeleton className="h-8 w-full" />
-                  </div>
-                ))
-              ) : (
-                teams.map((team) => (
-                  <CommandItem
-                    key={team.team_id}
-                    onSelect={() => {
-                      onChange(
-                        value.includes(team.team_id)
-                          ? value.filter((id) => id !== team.team_id)
-                          : [...value, team.team_id]
-                      )
-                    }}
-                  >
-                    <div className="flex items-center gap-2 w-full">
-                      <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
-                        {team.name[0]}
-                      </div>
-                      <span>{team.name}</span>
-                      <Check
-                        className={cn(
-                          "ml-auto h-4 w-4",
-                          value.includes(team.team_id) ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                    </div>
-                  </CommandItem>
-                ))
-              )}
+            <CommandGroup>
+              <ScrollArea className="flex max-h-[300px] flex-col overflow-y-auto">
+                {loading
+                  ? Array(3)
+                      .fill(0)
+                      .map((_, i) => (
+                        <div key={i} className="p-2">
+                          <Skeleton className="h-8 w-full" />
+                        </div>
+                      ))
+                  : teams.map((team) => (
+                      <CommandItem
+                        key={team.team_id}
+                        onSelect={() => {
+                          onChange(
+                            value.includes(team.team_id)
+                              ? value.filter((id) => id !== team.team_id)
+                              : [...value, team.team_id]
+                          );
+                        }}
+                      >
+                        <div className="flex items-center gap-2 w-full">
+                          <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
+                            {team.name[0]}
+                          </div>
+                          <span>{team.name}</span>
+                          <Check
+                            className={cn(
+                              "ml-auto h-4 w-4",
+                              value.includes(team.team_id)
+                                ? "opacity-100"
+                                : "opacity-0"
+                            )}
+                          />
+                        </div>
+                      </CommandItem>
+                    ))}
+              </ScrollArea>
             </CommandGroup>
           </CommandList>
         </Command>
       </PopoverContent>
     </Popover>
   );
-}
+};
 
 export default TeamSelect;

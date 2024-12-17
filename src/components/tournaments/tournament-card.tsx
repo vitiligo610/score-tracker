@@ -12,12 +12,12 @@ interface TournamentCardProps {
 const TournamentCard = ({ tournament }: TournamentCardProps) => {
   const getFormatColors = (format: string) => {
     switch (format) {
-      case "League":
-        return "from-blue-500 to-purple-500";
-      case "Knockout":
+      case "T20":
+        return "from-red-700 to-red-500";
+      case "ODI":
         return "from-red-500 to-orange-500";
       default:
-        return "from-green-500 to-teal-500";
+        return "from-yellow-700 to-orange-600";
     }
   };
 

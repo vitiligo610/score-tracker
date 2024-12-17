@@ -554,7 +554,7 @@ export const tournaments = [
     name: "Premier Cricket League 2024",
     start_date: new Date("2024-03-01"),
     end_date: new Date("2024-04-30"),
-    format: "League",
+    format: "T20",
     locations: ["Oval Stadium", "Central Ground", "City Arena"],
     team_ids: [1, 2, 3, 4]
   },
@@ -563,7 +563,7 @@ export const tournaments = [
     name: "National Cup 2024",
     start_date: new Date("2024-05-15"),
     end_date: new Date("2024-06-15"),
-    format: "Knockout",
+    format: "ODI",
     locations: ["National Stadium", "Sports Complex"],
     team_ids: [1, 2, 3, 4]
   },
@@ -572,7 +572,7 @@ export const tournaments = [
     name: "Regional Championship",
     start_date: new Date("2024-07-01"),
     end_date: new Date("2024-08-30"),
-    format: "Round-robin",
+    format: "Test",
     locations: ["East Ground", "West Park", "North Field"],
     team_ids: [1, 2, 3, 4]
   }
