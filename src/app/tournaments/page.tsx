@@ -1,9 +1,12 @@
 import { fetchTournaments } from "@/lib/actions";
 import TournamentCard from "@/components/tournaments/tournament-card";
-import { Button } from "@/components/ui/button";
-import { PlusIcon } from "lucide-react";
 import CreateTournamentDialog from "@/components/tournaments/create-tournament-dialog";
 import TournamentFilters from "@/components/tournaments/tournament-filteres";
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "Tournaments",
+};
 
 const Tournaments = async ({
   searchParams,
@@ -31,6 +34,14 @@ const Tournaments = async ({
           />
         ))}
       </div>
+
+      {tournaments.length == 0 &&
+        <div className="h-40 w-full flex items-center justify-center">
+          <span className="text-muted-foreground text-2xl">
+            No tournaments found!
+          </span>
+        </div>
+      }
     </div>
   );
 }

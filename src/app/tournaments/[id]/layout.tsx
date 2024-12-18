@@ -1,16 +1,16 @@
 import BackLink from "@/components/ui/back-link";
 
-const TeamLayout = ({
+const TournamentLayout = ({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) => {
   return (
     <div>
-      <BackLink href="/teams" label="All Teams" />
+      <BackLink href="/tournaments" label="All Tournaments" />
       {children}
     </div>
-  )
+  );
 }
 
-export default TeamLayout;
+export default TournamentLayout;

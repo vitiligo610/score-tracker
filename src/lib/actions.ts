@@ -336,7 +336,6 @@ export const fetchTournaments = async (filter: string) => {
     const dataSet = data.reduce((acc: any[], current: any) => {
       const key = current.tournament_id;
       if (acc[key] == undefined) {
-        console.log("inside: dsdfsfd")
         acc[key] = {
           tournament_id: current.tournament_id,
           name: current.name,
@@ -414,5 +413,20 @@ export const insertTournament = async (tournament: TournamentWithoutId) => {
   } catch (error) {
     console.log("Error adding new tournament: ", error);
     throw new Error("Failed creating new tournament!");
+  }
+}
+
+export const fetchTournamentById = async (tournament_id: number) => {
+  try {
+    const [data]: any = await pool.query(
+      `SELECT * FROM tournaments
+      WHERE tournament_id = ?`,
+      [tournament_id]
+    );
+
+    return { tournament: data[0] as Tournament };
+  } catch (error) {
+    console.log("Error fetching tournament by id: ", error);
+    throw new Error("Failed to fetch tournament!");
   }
 }

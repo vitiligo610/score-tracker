@@ -1,5 +1,10 @@
 import { pool } from "@/lib/db";
-import { players, team_players, teams, tournaments } from "@/lib/placeholder-data";
+import {
+  players,
+  team_players,
+  teams,
+  tournaments,
+} from "@/lib/placeholder-data";
 
 const seedTeams = async () => {
   console.log("Creating teams table...");
@@ -74,13 +79,27 @@ const seedTeamPlayers = async () => {
 
   console.log("Seeding team players...");
   await Promise.all(
-    team_players.map(team_player => 
+    team_players.map((team_player) =>
       pool.query(
         `INSERT INTO team_players (team_id, player_id)
         VALUES (?, ?)`,
         [team_player.team_id, team_player.player_id]
       )
     )
+  );
+};
+
+const createMiscProcs = async () => {
+  await pool.query("DROP PROCEDURE IF EXISTS IsPowerOfTwo");
+  await pool.query(
+    `CREATE PROCEDURE IsPowerOfTwo(IN n INT, OUT result BOOLEAN)
+    BEGIN
+        IF (n > 0 AND (n & (n - 1)) = 0) THEN
+            SET result = TRUE;
+        ELSE
+            SET result = FALSE;
+        END IF;
+    END`
   );
 };
 
@@ -93,7 +112,7 @@ const createAddTeamToTournamentProc = async () => {
         VALUES (tournament_id, team_id);
     END`
   );
-}
+};
 
 const createSetTournamentRoundsProc = async () => {
   await pool.query("DROP PROCEDURE IF EXISTS SetTournamentRounds");
@@ -102,13 +121,16 @@ const createSetTournamentRoundsProc = async () => {
     BEGIN
         DECLARE teams_count INT;
         DECLARE rounds INT;
+        DECLARE is_power_of_two BOOLEAN;
 
         SELECT COUNT(*) INTO teams_count
         FROM tournament_teams t
         WHERE t.tournament_id = tournament_id;
 
+        CALL IsPowerOfTwo(teams_count, is_power_of_two);
+
         # Check if power of 2
-        IF (teams_count & (teams_count - 1)) = 0 THEN
+        IF is_power_of_two = TRUE THEN
             SET rounds = LOG(2, teams_count);
         ELSE
             SET rounds = CEIL(LOG(2, teams_count));
@@ -119,7 +141,73 @@ const createSetTournamentRoundsProc = async () => {
         WHERE t.tournament_id = tournament_id;
     END`
   );
-}
+};
+
+const createInitialScheduleProc = async () => {
+  await pool.query("DROP PROCEDURE IF EXISTS CreateInitialSchedule");
+  await pool.query(
+    `CREATE PROCEDURE CreateInitialSchedule(IN p_tournament_id INT)
+    BEGIN
+        DECLARE total_teams INT;
+        DECLARE next_power_of_2 INT;
+        DECLARE byes_count INT;
+        DECLARE i INT;
+        DECLARE team1_id INT;
+        DECLARE team2_id INT;
+
+        -- Temporary table to store teams
+        CREATE TEMPORARY TABLE temp_teams (id INT AUTO_INCREMENT PRIMARY KEY, team_id INT);
+
+        -- Fetch all teams for the given tournament
+        INSERT INTO temp_teams (team_id)
+        SELECT team_id FROM tournament_teams WHERE tournament_id = p_tournament_id;
+
+        -- Calculate the total number of teams
+        SELECT COUNT(*) INTO total_teams FROM temp_teams;
+
+        -- Calculate the nearest power of 2
+        SET next_power_of_2 = POW(2, CEIL(LOG2(total_teams)));
+
+        -- Calculate the number of byes
+        SET byes_count = next_power_of_2 - total_teams;
+
+        -- Insert first-round matches for teams without byes
+        SET i = 1;
+        WHILE i <= (total_teams - byes_count) DO
+                -- Fetch two teams for the match
+                SELECT team_id INTO team1_id FROM temp_teams WHERE id = i;
+                SELECT team_id INTO team2_id FROM temp_teams WHERE id = i + 1;
+
+                -- Insert match into matches table
+                INSERT INTO matches (tournament_id, team1_id, team2_id, round)
+                VALUES (p_tournament_id, team1_id, team2_id, 1);
+
+                -- Move to the next pair of teams
+                SET i = i + 2;
+            END WHILE;
+
+        -- Handle byes: Add matches for round 2
+        IF byes_count > 0 THEN
+            SET i = (total_teams - byes_count) + 1; -- Start after non-bye teams
+            WHILE i <= total_teams DO
+                    -- Fetch team with a bye
+                    SELECT team_id INTO team1_id FROM temp_teams WHERE id = i;
+
+                    -- Fetch the next opponent from winners of round 1
+                    SELECT id INTO team2_id FROM temp_teams WHERE id = i - (total_teams - byes_count) / 2;
+
+                    -- Insert match into round 2
+                    INSERT INTO matches (tournament_id, team1_id, team2_id, round)
+                    VALUES (p_tournament_id, team1_id, team2_id, 2);
+
+                    SET i = i + 1;
+                END WHILE;
+        END IF;
+
+        DROP TEMPORARY TABLE temp_teams;
+    END`
+  );
+};
 
 const seedTournaments = async () => {
   console.log("Creating Tournaments table...");
@@ -134,6 +222,8 @@ const seedTournaments = async () => {
       rounds INT DEFAULT 0
     )
   `);
+
+  await seedMatches();
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS tournament_locations (
@@ -156,6 +246,7 @@ const seedTournaments = async () => {
 
   await createAddTeamToTournamentProc();
   await createSetTournamentRoundsProc();
+  await createInitialScheduleProc();
 
   console.log("Seeding tournament values...");
 
@@ -165,9 +256,9 @@ const seedTournaments = async () => {
       VALUES (?, ?, ?, ?)`,
       [
         tournament.name,
-        tournament.start_date, 
+        tournament.start_date,
         tournament.end_date,
-        tournament.format
+        tournament.format,
       ]
     );
 
@@ -180,20 +271,21 @@ const seedTournaments = async () => {
     }
 
     for (const team_id of tournament.team_ids) {
-      await pool.query(
-        `CALL AddTeamToTournament(?, ?)`,
-        [tournament.tournament_id, team_id]
-      );
+      await pool.query(`CALL AddTeamToTournament(?, ?)`, [
+        tournament.tournament_id,
+        team_id,
+      ]);
     }
 
     await pool.query("CALL SetTournamentRounds(?)", [tournament.tournament_id]);
+    await pool.query("CALL CreateInitialSchedule(?)", [tournament.tournament_id]);
   }
-}
+};
 
 const seedMatches = async () => {
   console.log("Creating Matches Table...");
   await pool.query(`
-    CREATE TABLE IF NOT EXISTS tournament_matches (
+    CREATE TABLE IF NOT EXISTS matches (
       match_id INT PRIMARY KEY AUTO_INCREMENT,
       tournament_id INT,
       series_id INT,
@@ -206,11 +298,10 @@ const seedMatches = async () => {
       FOREIGN KEY (tournament_id) REFERENCES tournaments (tournament_id) ON DELETE CASCADE,
       FOREIGN KEY (team1_id) REFERENCES teams (team_id) ON DELETE CASCADE,
       FOREIGN KEY (team2_id) REFERENCES teams (team_id) ON DELETE CASCADE,
-      FOREIGN KEY (winner_team_id) REFERENCES teams (team_id),
-      FOREGIN KEY (tournament_id, location) REFERENCES tournament_locations (tournament_id, location_name)
+      FOREIGN KEY (winner_team_id) REFERENCES teams (team_id)
     )
   `);
-}
+};
 
 const main = async () => {
   console.log("🌱 Starting database seed...");
@@ -227,11 +318,12 @@ const main = async () => {
                            teams
       `);
 
+    await createMiscProcs();
     await seedTeams();
     await seedPlayers();
     await seedTeamPlayers();
     await seedTournaments();
-    await seedMatches();
+    // await seedMatches();
 
     console.log("✅ Database seeded successfully");
     process.exit(0);
