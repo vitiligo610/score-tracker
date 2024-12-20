@@ -114,31 +114,24 @@ const createAddTeamToTournamentProc = async () => {
   );
 };
 
-const createSetTournamentRoundsProc = async () => {
-  await pool.query("DROP PROCEDURE IF EXISTS SetTournamentRounds");
+const createSetTournamentDetailsProc = async () => {
+  await pool.query("DROP PROCEDURE IF EXISTS SetTournamentDetails");
   await pool.query(
-    `CREATE PROCEDURE SetTournamentRounds(IN tournament_id INT)
+    `CREATE PROCEDURE SetTournamentDetails(IN p_tournament_id INT)
     BEGIN
         DECLARE teams_count INT;
         DECLARE rounds INT;
-        DECLARE is_power_of_two BOOLEAN;
 
         SELECT COUNT(*) INTO teams_count
         FROM tournament_teams t
-        WHERE t.tournament_id = tournament_id;
+        WHERE t.tournament_id = p_tournament_id;
 
-        CALL IsPowerOfTwo(teams_count, is_power_of_two);
-
-        # Check if power of 2
-        IF is_power_of_two = TRUE THEN
-            SET rounds = LOG(2, teams_count);
-        ELSE
-            SET rounds = CEIL(LOG(2, teams_count));
-        END IF;
+        SET rounds = CEIL(LOG2(teams_count));
 
         UPDATE tournaments t
-        SET t.rounds = rounds
-        WHERE t.tournament_id = tournament_id;
+        SET t.total_rounds = rounds,
+            t.total_teams = teams_count
+        WHERE t.tournament_id = p_tournament_id;
     END`
   );
 };
@@ -148,63 +141,72 @@ const createInitialScheduleProc = async () => {
   await pool.query(
     `CREATE PROCEDURE CreateInitialSchedule(IN p_tournament_id INT)
     BEGIN
-        DECLARE total_teams INT;
-        DECLARE next_power_of_2 INT;
-        DECLARE byes_count INT;
-        DECLARE i INT;
-        DECLARE team1_id INT;
-        DECLARE team2_id INT;
+      DECLARE total_teams INT;
+      DECLARE next_power_of_2 INT;
+      DECLARE byes_count INT;
+      DECLARE i INT;
+      DECLARE team1_id INT;
+      DECLARE team2_id INT;
 
-        -- Temporary table to store teams
-        CREATE TEMPORARY TABLE temp_teams (id INT AUTO_INCREMENT PRIMARY KEY, team_id INT);
+      -- Temporary table to store teams
+      CREATE TEMPORARY TABLE temp_teams (id INT AUTO_INCREMENT PRIMARY KEY, team_id INT);
 
-        -- Fetch all teams for the given tournament
-        INSERT INTO temp_teams (team_id)
-        SELECT team_id FROM tournament_teams WHERE tournament_id = p_tournament_id;
+      -- Fetch all teams for the given tournament
+      INSERT INTO temp_teams (team_id)
+      SELECT team_id FROM tournament_teams WHERE tournament_id = p_tournament_id;
 
-        -- Calculate the total number of teams
-        SELECT COUNT(*) INTO total_teams FROM temp_teams;
+      -- Calculate the total number of teams
+      SELECT COUNT(*) INTO total_teams FROM temp_teams;
 
-        -- Calculate the nearest power of 2
-        SET next_power_of_2 = POW(2, CEIL(LOG2(total_teams)));
+      -- Calculate the nearest power of 2
+      SET next_power_of_2 = POW(2, CEIL(LOG2(total_teams)));
 
-        -- Calculate the number of byes
-        SET byes_count = next_power_of_2 - total_teams;
+      -- Calculate the number of byes
+      SET byes_count = next_power_of_2 - total_teams;
 
-        -- Insert first-round matches for teams without byes
-        SET i = 1;
-        WHILE i <= (total_teams - byes_count) DO
-                -- Fetch two teams for the match
-                SELECT team_id INTO team1_id FROM temp_teams WHERE id = i;
-                SELECT team_id INTO team2_id FROM temp_teams WHERE id = i + 1;
+      -- Insert first-round matches for teams without byes
+      SET i = 1;
+      WHILE i <= (total_teams - byes_count) DO
+        -- Fetch two teams for the match
+        SELECT team_id INTO team1_id FROM temp_teams WHERE id = i;
+        SELECT team_id INTO team2_id FROM temp_teams WHERE id = i + 1;
 
-                -- Insert match into matches table
-                INSERT INTO matches (tournament_id, team1_id, team2_id, round)
-                VALUES (p_tournament_id, team1_id, team2_id, 1);
+        -- Insert match into matches table
+        INSERT INTO matches (tournament_id, team1_id, team2_id, round, status)
+        VALUES (p_tournament_id, team1_id, team2_id, 1, 'scheduled');
 
-                -- Move to the next pair of teams
-                SET i = i + 2;
-            END WHILE;
+        -- Move to the next pair of teams
+        SET i = i + 2;
+      END WHILE;
 
-        -- Handle byes: Add matches for round 2
-        IF byes_count > 0 THEN
-            SET i = (total_teams - byes_count) + 1; -- Start after non-bye teams
-            WHILE i <= total_teams DO
-                    -- Fetch team with a bye
-                    SELECT team_id INTO team1_id FROM temp_teams WHERE id = i;
+      -- Handle byes: Add matches for round 2
+      IF byes_count > 0 THEN
+        SET i = (total_teams - byes_count) + 1; -- Start after non-bye teams
+        WHILE i <= total_teams - (total_teams - byes_count) / 2 DO
+          -- Fetch team with a bye
+          SELECT team_id INTO team1_id FROM temp_teams WHERE id = i;
 
-                    -- Fetch the next opponent from winners of round 1
-                    SELECT id INTO team2_id FROM temp_teams WHERE id = i - (total_teams - byes_count) / 2;
+          -- Fetch the next opponent from winners of round 1
+          SELECT id INTO team2_id FROM temp_teams WHERE id = i + 1;
 
-                    -- Insert match into round 2
-                    INSERT INTO matches (tournament_id, team1_id, team2_id, round)
-                    VALUES (p_tournament_id, team1_id, team2_id, 2);
+          -- Insert match into round 2
+          INSERT INTO matches (tournament_id, team1_id, team2_id, round, status)
+          VALUES (p_tournament_id, team1_id, team2_id, 2, 'scheduled');
 
-                    SET i = i + 1;
-                END WHILE;
-        END IF;
+          SET i = i + 2;
+        END WHILE;
 
-        DROP TEMPORARY TABLE temp_teams;
+        WHILE i <= total_teams DO
+          SELECT team_id INTO team1_id FROM temp_teams WHERE id = i;
+
+          INSERT INTO matches (tournament_id, team1_id, round, status)
+          VALUES (p_tournament_id, team1_id, 2, 'tbd');
+
+          SET i = i + 1;
+        END WHILE;
+      END IF;
+
+      DROP TEMPORARY TABLE temp_teams;
     END`
   );
 };
@@ -218,8 +220,9 @@ const seedTournaments = async () => {
       start_date DATE,
       end_date DATE,
       format ENUM('T20', 'ODI', 'Test'),
-      finished BOOLEAN DEFAULT FALSE,
-      rounds INT DEFAULT 0
+      total_rounds INT DEFAULT 0,
+      total_teams INT DEFAULT 0,
+      finished BOOLEAN DEFAULT FALSE
     )
   `);
 
@@ -245,7 +248,7 @@ const seedTournaments = async () => {
   `);
 
   await createAddTeamToTournamentProc();
-  await createSetTournamentRoundsProc();
+  await createSetTournamentDetailsProc();
   await createInitialScheduleProc();
 
   console.log("Seeding tournament values...");
@@ -277,7 +280,7 @@ const seedTournaments = async () => {
       ]);
     }
 
-    await pool.query("CALL SetTournamentRounds(?)", [tournament.tournament_id]);
+    await pool.query("CALL SetTournamentDetails(?)", [tournament.tournament_id]);
     await pool.query("CALL CreateInitialSchedule(?)", [tournament.tournament_id]);
   }
 };
@@ -291,10 +294,11 @@ const seedMatches = async () => {
       series_id INT,
       match_date DATE,
       team1_id INT NOT NULL,
-      team2_id INT NOT NULL,
+      team2_id INT,
       winner_team_id INT,
       location VARCHAR (100),
       round VARCHAR (50),
+      status ENUM('started', 'scheduled', 'completed', 'tbd'),
       FOREIGN KEY (tournament_id) REFERENCES tournaments (tournament_id) ON DELETE CASCADE,
       FOREIGN KEY (team1_id) REFERENCES teams (team_id) ON DELETE CASCADE,
       FOREIGN KEY (team2_id) REFERENCES teams (team_id) ON DELETE CASCADE,

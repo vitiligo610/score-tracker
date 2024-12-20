@@ -10,3 +10,13 @@ export const createPageUrl = (path: string, pageNum: number) => {
   params.set("page", pageNum.toString());
   return `/${path}?${params.toString()}`;
 };
+
+export const getInitials = (str: string) => {
+  var names = str.split(' '),
+      initials = names[0].substring(0, 1).toUpperCase();
+  
+  if (names.length > 1) {
+      initials += names[names.length - 1].substring(0, 1).toUpperCase();
+  }
+  return initials;
+};

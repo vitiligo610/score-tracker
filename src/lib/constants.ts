@@ -14,3 +14,5 @@ export const BOWLING_STYLES = [
 export const TEAMS_PER_PAGE = 9;
 
 export const TOURNAMENT_FORMATS = ["T20", "ODI", "Test"] as const;
+
+export const MATCH_STATUS = ["started", "completed", "scheduled", "tbd"] as const;

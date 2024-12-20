@@ -1,4 +1,4 @@
-import { BATTING_STYLES, BOWLING_STYLES, PLAYER_ROLES, TOURNAMENT_FORMATS } from "@/lib/constants";
+import { BATTING_STYLES, BOWLING_STYLES, MATCH_STATUS, PLAYER_ROLES, TOURNAMENT_FORMATS } from "@/lib/constants";
 
 export type Team = {
   team_id: number;
@@ -44,9 +44,34 @@ export type Tournament = {
   start_date: Date;
   end_date: Date;
   format: TournamentFormat;
-  finished?: boolean;
+  total_rounds: number;
+  total_teams: number;
   locations: string[] | [];
   team_ids: number[] | [];
+  finished?: boolean;
 }
 
 export type TournamentWithoutId = Omit<Tournament, "tournament_id">;
+
+export type MatchStatus = typeof MATCH_STATUS[number];
+
+export type Match = {
+  match_id: number | string;
+  match_date?: Date;
+  team1_id?: number;
+  team2_id?: number;
+  winner_team_id?: number;
+  location?: string;
+  round: number;
+  status: MatchStatus;
+  team1: Team | null;
+  team2: Team | null;
+}
+
+export interface TournamentMatch extends Match {
+  tournament_id: number;
+}
+
+export interface SeriesMatch extends Match {
+  series_id: number;
+}
