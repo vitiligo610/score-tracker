@@ -2,6 +2,9 @@ import { fetchTournamentById, fetchTournamentMatches } from "@/lib/actions";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import MatchSchedule from "@/components/matches/matches-schedule";
+import { Suspense } from "react";
+import TournamentHeaderSkeleton from "@/components/ui/skeletons/tournament-header-skeleton";
+import MatchScheduleSkeleton from "@/components/ui/skeletons/match-schedule-skeleton";
 
 export const metadata: Metadata = {
   title: "Tournament",
@@ -23,15 +26,20 @@ const TournamentPage = async ({
     notFound();
   }
 
-
   return (
-    <div className="container mx-auto py-8">
-      <h1 className="text-4xl font-bold mb-8">{tournament.name}</h1>
-      <MatchSchedule 
-        tournament={tournament}
-        matches={matches}
-      />
-    </div>
+    <Suspense
+      fallback={
+        <div className="container mx-auto py-8 space-y-8">
+          <TournamentHeaderSkeleton />
+          <MatchScheduleSkeleton />
+        </div>
+      }
+    >
+      <div className="container mx-auto py-8">
+        <h1 className="text-4xl font-bold mb-8">{tournament.name}</h1>
+        <MatchSchedule tournament={tournament} matches={matches} />
+      </div>
+    </Suspense>
   );
 };
 

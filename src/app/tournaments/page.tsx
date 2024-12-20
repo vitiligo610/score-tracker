@@ -1,8 +1,9 @@
-import { fetchTournaments } from "@/lib/actions";
-import TournamentCard from "@/components/tournaments/tournament-card";
 import CreateTournamentDialog from "@/components/tournaments/create-tournament-dialog";
 import TournamentFilters from "@/components/tournaments/tournament-filteres";
 import { Metadata } from "next";
+import AllTournaments from "@/components/tournaments/all-tournaments";
+import { Suspense } from "react";
+import AllTournamentsSkeleton from "@/components/ui/skeletons/all-tournaments-skeleton";
 
 export const metadata: Metadata = {
   title: "Tournaments",
@@ -14,7 +15,6 @@ const Tournaments = async ({
   searchParams: { filter?: string };
 }) => {
   const params = await searchParams;
-  const { tournaments } = await fetchTournaments(params.filter || "all");
 
   return (
     <div className="container mx-auto py-8 space-y-8">
@@ -26,22 +26,9 @@ const Tournaments = async ({
       </div>
       <TournamentFilters />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {tournaments.map((tournament) => (
-          <TournamentCard 
-            key={tournament.tournament_id} 
-            tournament={tournament}
-          />
-        ))}
-      </div>
-
-      {tournaments.length == 0 &&
-        <div className="h-40 w-full flex items-center justify-center">
-          <span className="text-muted-foreground text-2xl">
-            No tournaments found!
-          </span>
-        </div>
-      }
+      <Suspense fallback={<AllTournamentsSkeleton />}>
+        <AllTournaments filter={params.filter} />
+      </Suspense>
     </div>
   );
 }
