@@ -29,14 +29,11 @@ const MatchCard = ({
     match.team1?.team_id &&
     match.team2?.team_id;
 
-  console.log("match status is ", match.match_id, match.match_date);
-
   return (
     <Card className="relative hover:shadow-lg transition-all">
       <CardContent className="px-6 py-3">
         <div className="space-y-6">
           <div className="flex items-center justify-between pt-6">
-            {/* Team 1 */}
             <div className="flex-1 text-center">
               <div className="h-16 w-16 mx-auto bg-primary/10 rounded-full flex items-center justify-center">
                 <span className="text-xl font-bold">

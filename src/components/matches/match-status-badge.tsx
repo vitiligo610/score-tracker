@@ -12,7 +12,7 @@ const statusConfig: Record<MatchStatus, { label: string; className: string }> = 
 const MatchStatusBadge = ({ status }: { status: MatchStatus }) => {
   const config = statusConfig[status];
   return (
-    <Badge variant="secondary" className={cn("font-medium", config.className)}>
+    <Badge variant="secondary" className={cn("font-bold", config.className)}>
       {config.label}
     </Badge>
   );

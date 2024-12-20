@@ -86,7 +86,7 @@ const EditMatchDialog = ({
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>Match Date</Label>
-            <Popover>
+            <Popover modal>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
@@ -107,6 +107,8 @@ const EditMatchDialog = ({
                   disabled={(date) =>
                     date < tournamentStart || date > tournamentEnd
                   }
+                  fromDate={tournamentStart}
+                  toDate={tournamentEnd}
                   initialFocus
                 />
               </PopoverContent>
