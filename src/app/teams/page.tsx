@@ -1,5 +1,6 @@
 import TeamFormDialog from "@/components/teams/team-form-dialog";
 import TeamsInfo from "@/components/teams/teams-info";
+import BackLink from "@/components/ui/back-link";
 import { Button } from "@/components/ui/button";
 import SearchInput from "@/components/ui/search-input";
 import TeamsSkeleton from "@/components/ui/skeletons/teams-skeleton";
@@ -24,7 +25,8 @@ const Teams = async ({
   const currentPage = Number(params?.page) || 1;
 
   return (
-    <div className="container mx-auto py-8 space-y-8">
+    <div className="container mx-auto pb-8 space-y-8">
+      <BackLink href="/" label="Home" />
       <div className="w-full flex justify-between items-center mb-12">
         <h1 className="text-7xl text-primary font-bold">Teams</h1>
         <TeamFormDialog>
