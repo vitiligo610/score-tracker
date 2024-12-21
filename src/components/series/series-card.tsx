@@ -1,53 +1,44 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CalendarDays, MapPin, Users2, Crosshair } from "lucide-react";
-import { format } from "date-fns";
-import { cn } from "@/lib/utils";
-import Link from "next/link";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Series } from "@/lib/definitons";
+import { format } from "date-fns";
+import {
+  CalendarIcon,
+  Crosshair,
+  MapPinIcon,
+  UsersIcon
+} from "lucide-react";
+import Link from "next/link";
 
 interface SeriesCardProps {
   series: Series;
 }
 
 const SeriesCard = ({ series }: SeriesCardProps) => {
-  const isActive = new Date() >= new Date(series.start_date) && 
-                  new Date() <= new Date(series.end_date);
-
   return (
     <Link href={`/series/${series.series_id}`}>
-      <Card className={cn(
-        "group relative overflow-hidden transition-all hover:shadow-lg",
-        "before:absolute before:inset-0 before:-translate-x-full",
-        "hover:before:translate-x-0 before:transition-transform before:duration-300",
-        "before:bg-gradient-to-r before:from-primary/5 before:to-transparent before:z-0"
-      )}>
-        <div className="relative z-10">
-          <CardHeader className="space-y-2 pb-4">
+      <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300 h-[280px] flex flex-col">
+        <div className="relative z-10 h-full flex flex-col space-y-1">
+          <CardHeader className="space-y-2 pb-4 flex-shrink-0">
             <div className="flex justify-between items-start gap-4">
-              <div className="space-y-1">
+              <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                  <Badge 
-                    variant={series.type === 'bilateral' ? 'default' : 'secondary'}
+                  <Badge
+                    variant={
+                      series.type === "bilateral" ? "default" : "secondary"
+                    }
                     className="uppercase text-xs tracking-wider"
                   >
                     {series.type}
                   </Badge>
-                  <Badge 
-                    variant="outline" 
-                    className={cn(
-                      "bg-primary/5",
-                      isActive && "bg-green-500/10 text-green-500"
-                    )}
-                  >
-                    {isActive ? "Active" : "Upcoming"}
-                  </Badge>
                 </div>
-                <h3 className="text-2xl font-bold tracking-tight">{series.name}</h3>
+                <h3 className="text-2xl font-bold tracking-tight line-clamp-2">
+                  {series.name}
+                </h3>
               </div>
-              <Badge 
-                variant="outline" 
-                className="bg-primary/5 flex items-center gap-1"
+              <Badge
+                variant="outline"
+                className="bg-primary/5 flex items-center gap-1 flex-shrink-0"
               >
                 <Crosshair className="h-3 w-3" />
                 {series.format}
@@ -55,45 +46,39 @@ const SeriesCard = ({ series }: SeriesCardProps) => {
             </div>
           </CardHeader>
 
-          <CardContent className="space-y-4">
-            {/* Timeline */}
-            <div className="flex items-center gap-3 text-sm">
-              <CalendarDays className="h-4 w-4 text-muted-foreground" />
-              <div className="flex items-center gap-2">
-                <span>{format(new Date(series.start_date), "MMM d, yyyy")}</span>
-                <span className="h-px w-6 bg-muted-foreground/30" />
-                <span>{format(new Date(series.end_date), "MMM d, yyyy")}</span>
-              </div>
-            </div>
-
-            {/* Teams */}
-            <div className="flex items-center gap-3 text-sm">
-              <Users2 className="h-4 w-4 text-muted-foreground" />
-              <span>
-                {series.type === 'bilateral' ? '2 Teams' : '3 Teams'}
+          <CardContent className="space-y-3 flex-grow">
+            <div className="flex items-center gap-2">
+              <CalendarIcon className="h-5 w-5 flex-shrink-0 text-primary text-sm" />
+              <span className="truncate">
+                {format(new Date(series.start_date), "MMM d, yyyy")} -{" "}
+                {format(new Date(series.end_date), "MMM d, yyyy")}
               </span>
             </div>
 
-            {/* Locations */}
-            <div className="flex items-start gap-3 text-sm">
-              <MapPin className="h-4 w-4 text-muted-foreground mt-0.5" />
+            <div className="flex items-center gap-2 min-h-[2.5rem]">
+              <MapPinIcon className="h-5 w-5 flex-shrink-0 text-primary" />
               <div className="flex flex-wrap gap-2">
                 {series.locations.map((location) => (
-                  <Badge 
-                    key={location} 
-                    variant="secondary"
-                    className="bg-muted/  50"
+                  <Badge
+                    key={location}
+                    variant="outline"
+                    className="bg-background truncate"
                   >
                     {location}
                   </Badge>
                 ))}
               </div>
             </div>
+
+            <div className="flex items-center gap-2">
+              <UsersIcon className="h-5 w-5 flex-shrink-0 text-primary" />
+              <span>{series.type === "bilateral" ? 2 : 3} Teams</span>
+            </div>
           </CardContent>
         </div>
       </Card>
     </Link>
   );
-}
+};
 
 export default SeriesCard;

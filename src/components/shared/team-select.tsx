@@ -20,14 +20,15 @@ import { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fetchAllTeams } from "@/lib/actions";
 import { Team } from "@/lib/definitons";
-import { ScrollArea } from "../ui/scroll-area";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface TeamSelectProps {
   value: number[];
   onChange: (value: number[]) => void;
+  maxTeams?: number;
 }
 
-const TeamSelect = ({ value, onChange }: TeamSelectProps) => {
+const TeamSelect = ({ value, onChange, maxTeams }: TeamSelectProps) => {
   const [open, setOpen] = useState(false);
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,7 +52,7 @@ const TeamSelect = ({ value, onChange }: TeamSelectProps) => {
         >
           {value.length === 0
             ? "Select teams..."
-            : `${value.length} teams selected`}
+            : `${value.length}${maxTeams ? ` / ${maxTeams}` : ""} teams selected`}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -72,33 +73,36 @@ const TeamSelect = ({ value, onChange }: TeamSelectProps) => {
                           <Skeleton className="h-8 w-full" />
                         </div>
                       ))
-                  : teams.map((team) => (
-                      <CommandItem
-                        key={team.team_id}
-                        onSelect={() => {
-                          onChange(
-                            value.includes(team.team_id)
-                              ? value.filter((id) => id !== team.team_id)
-                              : [...value, team.team_id]
-                          );
-                        }}
-                      >
-                        <div className="flex items-center gap-2 w-full">
-                          <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
-                            {team.name[0]}
-                          </div>
-                          <span>{team.name}</span>
+                  : teams.map((team) => {
+                      const isSelected = value.includes(team.team_id);
+                      const isDisabled = maxTeams && value.length >= maxTeams && !isSelected;
+
+                      return (
+                        <CommandItem
+                          key={team.team_id}
+                          onSelect={() => {
+                            if (isDisabled) return;
+                            onChange(
+                              isSelected
+                                ? value.filter((id) => id !== team.team_id)
+                                : [...value, team.team_id]
+                            );
+                          }}
+                          disabled={Boolean(isDisabled)}
+                          className={cn(
+                            isDisabled && "opacity-50 cursor-not-allowed"
+                          )}
+                        >
                           <Check
                             className={cn(
-                              "ml-auto h-4 w-4",
-                              value.includes(team.team_id)
-                                ? "opacity-100"
-                                : "opacity-0"
+                              "mr-2 h-4 w-4",
+                              isSelected ? "opacity-100" : "opacity-0"
                             )}
                           />
-                        </div>
-                      </CommandItem>
-                    ))}
+                          {team.name}
+                        </CommandItem>
+                      );
+                    })}
               </ScrollArea>
             </CommandGroup>
           </CommandList>

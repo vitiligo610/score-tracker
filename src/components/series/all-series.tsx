@@ -1,4 +1,5 @@
 import { fetchSeries } from "@/lib/actions";
+import SeriesCard from "@/components/series/series-card";
 
 const AllSeries = async ({ filter }: { filter?: string }) => {
   const { series } = await fetchSeries(filter || "all");
@@ -6,8 +7,12 @@ const AllSeries = async ({ filter }: { filter?: string }) => {
   console.log("fetched series: ", series);
 
   return (
-    <div>AllSeries</div>
-  )
-}
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {series.map((series) => (
+        <SeriesCard key={series.series_id} series={series} />
+      ))}
+    </div>
+  );
+};
 
 export default AllSeries;

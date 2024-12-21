@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { Player, PlayerWithoutId, PlayerWithTeam, Series, Team, TeamPlayer, TeamWithoutId, Tournament, TournamentMatch, TournamentWithoutId } from "@/lib/definitons";
+import { Player, PlayerWithoutId, PlayerWithTeam, Series, SeriesWithoutId, Team, TeamPlayer, TeamWithoutId, Tournament, TournamentMatch, TournamentWithoutId } from "@/lib/definitons";
 import { pool } from "@/lib/db";
 import { PLAYERS_PER_PAGE, TEAMS_PER_PAGE } from "@/lib/constants";
 
@@ -585,5 +585,39 @@ export const fetchSeries = async (filter: string) => {
   } catch (error) {
     console.log("Failed to fetch series: ", error);
     throw new Error("Failed to fetch series!");
+  }
+}
+
+export const insertSeries = async (series: SeriesWithoutId) => {
+  try {
+    await pool.query(
+      `INSERT INTO series (name, format, type, start_date, end_date, team1_id, team2_id, team3_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        series.name,
+        series.format,
+        series.type,
+        series.start_date,
+        series.end_date,
+        series.team_ids[0],
+        series.team_ids[1],
+        series.team_ids[2] ?? null,
+      ]
+    );
+
+    const series_id = await getLastInsertedId();
+
+    await Promise.all(
+      series.locations.map(location => 
+        pool.query(
+          `INSERT INTO series_locations (series_id, location_name)
+          VALUES (?, ?)`,
+          [series_id, location]
+        )
+      )
+    );
+  } catch (error) {
+    console.log("Error inserting new series: ", error);
+    throw new Error("Failed to create series!");
   }
 }

@@ -32,8 +32,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { insertTournament } from "@/lib/actions";
-import { MATCH_FORMATS } from "@/lib/constants";
+import { insertSeries } from "@/lib/actions";
+import { MATCH_FORMATS, SERIES_TYPES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
@@ -42,33 +42,57 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import LocationInput from "../shared/location-input";
+import LocationInput from "@/components/shared/location-input";
 
-const formSchema = z.object({
-  name: z.string().min(3, "Tournament name must be at least 3 characters"),
-  format: z.enum(MATCH_FORMATS),
-  dateRange: z.object({
-    from: z.date(),
-    to: z.date(),
-  }),
-  team_ids: z.array(z.number()).min(4, "At least 4 teams are required"),
-  locations: z.array(z.string()).min(1, "At least 1 location is required"),
-});
+const formSchema = z
+  .object({
+    name: z.string().min(3, "Series name must be at least 3 characters"),
+    format: z.enum(MATCH_FORMATS),
+    type: z.enum(SERIES_TYPES),
+    dateRange: z.object({
+      from: z.date({
+        required_error: "Start date is required",
+      }),
+      to: z.date({
+        required_error: "End date is required",
+      }),
+    }),
+    team_ids: z.array(z.number()),
+    locations: z.array(z.string()).min(1, "At least 1 location is required"),
+  })
+  .superRefine((data, ctx) => {
+    if (data.type === "bilateral" && data.team_ids.length !== 2) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Bilateral series must have exactly 2 teams",
+        path: ["team_ids"],
+      });
+    }
 
-type TournamentFormValues = z.infer<typeof formSchema>;
+    if (data.type === "trilateral" && data.team_ids.length !== 3) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Trilateral series must have exactly 3 teams",
+        path: ["team_ids"],
+      });
+    }
+  });
 
-export default function CreateTournamentDialog() {
+type SeriesFormValues = z.infer<typeof formSchema>;
+
+const CreateSeriesDialog = () => {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [locationInput, setLocationInput] = useState("");
   const { toast } = useToast();
   const router = useRouter();
 
-  const form = useForm<TournamentFormValues>({
+  const form = useForm<SeriesFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
       format: "T20",
+      type: "bilateral",
       dateRange: {
         from: undefined,
         to: undefined,
@@ -78,10 +102,10 @@ export default function CreateTournamentDialog() {
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: SeriesFormValues) => {
     try {
       setIsSubmitting(true);
-      await insertTournament({
+      await insertSeries({
         ...values,
         start_date: values.dateRange.from,
         end_date: values.dateRange.to,
@@ -89,7 +113,7 @@ export default function CreateTournamentDialog() {
       form.reset();
       setOpen(false);
       toast({
-        description: "Tournament added successfully!",
+        description: "Series added successfully!",
       });
       router.refresh();
     } catch (error: any) {
@@ -107,13 +131,14 @@ export default function CreateTournamentDialog() {
       <DialogTrigger asChild>
         <Button className="gap-2">
           <PlusIcon className="h-5 w-5" />
-          New Tournament
+          New Series
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Create New Tournament</DialogTitle>
+          <DialogTitle>Create New Series</DialogTitle>
         </DialogHeader>
+
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
@@ -135,7 +160,7 @@ export default function CreateTournamentDialog() {
               name="format"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Tournament Format</FormLabel>
+                  <FormLabel>Series Format</FormLabel>
                   <Select
                     onValueChange={field.onChange}
                     defaultValue={field.value}
@@ -149,6 +174,34 @@ export default function CreateTournamentDialog() {
                       {MATCH_FORMATS.map((format) => (
                         <SelectItem key={format} value={format}>
                           {format.charAt(0).toUpperCase() + format.slice(1)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Series Type</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {SERIES_TYPES.map((type) => (
+                        <SelectItem key={type} value={type}>
+                          {type.charAt(0).toUpperCase() + type.slice(1)}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -218,6 +271,7 @@ export default function CreateTournamentDialog() {
                       onChange={(values: any) =>
                         field.onChange(values.map(Number))
                       }
+                      maxTeams={form.getValues("type") === "bilateral" ? 2 : 3}
                     />
                   </FormControl>
                   <FormMessage />
@@ -245,11 +299,13 @@ export default function CreateTournamentDialog() {
 
             <Button type="submit" className="w-full" disabled={isSubmitting}>
               {isSubmitting && <Loader className="animate-spin" />} Create
-              Tournament
+              Series
             </Button>
           </form>
         </Form>
       </DialogContent>
     </Dialog>
   );
-}
+};
+
+export default CreateSeriesDialog;
