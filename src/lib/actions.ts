@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { Player, PlayerWithoutId, PlayerWithTeam, Team, TeamPlayer, TeamWithoutId, Tournament, TournamentMatch, TournamentWithoutId } from "@/lib/definitons";
+import { Player, PlayerWithoutId, PlayerWithTeam, Series, Team, TeamPlayer, TeamWithoutId, Tournament, TournamentMatch, TournamentWithoutId } from "@/lib/definitons";
 import { pool } from "@/lib/db";
 import { PLAYERS_PER_PAGE, TEAMS_PER_PAGE } from "@/lib/constants";
 
@@ -343,7 +343,7 @@ export const fetchTournaments = async (filter: string) => {
           end_date: current.end_date,
           format: current.format,
           finished: current.finished,
-          rounds: current.rounds,
+          total_rounds: current.total_rounds,
           locations: new Set(),
           team_ids: new Set(),
         }
@@ -410,7 +410,7 @@ export const insertTournament = async (tournament: TournamentWithoutId) => {
       )
     );
 
-    await pool.query("CALL SetTournamentRounds(?)", [tournament_id]);
+    await pool.query("CALL SetTournamentDetails(?)", [tournament_id]);
   } catch (error) {
     console.log("Error adding new tournament: ", error);
     throw new Error("Failed creating new tournament!");
@@ -538,5 +538,52 @@ export const setMatchDetails = async (match_id: number | string, match_date: Dat
   } catch (error) {
     console.log("Failed to update match details: ", error);
     throw new Error("Failed to update match details!");
+  }
+}
+
+export const fetchSeries = async (filter: string) => {
+  try {
+    const whereClause = !filter || filter === "all"
+      ? ""
+      : `WHERE finished IS ${filter === 'finished' ? 'TRUE' : 'FALSE'}`;
+    const [data]: any = await pool.query(
+      `SELECT * FROM series
+      LEFT JOIN series_locations USING (series_id)
+      ${whereClause}`
+    );
+    
+    const dataSet = data.reduce((acc: any[], current: any) => {
+      const key = current.series_id;
+      if (acc[key] == undefined) {
+        acc[key] = {
+          series_id: current.series_id,
+          name: current.name,
+          start_date: current.start_date,
+          end_date: current.end_date,
+          format: current.format,
+          team1_id: current.team1_id,
+          team2_id: current.team2_id,
+          team3_id: current.team3_id,
+          type: current.type,
+          total_rounds: current.total_rounds,
+          finished: current.finished,
+          locations: new Set(),
+        }
+      }
+
+      acc[key].locations.add(current.location_name);
+
+      return acc;
+    }, {});
+
+    const series = Object.values(dataSet).map((series: any) => ({
+      ...series,
+      locations: Array.from(series.locations),
+    }));
+
+    return { series: series as Series[] };
+  } catch (error) {
+    console.log("Failed to fetch series: ", error);
+    throw new Error("Failed to fetch series!");
   }
 }

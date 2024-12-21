@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import TeamSelect from "@/components/tournaments/team-select";
-import { X } from "lucide-react";
+import { Loader, X } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -39,46 +39,43 @@ import {
 } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import { PlusIcon } from "lucide-react";
-import { TOURNAMENT_FORMATS } from "@/lib/constants";
+import { MATCH_FORMATS } from "@/lib/constants";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { insertTournament } from "@/lib/actions";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 
-const tournamentFormSchema = z
+const formSchema = z
   .object({
     name: z.string().min(3, "Tournament name must be at least 3 characters"),
-    format: z.enum(TOURNAMENT_FORMATS),
-    start_date: z.date({
-      required_error: "Start date is required",
-    }),
-    end_date: z.date({
-      required_error: "End date is required",
+    format: z.enum(MATCH_FORMATS),
+    dateRange: z.object({
+      from: z.date(),
+      to: z.date(),
     }),
     team_ids: z.array(z.number()).min(4, "At least 4 teams are required"),
     locations: z.array(z.string()).min(1, "At least 1 location is required"),
-  })
-  .refine((data) => data.end_date >= data.start_date, {
-    message: "End date must be after start date",
-    path: ["end_date"],
   });
 
-type TournamentFormValues = z.infer<typeof tournamentFormSchema>;
+type TournamentFormValues = z.infer<typeof formSchema>;
 
 export default function CreateTournamentDialog() {
   const [open, setOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [locationInput, setLocationInput] = useState("");
   const { toast } = useToast();
   const router = useRouter();
 
   const form = useForm<TournamentFormValues>({
-    resolver: zodResolver(tournamentFormSchema),
+    resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
       format: "T20",
-      start_date: new Date(),
-      end_date: new Date(),
+      dateRange: {
+        from: undefined,
+        to: undefined,
+      },
       team_ids: [],
       locations: [],
     },
@@ -99,9 +96,14 @@ export default function CreateTournamentDialog() {
     );
   };
 
-  const onSubmit = async (data: TournamentFormValues) => {
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      await insertTournament(data);
+      setIsSubmitting(true);
+      await insertTournament({
+        ...values,
+        start_date: values.dateRange.from,
+        end_date: values.dateRange.to,
+      });
       form.reset();
       setOpen(false);
       toast({
@@ -112,7 +114,9 @@ export default function CreateTournamentDialog() {
       toast({
         variant: "destructive",
         description: error.message,
-      })
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -160,7 +164,7 @@ export default function CreateTournamentDialog() {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {TOURNAMENT_FORMATS.map((format) => (
+                      {MATCH_FORMATS.map((format) => (
                         <SelectItem key={format} value={format}>
                           {format.charAt(0).toUpperCase() + format.slice(1)}
                         </SelectItem>
@@ -172,86 +176,54 @@ export default function CreateTournamentDialog() {
               )}
             />
 
-            <div className="flex gap-4">
-              <FormField
-                control={form.control}
-                name="start_date"
-                render={({ field }) => (
-                  <FormItem className="flex-1">
-                    <FormLabel>Start Date</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, "dd/MM/yyyy")
+            <FormField
+              control={form.control}
+              name="dateRange"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Tournament Dates</FormLabel>
+                  <Popover modal>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {field.value?.from ? (
+                            field.value.to ? (
+                              <>
+                                {format(field.value.from, "LLL dd, y")} -{" "}
+                                {format(field.value.to, "LLL dd, y")}
+                              </>
                             ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                              format(field.value.from, "LLL dd, y")
+                            )
+                          ) : (
+                            <span>Pick a date range</span>
+                          )}
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        initialFocus
+                        mode="range"
+                        defaultMonth={field.value?.from}
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        numberOfMonths={2}
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <FormField
-                control={form.control}
-                name="end_date"
-                render={({ field }) => (
-                  <FormItem className="flex-1">
-                    <FormLabel>End Date</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, "dd/MM/yyyy")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          disabled={(date) =>
-                            date < form.getValues("start_date")
-                          }
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
 
             <FormField
               control={form.control}
@@ -326,8 +298,8 @@ export default function CreateTournamentDialog() {
               )}
             />
 
-            <Button type="submit" className="w-full">
-              Create Tournament
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting && <Loader className="animate-spin" />} Create Tournament
             </Button>
           </form>
         </Form>

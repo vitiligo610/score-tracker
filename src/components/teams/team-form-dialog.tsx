@@ -33,6 +33,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { Button } from "../ui/button";
 import { Textarea } from "../ui/textarea";
+import { Loader } from "lucide-react";
 
 interface TeamDialogProps {
   team?: Team;
@@ -153,8 +154,8 @@ const TeamFormDialog = ({ team, children }: TeamDialogProps) => {
               )}
             />
 
-            <Button type="submit" className="w-full">
-              {!team ? "Add" : "Update"} Team
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting && <Loader className="animate-spin" />} {!team ? "Add" : "Update"} Team
             </Button>
           </form>
         </Form>

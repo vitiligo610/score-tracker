@@ -21,9 +21,7 @@ const FilterButton = ({
       variant="outline"
       size="sm"
       onClick={handleClick}
-      className={cn(
-        currentFilter === value && "bg-accent"
-      )}
+      className={cn(currentFilter === value && "bg-accent")}
     >
       {currentFilter === value && <CheckIcon />}
       {label}
@@ -31,7 +29,7 @@ const FilterButton = ({
   );
 };
 
-const TournamentFilters = () => {
+const CompetitionFilters = () => {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -71,4 +69,4 @@ const TournamentFilters = () => {
   );
 };
 
-export default TournamentFilters;
+export default CompetitionFilters;

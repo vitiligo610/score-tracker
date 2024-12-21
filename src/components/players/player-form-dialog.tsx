@@ -30,7 +30,7 @@ import { BATTING_STYLES, BOWLING_STYLES, PLAYER_ROLES } from "@/lib/constants";
 import { Player } from "@/lib/definitons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
-import { UserRound } from "lucide-react";
+import { Loader, UserRound } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -60,16 +60,16 @@ const PlayerFormDialog = ({ player, children }: PlayerDialogProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
-  
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       first_name: player?.first_name ?? "",
       last_name: player?.last_name ?? "",
       // @ts-ignore
-      date_of_birth: player?.date_of_birth 
-        ? format(new Date(player.date_of_birth), 'yyyy-MM-dd')
-        : format(new Date(), 'yyyy-MM-dd'),
+      date_of_birth: player?.date_of_birth
+        ? format(new Date(player.date_of_birth), "yyyy-MM-dd")
+        : format(new Date(), "yyyy-MM-dd"),
       batting_style: player?.batting_style ?? "Right-hand",
       bowling_style: player?.bowling_style ?? "Right-arm Spin",
       player_role: player?.player_role ?? "Batsman",
@@ -87,7 +87,7 @@ const PlayerFormDialog = ({ player, children }: PlayerDialogProps) => {
         ? await insertPlayer(values)
         : await updatePlayer({ player_id: player.player_id, ...values });
       setOpen(false);
-      form.reset();
+      if (!player) form.reset();
       toast({
         description: `Player ${!player ? "added" : "updated"} successfully!`,
       });
@@ -104,9 +104,7 @@ const PlayerFormDialog = ({ player, children }: PlayerDialogProps) => {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        {children}
-      </DialogTrigger>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>{!player ? "Add New" : "Edit"} Player</DialogTitle>
@@ -178,7 +176,9 @@ const PlayerFormDialog = ({ player, children }: PlayerDialogProps) => {
                         <Input
                           type="date"
                           {...field}
-                          value={field.value ? format(field.value, "yyyy-MM-dd") : ""}
+                          value={
+                            field.value ? format(field.value, "yyyy-MM-dd") : ""
+                          }
                           max={format(new Date(), "yyyy-MM-dd")}
                           min="1900-01-01"
                           className="w-full"
@@ -276,7 +276,8 @@ const PlayerFormDialog = ({ player, children }: PlayerDialogProps) => {
               </div>
             </div>
 
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting && <Loader className="animate-spin" />}{" "}
               {!player ? "Add" : "Update"} Player
             </Button>
           </form>

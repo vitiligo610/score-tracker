@@ -20,7 +20,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { PlusIcon } from "lucide-react";
+import { Loader, PlusIcon } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { addPlayersToTeam, fetchAllPlayers } from "@/lib/actions";
@@ -38,6 +38,7 @@ export default function AddTeamPlayer({ teamId, existingPlayerIds }: AddTeamPlay
   const [players, setPlayers] = useState<PlayerWithTeam[]>([]);
   const [selectedPlayers, setSelectedPlayers] = useState<number[]>([]);
   const [loading, setLoading] = useState(false);
+  const [adding, setAdding] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("ALL");
   const { toast } = useToast();
@@ -60,6 +61,7 @@ export default function AddTeamPlayer({ teamId, existingPlayerIds }: AddTeamPlay
 
   const handleSubmit = async () => {
     try {
+      setAdding(true);
       await addPlayersToTeam(teamId, selectedPlayers);
       toast({
         description: "Players added successfully",
@@ -71,6 +73,8 @@ export default function AddTeamPlayer({ teamId, existingPlayerIds }: AddTeamPlay
         variant: "destructive",
         description: "Failed to add players",
       });
+    } finally {
+      setAdding(false);
     }
   };
 
@@ -198,10 +202,10 @@ export default function AddTeamPlayer({ teamId, existingPlayerIds }: AddTeamPlay
             Cancel
           </Button>
           <Button
-            disabled={selectedPlayers.length === 0}
+            disabled={selectedPlayers.length === 0 || adding}
             onClick={handleSubmit}
           >
-            Add Selected Players
+            {adding && <Loader className="animate-spin" />} Add Selected Players
           </Button>
         </div>
       </DialogContent>

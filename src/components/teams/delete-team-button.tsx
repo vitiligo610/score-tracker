@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { deleteTeam } from "@/lib/actions";
-import { TrashIcon } from "lucide-react";
+import { Loader, TrashIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 const DeleteTeamButton = ({ team_id }: { team_id: number }) => {
@@ -59,7 +59,7 @@ const DeleteTeamButton = ({ team_id }: { team_id: number }) => {
             onClick={handleDelete}
             disabled={isDeleting}
           >
-            {isDeleting ? "Deleting..." : "Delete"}
+            {isDeleting && <Loader className="animate-spin" />} {isDeleting ? "Deleting..." : "Delete"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

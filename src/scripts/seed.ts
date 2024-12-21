@@ -1,6 +1,7 @@
 import { pool } from "@/lib/db";
 import {
   players,
+  series,
   team_players,
   teams,
   tournaments,
@@ -308,9 +309,15 @@ const seedSeries = async () => {
       type ENUM ('bilateral', 'trilateral'),
       start_date DATE,
       end_date DATE,
-      num_matches INT DEFAULT 3,
+      total_rounds INT DEFAULT 3,
+      team1_id INT NOT NULL,
+      team2_id INT NOT NULL,
+      team3_id INT,
       winner_team_id INT,
       finished BOOLEAN DEFAULT FALSE,
+      FOREIGN KEY (team1_id) REFERENCES teams (team_id) ON DELETE CASCADE,
+      FOREIGN KEY (team2_id) REFERENCES teams (team_id) ON DELETE CASCADE,
+      FOREIGN KEY (team3_id) REFERENCES teams (team_id) ON DELETE CASCADE,
       FOREIGN KEY (winner_team_id) REFERENCES teams (team_id)
     )`
   );
@@ -325,11 +332,17 @@ const seedSeries = async () => {
     )
   `);
 
-  console.log("Creating series_teams table...");
+  console.log("Creating series_points table...") // for trilateral series
   await pool.query(
-    `CREATE TABLE IF NOT EXISTS series_teams (
-      series_id INT,
-      team_id INT,
+    `CREATE TABLE IF NOT EXISTS series_points (
+      series_id INT NOT NULL,
+      team_id INT NOT NULL,
+      matches_played INT DEFAULT 0,
+      wins INT DEFAULT 0,
+      losses INT DEFAULT 0,
+      ties INT DEFAULT 0,
+      points INT DEFAULT 0,
+      net_run_rate FLOAT DEFAULT 0.0,
       FOREIGN KEY (series_id) REFERENCES series (series_id) ON DELETE CASCADE,
       FOREIGN KEY (team_id) REFERENCES teams (team_id) ON DELETE CASCADE,
       PRIMARY KEY (series_id, team_id)
@@ -340,6 +353,33 @@ const seedSeries = async () => {
   await pool.query(
     `ALTER TABLE matches ADD FOREIGN KEY (series_id) REFERENCES series (series_id) ON DELETE CASCADE`
   );
+
+  console.log("Seeding series...");
+  for (const s of series) {
+    await pool.query(
+      `INSERT INTO series (name, start_date, end_date, format, type, total_rounds, team1_id, team2_id, team3_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        s.name,
+        s.start_date,
+        s.end_date,
+        s.format,
+        s.type,
+        s.total_rounds,
+        s.team_ids[0],
+        s.team_ids[1],
+        s.team_ids[2] ?? null,
+      ]
+    );
+
+    for (const location of s.locations) {
+      await pool.query(
+        `INSERT INTO series_locations (series_id, location_name)
+        VALUES (?, ?)`,
+        [s.series_id, location]
+      );
+    }
+  }
 }
 
 const main = async () => {
@@ -350,7 +390,7 @@ const main = async () => {
     await pool.query(`
       DROP TABLE IF EXISTS matches,
                            series_locations,
-                           series_teams,
+                           series_points,
                            series,
                            tournament_locations,
                            tournament_teams,
@@ -358,7 +398,7 @@ const main = async () => {
                            team_players,
                            players,
                            teams
-      `);
+    `);
 
     await seedTeams();
     await seedPlayers();

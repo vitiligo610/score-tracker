@@ -35,8 +35,13 @@ const TournamentPage = async ({
         </div>
       }
     >
-      <div className="container mx-auto py-8">
-        <h1 className="text-4xl font-bold mb-8">{tournament.name}</h1>
+      <div className="container mx-auto py-8 space-y-8">
+        <div>
+          <span className="text-secondary text-sm tracking-widest uppercase">
+            Tournament
+          </span>
+          <h1 className="text-4xl font-bold text-primary">{tournament.name}</h1>
+        </div>
         <MatchSchedule tournament={tournament} matches={matches} />
       </div>
     </Suspense>

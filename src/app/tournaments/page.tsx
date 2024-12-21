@@ -1,5 +1,5 @@
 import CreateTournamentDialog from "@/components/tournaments/create-tournament-dialog";
-import TournamentFilters from "@/components/tournaments/tournament-filteres";
+import CompetitionFilters from "@/components/layout/competition-filters";
 import { Metadata } from "next";
 import AllTournaments from "@/components/tournaments/all-tournaments";
 import { Suspense } from "react";
@@ -26,13 +26,13 @@ const Tournaments = async ({
         </h1>
         <CreateTournamentDialog />
       </div>
-      <TournamentFilters />
+      <CompetitionFilters />
 
       <Suspense fallback={<AllTournamentsSkeleton />}>
         <AllTournaments filter={params.filter} />
       </Suspense>
     </div>
   );
-}
+};
 
 export default Tournaments;

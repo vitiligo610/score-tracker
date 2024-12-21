@@ -22,7 +22,7 @@ const generatePlaceholderMatches = (
   existingMatches: Match[]
 ): Match[] => {
   const expectedCount = getExpectedMatchesForRound(
-    tournament.total_teams,
+    tournament.total_teams ?? 0,
     round
   );
   const missingCount = expectedCount - existingMatches.length;
@@ -51,7 +51,7 @@ const MatchesSchedule = ({ tournament, matches }: MatchesScheduleProps) => {
   }, {} as Record<number, Match[]>);
 
   const roundsWithPlaceholders = Array.from(
-    { length: tournament.total_rounds },
+    { length: tournament.total_rounds ?? 0 },
     (_, index) => {
       const round = index + 1;
       const existingMatches = matchesByRound[round] || [];
@@ -59,7 +59,7 @@ const MatchesSchedule = ({ tournament, matches }: MatchesScheduleProps) => {
       const isFutureRound =
         existingMatches.every((match) => match.status === "tbd") &&
         existingMatches.length < getExpectedMatchesForRound(
-          tournament.total_teams,
+          tournament.total_teams ?? 0,
           round
         );
       const placeholderMatches = isFutureRound
@@ -79,7 +79,7 @@ const MatchesSchedule = ({ tournament, matches }: MatchesScheduleProps) => {
         <RoundSection
           key={round}
           roundNumber={round}
-          totalRounds={tournament.total_rounds}
+          totalRounds={tournament.total_rounds ?? 0}
           matches={matches}
           tournamentStart={new Date(tournament.start_date)}
           tournamentEnd={new Date(tournament.end_date)}

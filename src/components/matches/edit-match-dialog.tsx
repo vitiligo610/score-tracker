@@ -50,7 +50,7 @@ const EditMatchDialog = ({
   const [date, setDate] = useState<Date | undefined>(
     match.match_date ? new Date(match.match_date) : undefined
   );
-  const [location, setLocation] = useState<string | undefined>(match.location);
+  const [location, setLocation] = useState<string | undefined>(match.location ?? "");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();

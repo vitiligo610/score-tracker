@@ -1,4 +1,11 @@
-import { BATTING_STYLES, BOWLING_STYLES, MATCH_STATUS, PLAYER_ROLES, TOURNAMENT_FORMATS } from "@/lib/constants";
+import {
+  BATTING_STYLES,
+  BOWLING_STYLES,
+  MATCH_STATUS,
+  PLAYER_ROLES,
+  MATCH_FORMATS,
+  SERIES_TYPES,
+} from "@/lib/constants";
 
 export type Team = {
   team_id: number;
@@ -6,13 +13,13 @@ export type Team = {
   logo_url?: string;
   founded_year: number;
   description: string;
-}
+};
 
 export type TeamWithoutId = Omit<Team, "team_id">;
 
-type BattingStyle = typeof BATTING_STYLES[number];
-type BowlingStyle = typeof BOWLING_STYLES[number];
-type PlayerRole = typeof PLAYER_ROLES[number];
+type BattingStyle = (typeof BATTING_STYLES)[number];
+type BowlingStyle = (typeof BOWLING_STYLES)[number];
+type PlayerRole = (typeof PLAYER_ROLES)[number];
 
 export type Player = {
   player_id: number;
@@ -36,24 +43,7 @@ export interface TeamPlayer {
   player_id: number;
 }
 
-type TournamentFormat = typeof TOURNAMENT_FORMATS[number];
-
-export type Tournament = {
-  tournament_id: number;
-  name: string;
-  start_date: Date;
-  end_date: Date;
-  format: TournamentFormat;
-  total_rounds: number;
-  total_teams: number;
-  locations: string[] | [];
-  team_ids: number[] | [];
-  finished?: boolean;
-}
-
-export type TournamentWithoutId = Omit<Tournament, "tournament_id">;
-
-export type MatchStatus = typeof MATCH_STATUS[number];
+export type MatchStatus = (typeof MATCH_STATUS)[number];
 
 export type Match = {
   match_id: number | string;
@@ -66,12 +56,41 @@ export type Match = {
   status: MatchStatus;
   team1: Team | null;
   team2: Team | null;
+};
+
+type MatchFormat = (typeof MATCH_FORMATS)[number];
+
+interface Competition {
+  name: string;
+  start_date: Date;
+  end_date: Date;
+  format: MatchFormat;
+  total_rounds?: number;
+  locations: string[] | [];
+  team_ids: number[] | [];
+  finished?: boolean;
 }
+
+export interface Tournament extends Competition {
+  tournament_id: number;
+  total_teams?: number;
+};
+
+export type TournamentWithoutId = Omit<Tournament, "tournament_id">;
 
 export interface TournamentMatch extends Match {
   tournament_id: number;
-}
+};
+
+type SeriesType = (typeof SERIES_TYPES)[number];
+
+export interface Series extends Competition {
+  series_id: number;
+  type: SeriesType;
+};
+
+export type SeriesWithoutId = Omit<Series, "series_id">;
 
 export interface SeriesMatch extends Match {
   series_id: number;
-}
+};

@@ -1,4 +1,4 @@
-import { Player, Team, TeamPlayer } from "@/lib/definitons";
+import { Player, Series, Team, TeamPlayer, Tournament } from "@/lib/definitons";
 
 export const teams: Team[] = [
   {
@@ -548,7 +548,7 @@ export const team_players: TeamPlayer[] = [
   ...(players.slice(36, 48).map(player => ({ team_id: 4, player_id: player.player_id }))),
 ];
 
-export const tournaments = [
+export const tournaments: Tournament[] = [
   {
     tournament_id: 1,
     name: "Premier Cricket League 2024",
@@ -556,7 +556,9 @@ export const tournaments = [
     end_date: new Date("2024-10-30"),
     format: "T20",
     locations: ["Oval Stadium", "Central Ground", "City Arena"],
-    team_ids: [1, 2, 3, 4, 5]
+    team_ids: [1, 2, 3, 4, 5],
+    total_rounds: 3,
+    total_teams: 5,
   },
   {
     tournament_id: 2,
@@ -565,6 +567,33 @@ export const tournaments = [
     end_date: new Date("2024-10-15"),
     format: "ODI",
     locations: ["National Stadium", "Sports Complex"],
-    team_ids: [1, 2, 3, 4]
+    team_ids: [1, 2, 3, 4],
+    total_rounds: 2,
+    total_teams: 4,
   },
+];
+
+export const series: Series[] = [
+  {
+    series_id: 1,
+    name: "Australia vs England Series",
+    start_date: new Date("2024-11-01"),
+    end_date: new Date("2024-12-15"),
+    format: "T20",
+    locations: ["Melbourne Cricket Ground", "Sydney Cricket Ground"],
+    team_ids: [1, 2],
+    total_rounds: 3,
+    type: "bilateral"
+  },
+  {
+    series_id: 2,
+    name: "Asian Cricket Cup",
+    start_date: new Date("2024-11-01"),
+    end_date: new Date("2024-12-20"),
+    format: "ODI",
+    locations: ["Dubai International Stadium", "Sharjah Cricket Stadium", "Abu Dhabi Cricket Stadium"],
+    team_ids: [3, 4, 5],
+    total_rounds: 2,
+    type: "trilateral"
+  }
 ];

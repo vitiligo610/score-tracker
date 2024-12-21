@@ -51,7 +51,7 @@ const RemovePlayerButton = ({ player_id, team_id }: Props) => {
 
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
-      <AlertDialogTrigger asChild>
+      <AlertDialogTrigger>
         <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
