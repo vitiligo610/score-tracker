@@ -33,7 +33,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { insertSeries } from "@/lib/actions";
-import { MATCH_FORMATS, SERIES_TYPES } from "@/lib/constants";
+import { MATCH_FORMATS, SERIES_ROUNDS, SERIES_TYPES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
@@ -49,6 +49,7 @@ const formSchema = z
     name: z.string().min(3, "Series name must be at least 3 characters"),
     format: z.enum(MATCH_FORMATS),
     type: z.enum(SERIES_TYPES),
+    total_rounds: z.string().transform(Number),
     dateRange: z.object({
       from: z.date({
         required_error: "Start date is required",
@@ -93,6 +94,8 @@ const CreateSeriesDialog = () => {
       name: "",
       format: "T20",
       type: "bilateral",
+      // @ts-ignore
+      total_rounds: "3",
       dateRange: {
         from: undefined,
         to: undefined,
@@ -146,9 +149,9 @@ const CreateSeriesDialog = () => {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Tournament Name</FormLabel>
+                  <FormLabel>Series Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter tournament name" {...field} />
+                    <Input placeholder="Enter series name" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -183,40 +186,71 @@ const CreateSeriesDialog = () => {
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="type"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Series Type</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select type" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {SERIES_TYPES.map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type.charAt(0).toUpperCase() + type.slice(1)}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="flex gap-4">
+              <FormField
+                control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem className="flex-1">
+                    <FormLabel>Series Type</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {SERIES_TYPES.map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {type.charAt(0).toUpperCase() + type.slice(1)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="total_rounds"
+                render={({ field }) => (
+                  <FormItem className="flex-1">
+                    <FormLabel>Rounds</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={String(field.value)}
+                      disabled={form.getValues("type") === "trilateral"}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select total rounds" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {SERIES_ROUNDS.map((round) => (
+                          <SelectItem key={round} value={String(round)}>
+                            {round}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <FormField
               control={form.control}
               name="dateRange"
               render={({ field }) => (
                 <FormItem className="flex flex-col">
-                  <FormLabel>Tournament Dates</FormLabel>
+                  <FormLabel>Series Dates</FormLabel>
                   <Popover modal>
                     <PopoverTrigger asChild>
                       <FormControl>

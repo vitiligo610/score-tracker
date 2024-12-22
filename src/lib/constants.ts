@@ -28,3 +28,5 @@ export const MATCH_STATUS = [
 ] as const;
 
 export const SERIES_TYPES = ["bilateral", "trilateral"] as const;
+
+export const SERIES_ROUNDS = [3, 5, 7] as const;

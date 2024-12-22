@@ -52,7 +52,9 @@ const TeamSelect = ({ value, onChange, maxTeams }: TeamSelectProps) => {
         >
           {value.length === 0
             ? "Select teams..."
-            : `${value.length}${maxTeams ? ` / ${maxTeams}` : ""} teams selected`}
+            : `${value.length}${
+                maxTeams ? ` / ${maxTeams}` : ""
+              } teams selected`}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
@@ -75,7 +77,8 @@ const TeamSelect = ({ value, onChange, maxTeams }: TeamSelectProps) => {
                       ))
                   : teams.map((team) => {
                       const isSelected = value.includes(team.team_id);
-                      const isDisabled = maxTeams && value.length >= maxTeams && !isSelected;
+                      const isDisabled =
+                        maxTeams && value.length >= maxTeams && !isSelected;
 
                       return (
                         <CommandItem
@@ -93,13 +96,20 @@ const TeamSelect = ({ value, onChange, maxTeams }: TeamSelectProps) => {
                             isDisabled && "opacity-50 cursor-not-allowed"
                           )}
                         >
-                          <Check
-                            className={cn(
-                              "mr-2 h-4 w-4",
-                              isSelected ? "opacity-100" : "opacity-0"
-                            )}
-                          />
-                          {team.name}
+                          <div className="flex items-center gap-2 w-full">
+                            <div className="flex-1 flex gap-3">
+                              <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
+                                {team.name[0]}
+                              </div>
+                              <span>{team.name}</span>
+                            </div>
+                            <Check
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                isSelected ? "opacity-100" : "opacity-0"
+                              )}
+                            />
+                          </div>
                         </CommandItem>
                       );
                     })}

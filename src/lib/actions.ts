@@ -591,14 +591,15 @@ export const fetchSeries = async (filter: string) => {
 export const insertSeries = async (series: SeriesWithoutId) => {
   try {
     await pool.query(
-      `INSERT INTO series (name, format, type, start_date, end_date, team1_id, team2_id, team3_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO series (name, format, type, start_date, end_date, total_rounds, team1_id, team2_id, team3_id)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         series.name,
         series.format,
         series.type,
         series.start_date,
         series.end_date,
+        series.type !== "trilateral" ? series.total_rounds : 2,
         series.team_ids[0],
         series.team_ids[1],
         series.team_ids[2] ?? null,
