@@ -314,11 +314,7 @@ const seedSeries = async () => {
       team2_id INT NOT NULL,
       team3_id INT,
       winner_team_id INT,
-      finished BOOLEAN DEFAULT FALSE,
-      FOREIGN KEY (team1_id) REFERENCES teams (team_id) ON DELETE CASCADE,
-      FOREIGN KEY (team2_id) REFERENCES teams (team_id) ON DELETE CASCADE,
-      FOREIGN KEY (team3_id) REFERENCES teams (team_id) ON DELETE CASCADE,
-      FOREIGN KEY (winner_team_id) REFERENCES teams (team_id)
+      finished BOOLEAN DEFAULT FALSE
     )`
   );
 
@@ -329,6 +325,17 @@ const seedSeries = async () => {
       location_name VARCHAR(100),
       FOREIGN KEY (series_id) REFERENCES series (series_id) ON DELETE CASCADE,
       PRIMARY KEY (series_id, location_name)
+    )
+  `);
+
+  console.log("Creating series_teams table...");
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS series_teams (
+      series_id INT,
+      team_id INT,
+      FOREIGN KEY (series_id) REFERENCES series (series_id) ON DELETE CASCADE,
+      FOREIGN KEY (team_id) REFERENCES teams (team_id) ON DELETE CASCADE,
+      PRIMARY KEY (series_id, team_id)
     )
   `);
 
@@ -357,8 +364,8 @@ const seedSeries = async () => {
   console.log("Seeding series...");
   for (const s of series) {
     await pool.query(
-      `INSERT INTO series (name, start_date, end_date, format, type, total_rounds, team1_id, team2_id, team3_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO series (name, start_date, end_date, format, type, total_rounds)
+      VALUES (?, ?, ?, ?, ?, ?)`,
       [
         s.name,
         s.start_date,
@@ -366,9 +373,6 @@ const seedSeries = async () => {
         s.format,
         s.type,
         s.total_rounds,
-        s.team_ids[0],
-        s.team_ids[1],
-        s.team_ids[2] ?? null,
       ]
     );
 
@@ -377,6 +381,14 @@ const seedSeries = async () => {
         `INSERT INTO series_locations (series_id, location_name)
         VALUES (?, ?)`,
         [s.series_id, location]
+      );
+    }
+
+    for (const team_id of s.team_ids) {
+      await pool.query(
+        `INSERT INTO series_teams (series_id, team_id)
+        VALUES (?, ?)`,
+        [s.series_id, team_id]
       );
     }
   }

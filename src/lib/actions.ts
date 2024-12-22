@@ -591,8 +591,8 @@ export const fetchSeries = async (filter: string) => {
 export const insertSeries = async (series: SeriesWithoutId) => {
   try {
     await pool.query(
-      `INSERT INTO series (name, format, type, start_date, end_date, total_rounds, team1_id, team2_id, team3_id)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO series (name, format, type, start_date, end_date, total_rounds)
+      VALUES (?, ?, ?, ?, ?, ?)`,
       [
         series.name,
         series.format,
@@ -600,13 +600,20 @@ export const insertSeries = async (series: SeriesWithoutId) => {
         series.start_date,
         series.end_date,
         series.type !== "trilateral" ? series.total_rounds : 2,
-        series.team_ids[0],
-        series.team_ids[1],
-        series.team_ids[2] ?? null,
       ]
     );
 
     const series_id = await getLastInsertedId();
+
+    await Promise.all(
+      series.team_ids.map(team_id =>
+        pool.query(
+          `INSERT INTO series_teams (series_id, team_id)
+          VALUES (?, ?)`,
+          [series_id, team_id]
+        )
+      )
+    );
 
     await Promise.all(
       series.locations.map(location => 
