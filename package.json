@@ -28,6 +28,7 @@
     "clsx": "^2.1.1",
     "cmdk": "1.0.0",
     "date-fns": "^4.1.0",
+    "embla-carousel-react": "^8.5.1",
     "lucide-react": "^0.468.0",
     "mysql2": "^3.11.5",
     "next": "15.0.3",
