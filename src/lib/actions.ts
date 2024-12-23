@@ -196,6 +196,21 @@ export const fetchAllTeams = async () => {
   }
 }
 
+export const fetchTeamNameById = async (team_id: number) => {
+  try {
+    const [data]: any = await pool.query(
+      `SELECT name FROM teams
+      WHERE team_id = ?`,
+      [team_id]
+    );
+
+    return data[0].name as string;
+  } catch (error) {
+    console.log("Error fetching team name: ", error);
+    throw new Error("Failed to fetch team name!");
+  }
+}
+
 export const fetchTeamById = async (team_id: number) => {
   try {
     const [data]: any = await pool.query(

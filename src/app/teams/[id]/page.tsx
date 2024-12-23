@@ -1,20 +1,27 @@
 import AddTeamPlayer from "@/components/teams/add-team-player";
 import TeamPlayersList from "@/components/teams/team-players-list";
-import { fetchTeamById, fetchTeamPlayers } from "@/lib/actions";
+import { fetchTeamById, fetchTeamNameById, fetchTeamPlayers } from "@/lib/actions";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Team",
-};
-
-const TeamPage = async ({
-  params,
-}: {
+interface Props {
   params: {
     id: string;
+  }
+};
+
+export const generateMetadata = async ({ params }: Props) => {
+  const p = await params;
+  const team_id = Number(p.id);
+
+  const name = await fetchTeamNameById(team_id);
+
+  return {
+    title: name,
   };
-}) => {
+}
+
+const TeamPage = async ({ params }: Props) => {
   const p = await params;
   const { id } = p;
   const team_id = Number(id);
