@@ -1,26 +1,33 @@
 import BilateralSeriesSchedule from "@/components/matches/bilateral-series-schedule";
 import TrilateralSeriesSchedule from "@/components/matches/trilateral-series-schedule";
 import CompetitionSkeleton from "@/components/ui/skeletons/competition-skeleton";
-import { fetchSeriesById, fetchSeriesMatches } from "@/lib/actions";
-import { Metadata } from "next";
+import { fetchSeriesById, fetchSeriesMatches, fetchSeriesNameById } from "@/lib/actions";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
-export const metadata: Metadata = {
-  title: "Tournament",
-};
-
-const SeriesPage = async ({
-  params,
-}: {
+interface Props {
   params: {
     id: string;
+  }
+};
+
+export const generateMetadata = async ({ params }: Props) => {
+  const p = await params;
+  const series_id = Number(p.id);
+
+  const name = await fetchSeriesNameById(series_id);
+
+  return {
+    title: name,
   };
-}) => {
+}
+
+const SeriesPage = async ({ params }: Props) => {
   const p = await params;
   const series_id = Number(p.id);
   const { series } = await fetchSeriesById(series_id);
   const { matches } = await fetchSeriesMatches(series_id);
+  await fetchSeriesNameById(series_id);
 
   if (!series) {
     notFound();

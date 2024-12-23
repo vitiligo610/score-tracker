@@ -418,6 +418,21 @@ export const insertTournament = async (tournament: TournamentWithoutId) => {
   }
 }
 
+export const fetchTournamentNameById = async (tournament_id: number) => {
+  try {
+    const [data]: any = await pool.query(
+      `SELECT name FROM tournaments
+      WHERE tournament_id = ?`,
+      [tournament_id]
+    );
+
+    return data[0].name as string;
+  } catch (error) {
+    console.log("Error fetching tournament name: ", error);
+    throw new Error("Failed to fetch tournament name!");
+  }
+}
+
 export const fetchTournamentById = async (tournament_id: number) => {
   try {
     const [data]: any = await pool.query(
@@ -630,6 +645,21 @@ export const insertSeries = async (series: SeriesWithoutId) => {
   } catch (error) {
     console.log("Error inserting new series: ", error);
     throw new Error("Failed to create series!");
+  }
+}
+
+export const fetchSeriesNameById = async (series_id: number) => {
+  try {
+    const [data]: any = await pool.query(
+      `SELECT name FROM series
+      WHERE series_id = ?`,
+      [series_id]
+    );
+
+    return data[0].name as string;
+  } catch (error) {
+    console.log("Error fetching series name: ", error);
+    throw new Error("Failed to fetch series name!");
   }
 }
 
