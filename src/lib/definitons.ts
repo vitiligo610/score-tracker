@@ -92,5 +92,6 @@ export interface Series extends Competition {
 export type SeriesWithoutId = Omit<Series, "series_id">;
 
 export interface SeriesMatch extends Match {
+  [x: string]: any;
   series_id: number;
 };

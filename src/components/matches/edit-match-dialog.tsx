@@ -33,16 +33,16 @@ import { useToast } from "@/hooks/use-toast";
 
 interface EditMatchDialogProps {
   match: Match;
-  tournamentStart: Date;
-  tournamentEnd: Date;
+  startDate: Date;
+  endDate: Date;
   locations: string[];
-  children: React.ReactNode,
+  children: React.ReactNode;
 }
 
 const EditMatchDialog = ({
   match,
-  tournamentStart,
-  tournamentEnd,
+  startDate: startDate,
+  endDate: endDate,
   locations,
   children,
 }: EditMatchDialogProps) => {
@@ -50,7 +50,9 @@ const EditMatchDialog = ({
   const [date, setDate] = useState<Date | undefined>(
     match.match_date ? new Date(match.match_date) : undefined
   );
-  const [location, setLocation] = useState<string | undefined>(match.location ?? "");
+  const [location, setLocation] = useState<string | undefined>(
+    match.location ?? ""
+  );
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
@@ -76,9 +78,7 @@ const EditMatchDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        {children}
-      </DialogTrigger>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit Match Details</DialogTitle>
@@ -105,10 +105,10 @@ const EditMatchDialog = ({
                   selected={date}
                   onSelect={setDate}
                   disabled={(date) =>
-                    date < tournamentStart || date > tournamentEnd
+                    date < startDate || date > endDate
                   }
-                  fromDate={tournamentStart}
-                  toDate={tournamentEnd}
+                  fromDate={startDate}
+                  toDate={endDate}
                   initialFocus
                 />
               </PopoverContent>
@@ -131,11 +131,7 @@ const EditMatchDialog = ({
             </Select>
           </div>
 
-          <Button 
-            className="w-full" 
-            onClick={handleSave} 
-            disabled={isLoading}
-          >
+          <Button className="w-full" onClick={handleSave} disabled={isLoading}>
             {isLoading && <Loader className="animate-spin" />}
             Update Details
           </Button>
@@ -143,6 +139,6 @@ const EditMatchDialog = ({
       </DialogContent>
     </Dialog>
   );
-}
+};
 
 export default EditMatchDialog;

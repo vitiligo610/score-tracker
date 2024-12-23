@@ -3,8 +3,7 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import MatchSchedule from "@/components/matches/matches-schedule";
 import { Suspense } from "react";
-import TournamentHeaderSkeleton from "@/components/ui/skeletons/tournament-header-skeleton";
-import MatchScheduleSkeleton from "@/components/ui/skeletons/match-schedule-skeleton";
+import CompetitionSkeleton from "@/components/ui/skeletons/competition-skeleton";
 
 export const metadata: Metadata = {
   title: "Tournament",
@@ -27,14 +26,7 @@ const TournamentPage = async ({
   }
 
   return (
-    <Suspense
-      fallback={
-        <div className="container mx-auto py-8 space-y-8">
-          <TournamentHeaderSkeleton />
-          <MatchScheduleSkeleton />
-        </div>
-      }
-    >
+    <Suspense fallback={<CompetitionSkeleton />}>
       <div className="container mx-auto py-8 space-y-8">
         <div>
           <span className="text-secondary text-sm tracking-widest uppercase">

@@ -261,6 +261,7 @@ const seedTournaments = async () => {
     `ALTER TABLE matches ADD FOREIGN KEY (tournament_id) REFERENCES tournaments (tournament_id) ON DELETE CASCADE`
   );
 
+  console.log("Creating tournament procedures...");
   await createAddTeamToTournamentProc();
   await createSetTournamentDetailsProc();
   await createInitialTournamentScheduleProc();
@@ -298,6 +299,75 @@ const seedTournaments = async () => {
     await pool.query("CALL CreateInitialTournamentSchedule(?)", [tournament.tournament_id]);
   }
 };
+
+const createInitialSeriesScheduleProc = async () => {
+  await pool.query("DROP PROCEDURE IF EXISTS CreateInitialSeriesSchedule");
+  await pool.query(
+    `CREATE PROCEDURE CreateInitialSeriesSchedule (IN p_series_id INT)
+    BEGIN
+        DECLARE series_type VARCHAR(30);
+        DECLARE series_rounds INT;
+        DECLARE i INT;
+        DECLARE team1_id INT;
+        DECLARE team2_id INT;
+
+        SELECT type INTO series_type FROM series
+        WHERE series_id = p_series_id;
+
+        SELECT total_rounds INTO series_rounds FROM series
+        WHERE series_id = p_series_id;
+
+        CREATE TEMPORARY TABLE temp_teams (id INT AUTO_INCREMENT PRIMARY KEY, team_id INT);
+
+        INSERT INTO temp_teams (team_id)
+        SELECT team_id FROM series_teams
+        WHERE series_id = p_series_id;
+
+        IF series_type = 'bilateral' THEN
+            SET i = 1;
+
+            SELECT team_id INTO team1_id FROM temp_teams
+            WHERE id = 1;
+
+            SELECT team_id INTO team2_id FROM temp_teams
+            WHERE id = 2;
+
+            WHILE i <= series_rounds DO
+                INSERT INTO matches (series_id, team1_id, team2_id, round, status)
+                VALUES (p_series_id, team1_id, team2_id, i, 'scheduled');
+
+                SET i = i + 1;
+            END WHILE;
+        ELSE
+            SELECT team_id INTO team1_id FROM temp_teams
+            WHERE id = 1;
+            SELECT team_id INTO team2_id FROM temp_teams
+            WHERE id = 2;
+
+            INSERT INTO matches (series_id, team1_id, team2_id, round, status)
+            VALUES (p_series_id, team1_id, team2_id, 1, 'scheduled');
+
+            SELECT team_id INTO team1_id FROM temp_teams
+            WHERE id = 2;
+            SELECT team_id INTO team2_id FROM temp_teams
+            WHERE id = 3;
+
+            INSERT INTO matches (series_id, team1_id, team2_id, round, status)
+            VALUES (p_series_id, team1_id, team2_id, 1, 'scheduled');
+
+            SELECT team_id INTO team1_id FROM temp_teams
+            WHERE id = 3;
+            SELECT team_id INTO team2_id FROM temp_teams
+            WHERE id = 1;
+
+            INSERT INTO matches (series_id, team1_id, team2_id, round, status)
+            VALUES (p_series_id, team1_id, team2_id, 1, 'scheduled');
+        END IF;
+
+        DROP TEMPORARY TABLE temp_teams;
+    END;`
+  );
+}
 
 const seedSeries = async () => {
   console.log("Creating series table...");
@@ -361,6 +431,9 @@ const seedSeries = async () => {
     `ALTER TABLE matches ADD FOREIGN KEY (series_id) REFERENCES series (series_id) ON DELETE CASCADE`
   );
 
+  console.log("Creating series procedures...");
+  await createInitialSeriesScheduleProc();
+
   console.log("Seeding series...");
   for (const s of series) {
     await pool.query(
@@ -391,6 +464,8 @@ const seedSeries = async () => {
         [s.series_id, team_id]
       );
     }
+
+    await pool.query("CALL CreateInitialSeriesSchedule(?)", [s.series_id]);
   }
 }
 
@@ -403,6 +478,7 @@ const main = async () => {
       DROP TABLE IF EXISTS matches,
                            series_locations,
                            series_points,
+                           series_teams,
                            series,
                            tournament_locations,
                            tournament_teams,

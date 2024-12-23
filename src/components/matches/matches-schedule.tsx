@@ -1,4 +1,4 @@
-import { Match, Tournament } from "@/lib/definitons";
+import { Match, Series, Tournament } from "@/lib/definitons";
 import RoundSection from "@/components/matches/round-section";
 
 interface MatchesScheduleProps {
@@ -16,22 +16,24 @@ const getExpectedMatchesForRound = (
 };
 
 // Generate placeholder matches for rounds missing some matches
-const generatePlaceholderMatches = (
+export const generatePlaceholderMatches = (
   round: number,
-  tournament: Tournament,
+  competition: Tournament | Series,
   existingMatches: Match[]
 ): Match[] => {
-  const expectedCount = getExpectedMatchesForRound(
-    tournament.total_teams ?? 0,
-    round
-  );
+  const expectedCount = 'tournament_id' in competition 
+    ? getExpectedMatchesForRound(competition.total_teams ?? 0, round)
+    : 3;
+
   const missingCount = expectedCount - existingMatches.length;
 
-  if (missingCount <= 0) return []; // No placeholders if the round is fully defined
+  if (missingCount <= 0) return [];
 
   return Array.from({ length: missingCount }, (_, index) => ({
     match_id: `placeholder-${round}-${index}`,
-    tournament_id: tournament.tournament_id,
+    ...'tournament_id' in competition 
+      ? { tournament_id: competition.tournament_id }
+      : { series_id: competition.series_id },
     round: round,
     status: "tbd" as const,
     team1_id: undefined,

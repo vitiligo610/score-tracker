@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { Player, PlayerWithoutId, PlayerWithTeam, Series, SeriesWithoutId, Team, TeamPlayer, TeamWithoutId, Tournament, TournamentMatch, TournamentWithoutId } from "@/lib/definitons";
+import { Player, PlayerWithoutId, PlayerWithTeam, Series, SeriesMatch, SeriesWithoutId, Team, TeamPlayer, TeamWithoutId, Tournament, TournamentMatch, TournamentWithoutId } from "@/lib/definitons";
 import { pool } from "@/lib/db";
 import { PLAYERS_PER_PAGE, TEAMS_PER_PAGE } from "@/lib/constants";
 
@@ -411,6 +411,7 @@ export const insertTournament = async (tournament: TournamentWithoutId) => {
     );
 
     await pool.query("CALL SetTournamentDetails(?)", [tournament_id]);
+    await pool.query("CALL CreateInitialTournamentSchedule(?)", [tournament_id]);
   } catch (error) {
     console.log("Error adding new tournament: ", error);
     throw new Error("Failed creating new tournament!");
@@ -624,8 +625,119 @@ export const insertSeries = async (series: SeriesWithoutId) => {
         )
       )
     );
+
+    await pool.query("CALL CreateInitialSeriesSchedule(?)", [series_id]);
   } catch (error) {
     console.log("Error inserting new series: ", error);
     throw new Error("Failed to create series!");
+  }
+}
+
+export const fetchSeriesById = async (series_id: number) => {
+  try {
+    const [data]: any = await pool.query(
+      `SELECT * FROM series
+      LEFT JOIN series_locations USING (series_id)
+      WHERE series_id = ?`,
+      [series_id]
+    );
+
+    const dataSet = data.reduce((acc: any[], current: any) => {
+      const key = current.series_id;
+      if (acc[key] == undefined) {
+        acc[key] = {
+          series_id: current.series_id,
+          name: current.name,
+          start_date: current.start_date,
+          end_date: current.end_date,
+          format: current.format,
+          finished: current.finished,
+          total_rounds: current.total_rounds,
+          type: current.type,
+          locations: new Set(),
+        }
+      }
+
+      acc[key].locations.add(current.location_name);
+
+      return acc;
+    }, {});
+
+    const series = Object.values(dataSet).map((series: any) => ({
+      ...series,
+      locations: Array.from(series.locations),
+    }));
+
+    return { series: series[0] as Series };
+  } catch (error) {
+    console.log("Error fetching series by id: ", error);
+    throw new Error("Failed to fetch series!");
+  }
+}
+
+export const fetchSeriesMatches = async (series_id: number) => {
+  try {
+    const [matches]: any = await pool.query(
+      `SELECT 
+          m.match_id AS match_id,
+          m.tournament_id AS tournament_id,
+          m.team1_id AS team1_id,
+          m.team2_id AS team2_id,
+          m.winner_team_id AS winner_team_id,
+          m.match_date AS match_date,
+          m.location AS location,
+          m.round AS round,
+          m.status AS status,
+          t1.team_id AS team1_team_id,
+          t1.name AS team1_name,
+          t1.logo_url AS team1_logo_url,
+          t1.founded_year AS team1_founded_year,
+          t1.description AS team1_description,
+          t2.team_id AS team2_team_id,
+          t2.name AS team2_name,
+          t2.logo_url AS team2_logo_url,
+          t2.founded_year AS team2_founded_year,
+          t2.description AS team2_description
+      FROM matches m
+      LEFT JOIN teams t1 ON m.team1_id = t1.team_id
+      LEFT JOIN teams t2 ON m.team2_id = t2.team_id
+      WHERE m.series_id = ?`,
+      [series_id]
+    );
+
+    const transformedMatches = matches.map((match: any) => {
+      const cleanedMatch = Object.fromEntries(
+        Object.entries(match).filter(([key]) => 
+          !key.startsWith('team1_') && 
+          !key.startsWith('team2_') &&
+          key !== "team1_id" &&
+          key !== "team2_id"
+        )
+      );
+    
+      return {
+        ...cleanedMatch,
+        team1: match.team1_team_id ? {
+          team_id: match.team1_team_id,
+          name: match.team1_name,
+          logo_url: match.team1_logo_url,
+          founded_year: match.team1_founded_year,
+          description: match.team1_description,
+        } : null,
+        team2: match.team2_team_id ? {
+          team_id: match.team2_team_id,
+          name: match.team2_name,
+          logo_url: match.team2_logo_url,
+          founded_year: match.team2_founded_year,
+          description: match.team2_description,
+        } : null
+      };
+    });
+    
+
+    return { matches: transformedMatches as SeriesMatch[] };
+  } catch (error) {
+    console.log("Error fetching series matches: ", error);
+    throw new Error("Failed to fetch series matches!");
   }
 }

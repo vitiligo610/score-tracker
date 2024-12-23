@@ -4,7 +4,7 @@ import SeriesCard from "@/components/series/series-card";
 const AllSeries = async ({ filter }: { filter?: string }) => {
   const { series } = await fetchSeries(filter || "all");
 
-  console.log("fetched series: ", series);
+  // console.log("fetched series: ", series);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -1,5 +1,5 @@
 import { Match } from "@/lib/definitons";
-import MatchCard from "./match-card";
+import MatchCard from "@/components/matches/match-card";
 
 interface RoundSectionProps {
   roundNumber: number;
@@ -39,17 +39,17 @@ const RoundSection = ({
       </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {matches.map((match) => (
-          <MatchCard 
-            key={match.match_id} 
+          <MatchCard
+            key={match.match_id}
             match={match}
-            tournamentStart={tournamentStart}
-            tournamentEnd={tournamentEnd}
+            startDate={tournamentStart}
+            endDate={tournamentEnd}
             locations={locations}
           />
         ))}
       </div>
     </section>
   );
-}
+};
 
 export default RoundSection;

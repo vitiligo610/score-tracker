@@ -10,15 +10,15 @@ import { EditIcon } from "lucide-react";
 
 interface MatchCardProps {
   match: Match;
-  tournamentStart: Date;
-  tournamentEnd: Date;
+  startDate: Date;
+  endDate: Date;
   locations: string[];
 }
 
 const MatchCard = ({
   match,
-  tournamentStart,
-  tournamentEnd,
+  startDate,
+  endDate,
   locations,
 }: MatchCardProps) => {
   const isTBD = !match.team1?.team_id && !match.team2?.team_id;
@@ -95,8 +95,8 @@ const MatchCard = ({
         </Button>
         <EditMatchDialog
           match={match}
-          tournamentStart={tournamentStart}
-          tournamentEnd={tournamentEnd}
+          startDate={startDate}
+          endDate={endDate}
           locations={locations}
         >
           <Button variant="secondary" disabled={isTBD}>
