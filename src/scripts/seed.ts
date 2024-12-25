@@ -72,6 +72,7 @@ const seedTeamPlayers = async () => {
     CREATE TABLE IF NOT EXISTS team_players(
       team_id INT,
       player_id INT,
+      batting_order INT,
       FOREIGN KEY (team_id) REFERENCES teams(team_id) ON DELETE CASCADE,
       FOREIGN KEY (player_id) REFERENCES players(player_id) ON DELETE CASCADE,
       PRIMARY KEY (team_id, player_id)
@@ -82,14 +83,13 @@ const seedTeamPlayers = async () => {
   await Promise.all(
     team_players.map((team_player) =>
       pool.query(
-        `INSERT INTO team_players (team_id, player_id)
-        VALUES (?, ?)`,
-        [team_player.team_id, team_player.player_id]
+        `INSERT INTO team_players (team_id, player_id, batting_order)
+        VALUES (?, ?, ?)`,
+        [team_player.team_id, team_player.player_id, team_player.batting_order]
       )
     )
   );
 };
-
 
 const seedMatches = async () => {
   console.log("Creating matches table...");

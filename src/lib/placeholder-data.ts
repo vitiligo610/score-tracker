@@ -542,10 +542,26 @@ export const players: Player[] = [
 ];
 
 export const team_players: TeamPlayer[] = [
-  ...(players.slice(0, 12).map(player => ({ team_id: 1, player_id: player.player_id }))),
-  ...(players.slice(12, 24).map(player => ({ team_id: 2, player_id: player.player_id }))),
-  ...(players.slice(24, 36).map(player => ({ team_id: 3, player_id: player.player_id }))),
-  ...(players.slice(36, 48).map(player => ({ team_id: 4, player_id: player.player_id }))),
+  ...(players.slice(0, 12).map((player, index) => ({ 
+    team_id: 1, 
+    player_id: player.player_id,
+    batting_order: index % 12 + 1
+  }))),
+  ...(players.slice(12, 24).map((player, index) => ({ 
+    team_id: 2, 
+    player_id: player.player_id,
+    batting_order: index % 12 + 1
+  }))),
+  ...(players.slice(24, 36).map((player, index) => ({ 
+    team_id: 3, 
+    player_id: player.player_id,
+    batting_order: index % 12 + 1
+  }))),
+  ...(players.slice(36, 48).map((player, index) => ({ 
+    team_id: 4, 
+    player_id: player.player_id,
+    batting_order: index % 12 + 1
+  }))),
 ];
 
 export const tournaments: Tournament[] = [

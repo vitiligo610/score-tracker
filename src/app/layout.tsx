@@ -14,7 +14,6 @@ export const metadata: Metadata = {
     default: "CricScore - Cricket Score Management System",
   },
   description: "Professional cricket tournament and series management system",
-  
 };
 
 export default function RootLayout({

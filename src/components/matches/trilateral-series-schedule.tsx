@@ -1,6 +1,6 @@
 import { Series, SeriesMatch } from "@/lib/definitons";
-import { generatePlaceholderMatches } from "./matches-schedule";
-import MatchCard from "./match-card";
+import { generatePlaceholderMatches } from "@/lib/utils";
+import MatchCard from "@/components/matches/match-card";
 
 interface TrilateralSeriesScheduleProps {
   series: Series;
