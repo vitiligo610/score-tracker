@@ -24,9 +24,10 @@ import { useToast } from "@/hooks/use-toast";
 interface BowlingOrderList {
   players: PlayerWithTeam[];
   teamId: number;
+  captainId?: number;
 }
 
-const BowlingOrderList = ({ players, teamId }: BowlingOrderList) => {
+const BowlingOrderList = ({ players, teamId, captainId }: BowlingOrderList) => {
   const [sortedPlayers, setSortedPlayers] = useState(
     players.sort((a, b) => (a.bowling_order || 0) - (b.bowling_order || 0))
   );
@@ -90,6 +91,7 @@ const BowlingOrderList = ({ players, teamId }: BowlingOrderList) => {
                 player={player}
                 order={index + 1}
                 context="bowling"
+                isCaptain={player.player_id === captainId}
               />
             ))}
           </div>

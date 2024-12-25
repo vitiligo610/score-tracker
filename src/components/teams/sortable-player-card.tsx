@@ -9,11 +9,12 @@ import { cn } from "@/lib/utils";
 
 interface SortablePlayerCardProps {
   player: PlayerWithTeam;
+  isCaptain?: boolean;
   order: number;
-  context: "batting" | "bowling"
+  context: "batting" | "bowling";
 }
 
-const SortablePlayerCard = ({ player, order, context }: SortablePlayerCardProps) => {
+const SortablePlayerCard = ({ player, isCaptain, order, context }: SortablePlayerCardProps) => {
   const {
     attributes,
     listeners,
@@ -47,7 +48,7 @@ const SortablePlayerCard = ({ player, order, context }: SortablePlayerCardProps)
         </div>
         <div className="flex-1">
           <div className="font-semibold">
-            {player.first_name} {player.last_name}
+            {player.first_name} {player.last_name} {isCaptain && "(c)"}
           </div>
           <div className="text-sm text-muted-foreground">
             {player.player_role} • {context === "batting" ? player.batting_style : player.bowling_style}

@@ -13,6 +13,8 @@ export type Team = {
   logo_url?: string;
   founded_year: number;
   description: string;
+  players_count?: number;
+  captain_id?: number;
 };
 
 export type TeamWithoutId = Omit<Team, "team_id">;

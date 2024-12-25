@@ -7,6 +7,8 @@ import { Activity, CalendarDays, MapPin, PlayIcon } from "lucide-react";
 import { format } from "date-fns";
 import { getInitials } from "@/lib/utils";
 import { EditIcon } from "lucide-react";
+import MatchButton from "./match-button";
+import Link from "next/link";
 
 interface MatchCardProps {
   match: Match;
@@ -90,8 +92,10 @@ const MatchCard = ({
 
       <CardFooter className="bg-muted/50 p-4 flex gap-2">
         <Button className="w-full gap-2" disabled={!canStart}>
-          <PlayIcon className="h-4 w-4" />
-          Start Match
+          <Link href={`/match/${match.match_id}`} className="flex gap-2 items-center justify-center">
+            <PlayIcon className="h-4 w-4" />
+            Start Match
+          </Link>
         </Button>
         <EditMatchDialog
           match={match}

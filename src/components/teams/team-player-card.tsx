@@ -1,7 +1,7 @@
 import { PlayerWithTeam } from "@/lib/definitons";
 import RemovePlayerButton from "@/components/teams/remove-player-button";
 
-const TeamPlayerCard = ({ player }: { player: PlayerWithTeam }) => {
+const TeamPlayerCard = ({ player, isCaptain }: { player: PlayerWithTeam; isCaptain?: boolean }) => {
   return (
     <div
       key={player.player_id}
@@ -20,7 +20,7 @@ const TeamPlayerCard = ({ player }: { player: PlayerWithTeam }) => {
       </div>
       <div className="p-6 pt-16">
         <h3 className="text-lg font-bold">
-          {player.first_name} {player.last_name}
+          {player.first_name} {player.last_name} {isCaptain && "(c)"}
         </h3>
         <div className="mt-4 space-y-2">
           <div className="flex items-center text-sm">

@@ -49,15 +49,19 @@ const TeamPage = async ({ params }: Props) => {
       </div>
       <TeamPlayersList
         players={teamPlayers}
+        teamId={team_id}
+        captainId={team.captain_id}
       />
       <div className="flex flex-col md:flex-row gap-8" key={`${team_id}-${teamPlayers.length}`}>
         <BattingOrderList
           players={teamPlayers}
           teamId={team_id}
+          captainId={team.captain_id}
         />
         <BowlingOrderList
           players={teamPlayers}
           teamId={team_id}
+          captainId={team.captain_id}
         />
       </div>
     </div>

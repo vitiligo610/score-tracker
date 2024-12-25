@@ -199,10 +199,29 @@ export const fetchTeams = async (query: string, page: number) => {
 
 export const fetchAllTeams = async () => {
   try {
-    const [teams] = await pool.query(`SELECT * FROM teams`);
+    const [teams] = await pool.query(`
+      SELECT 
+        t.team_id AS team_id,
+        t.name AS name,
+        t.logo_url AS logo_url,
+        t.founded_year AS founded_year,
+        t.description AS description,
+        COUNT(tp.player_id) AS players_count
+      FROM teams t
+      LEFT JOIN team_players tp ON tp.team_id = t.team_id
+      GROUP BY
+        t.team_id,
+        t.name,
+        t.logo_url,
+        t.founded_year,
+        t.description
+    `);
+
+    console.log("all teams is ", teams);
 
     return { allTeams: teams as Team[] };
   } catch (error) {
+    console.log("error is ", error);
     throw new Error("Failed to fetch all teams!");
   }
 };
@@ -266,6 +285,20 @@ export const updateTeam = async (team: Team) => {
     throw new Error("Failed to update team!");
   }
 };
+
+export const updateTeamCaptain = async (team_id: number, captain_id: number) => {
+  try {
+    await pool.query(
+      `UPDATE teams
+      SET captain_id = ?
+      WHERE team_id = ?`,
+      [captain_id, team_id]
+    );
+  } catch (error) {
+    console.log("Error updating team captain: ", error);
+    throw new Error("Failed to update team captain!");
+  }
+}
 
 export const updateTeamBattingOrder = async (
   teamId: number,

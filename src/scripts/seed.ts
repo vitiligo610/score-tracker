@@ -15,7 +15,8 @@ const seedTeams = async () => {
       name VARCHAR(100) NOT NULL,
       logo_url VARCHAR(255),
       founded_year INT,
-      description TEXT
+      description TEXT,
+      captain_id INT
     )
   `);
 
@@ -181,72 +182,111 @@ const createInitialTournamentScheduleProc = async () => {
   await pool.query(
     `CREATE PROCEDURE CreateInitialTournamentSchedule(IN p_tournament_id INT)
     BEGIN
-      DECLARE total_teams INT;
-      DECLARE next_power_of_2 INT;
-      DECLARE byes_count INT;
-      DECLARE i INT;
-      DECLARE team1_id INT;
-      DECLARE team2_id INT;
+        DECLARE total_teams INT;
+        DECLARE next_power_of_2 INT;
+        DECLARE byes_count INT;
+        DECLARE i INT;
+        DECLARE team1_id INT;
+        DECLARE team2_id INT;
+        DECLARE t_start_date DATE;
+        DECLARE location VARCHAR(100);
 
-      -- Temporary table to store teams
-      CREATE TEMPORARY TABLE temp_teams (id INT AUTO_INCREMENT PRIMARY KEY, team_id INT);
+        -- Temporary table to store teams
+        CREATE TEMPORARY TABLE temp_teams
+        (
+            id      INT AUTO_INCREMENT PRIMARY KEY,
+            team_id INT
+        );
 
-      -- Fetch all teams for the given tournament
-      INSERT INTO temp_teams (team_id)
-      SELECT team_id FROM tournament_teams WHERE tournament_id = p_tournament_id;
+        -- Fetch all teams for the given tournament
+        INSERT INTO temp_teams (team_id)
+        SELECT team_id
+        FROM tournament_teams
+        WHERE tournament_id = p_tournament_id;
+        
+        SELECT start_date INTO t_start_date
+        FROM tournaments
+        WHERE tournament_id = p_tournament_id;
 
-      -- Calculate the total number of teams
-      SELECT COUNT(*) INTO total_teams FROM temp_teams;
+        -- Calculate the total number of teams
+        SELECT COUNT(*) INTO total_teams FROM temp_teams;
 
-      -- Calculate the nearest power of 2
-      SET next_power_of_2 = POW(2, CEIL(LOG2(total_teams)));
+        -- Calculate the nearest power of 2
+        SET next_power_of_2 = POW(2, CEIL(LOG2(total_teams)));
 
-      -- Calculate the number of byes
-      SET byes_count = next_power_of_2 - total_teams;
+        -- Calculate the number of byes
+        SET byes_count = next_power_of_2 - total_teams;
 
-      -- Insert first-round matches for teams without byes
-      SET i = 1;
-      WHILE i <= (total_teams - byes_count) DO
-        -- Fetch two teams for the match
-        SELECT team_id INTO team1_id FROM temp_teams WHERE id = i;
-        SELECT team_id INTO team2_id FROM temp_teams WHERE id = i + 1;
+        -- Insert first-round matches for teams without byes
+        SET i = 1;
+        WHILE i <= (total_teams - byes_count)
+            DO
+                -- Fetch two teams for the match
+                SELECT team_id INTO team1_id FROM temp_teams WHERE id = i;
+                SELECT team_id INTO team2_id FROM temp_teams WHERE id = i + 1;
 
-        -- Insert match into matches table
-        INSERT INTO matches (tournament_id, team1_id, team2_id, round, status)
-        VALUES (p_tournament_id, team1_id, team2_id, 1, 'scheduled');
+                SET location = (
+                    SELECT location_name
+                    FROM tournament_locations
+                    WHERE tournament_id = p_tournament_id
+                    ORDER BY RAND()
+                    LIMIT 1
+                );
 
-        -- Move to the next pair of teams
-        SET i = i + 2;
-      END WHILE;
+                -- Insert match into matches table
+                INSERT INTO matches (tournament_id, team1_id, team2_id, round, status, match_date, location)
+                VALUES (p_tournament_id, team1_id, team2_id, 1, 'scheduled', t_start_date, location);
 
-      -- Handle byes: Add matches for round 2
-      IF byes_count > 0 THEN
-        SET i = (total_teams - byes_count) + 1; -- Start after non-bye teams
-        WHILE i <= total_teams - (total_teams - byes_count) / 2 DO
-          -- Fetch team with a bye
-          SELECT team_id INTO team1_id FROM temp_teams WHERE id = i;
+                -- Move to the next pair of teams
+                SET i = i + 2;
+            END WHILE;
 
-          -- Fetch the next opponent from winners of round 1
-          SELECT id INTO team2_id FROM temp_teams WHERE id = i + 1;
+        -- Handle byes: Add matches for round 2
+        IF byes_count > 0 THEN
+            SET i = (total_teams - byes_count) + 1; -- Start after non-bye teams
+            WHILE i <= total_teams - (total_teams - byes_count) / 2
+                DO
+                    -- Fetch team with a bye
+                    SELECT team_id INTO team1_id FROM temp_teams WHERE id = i;
 
-          -- Insert match into round 2
-          INSERT INTO matches (tournament_id, team1_id, team2_id, round, status)
-          VALUES (p_tournament_id, team1_id, team2_id, 2, 'scheduled');
+                    -- Fetch the next opponent from winners of round 1
+                    SELECT id INTO team2_id FROM temp_teams WHERE id = i + 1;
 
-          SET i = i + 2;
-        END WHILE;
+                    SET location = (
+                        SELECT location_name
+                        FROM tournament_locations
+                        WHERE tournament_id = p_tournament_id
+                        ORDER BY RAND()
+                        LIMIT 1
+                    );
 
-        WHILE i <= total_teams DO
-          SELECT team_id INTO team1_id FROM temp_teams WHERE id = i;
+                    -- Insert match into round 2
+                    INSERT INTO matches (tournament_id, team1_id, team2_id, round, status, match_date, location)
+                    VALUES (p_tournament_id, team1_id, team2_id, 2, 'scheduled', t_start_date, location);
 
-          INSERT INTO matches (tournament_id, team1_id, round, status)
-          VALUES (p_tournament_id, team1_id, 2, 'tbd');
+                    SET i = i + 2;
+                END WHILE;
 
-          SET i = i + 1;
-        END WHILE;
-      END IF;
+            WHILE i <= total_teams
+                DO
+                    SELECT team_id INTO team1_id FROM temp_teams WHERE id = i;
 
-      DROP TEMPORARY TABLE temp_teams;
+                    SET location = (
+                        SELECT location_name
+                        FROM tournament_locations
+                        WHERE tournament_id = p_tournament_id
+                        ORDER BY RAND()
+                        LIMIT 1
+                    );
+
+                    INSERT INTO matches (tournament_id, team1_id, round, status, match_date, location)
+                    VALUES (p_tournament_id, team1_id, 2, 'tbd', t_start_date, location);
+
+                    SET i = i + 1;
+                END WHILE;
+        END IF;
+
+        DROP TEMPORARY TABLE temp_teams;
     END`
   );
 };
@@ -345,11 +385,17 @@ const createInitialSeriesScheduleProc = async () => {
         DECLARE i INT;
         DECLARE team1_id INT;
         DECLARE team2_id INT;
+        DECLARE s_start_date DATE;
+        DECLARE location VARCHAR(100);
 
         SELECT type INTO series_type FROM series
         WHERE series_id = p_series_id;
 
         SELECT total_rounds INTO series_rounds FROM series
+        WHERE series_id = p_series_id;
+
+        SELECT start_date INTO s_start_date
+        FROM series
         WHERE series_id = p_series_id;
 
         CREATE TEMPORARY TABLE temp_teams (id INT AUTO_INCREMENT PRIMARY KEY, team_id INT);
@@ -368,8 +414,15 @@ const createInitialSeriesScheduleProc = async () => {
             WHERE id = 2;
 
             WHILE i <= series_rounds DO
-                INSERT INTO matches (series_id, team1_id, team2_id, round, status)
-                VALUES (p_series_id, team1_id, team2_id, i, 'scheduled');
+                SET location = (
+                    SELECT location_name
+                    FROM series_locations
+                    WHERE series_id = p_series_id
+                    ORDER BY RAND()
+                    LIMIT 1
+                );
+                INSERT INTO matches (series_id, team1_id, team2_id, round, status, match_date, location)
+                VALUES (p_series_id, team1_id, team2_id, i, 'scheduled', s_start_date, location);
 
                 SET i = i + 1;
             END WHILE;
@@ -379,28 +432,52 @@ const createInitialSeriesScheduleProc = async () => {
             SELECT team_id INTO team2_id FROM temp_teams
             WHERE id = 2;
 
-            INSERT INTO matches (series_id, team1_id, team2_id, round, status)
-            VALUES (p_series_id, team1_id, team2_id, 1, 'scheduled');
+            SET location = (
+                SELECT location_name
+                FROM series_locations
+                WHERE series_id = p_series_id
+                ORDER BY RAND()
+                LIMIT 1
+            );
+
+            INSERT INTO matches (series_id, team1_id, team2_id, round, status, match_date, location)
+            VALUES (p_series_id, team1_id, team2_id, 1, 'scheduled', s_start_date, location);
 
             SELECT team_id INTO team1_id FROM temp_teams
             WHERE id = 2;
             SELECT team_id INTO team2_id FROM temp_teams
             WHERE id = 3;
 
-            INSERT INTO matches (series_id, team1_id, team2_id, round, status)
-            VALUES (p_series_id, team1_id, team2_id, 1, 'scheduled');
+            SET location = (
+                SELECT location_name
+                FROM series_locations
+                WHERE series_id = p_series_id
+                ORDER BY RAND()
+                LIMIT 1
+            );
+
+            INSERT INTO matches (series_id, team1_id, team2_id, round, status, match_date, location)
+            VALUES (p_series_id, team1_id, team2_id, 1, 'scheduled', s_start_date, location);
 
             SELECT team_id INTO team1_id FROM temp_teams
             WHERE id = 3;
             SELECT team_id INTO team2_id FROM temp_teams
             WHERE id = 1;
 
-            INSERT INTO matches (series_id, team1_id, team2_id, round, status)
-            VALUES (p_series_id, team1_id, team2_id, 1, 'scheduled');
+            SET location = (
+                SELECT location_name
+                FROM series_locations
+                WHERE series_id = p_series_id
+                ORDER BY RAND()
+                LIMIT 1
+            );
+
+            INSERT INTO matches (series_id, team1_id, team2_id, round, status, match_date, location)
+            VALUES (p_series_id, team1_id, team2_id, 1, 'scheduled', s_start_date, location);
         END IF;
 
         DROP TEMPORARY TABLE temp_teams;
-    END;`
+    END`
   );
 };
 

@@ -77,8 +77,13 @@ const TeamSelect = ({ value, onChange, maxTeams }: TeamSelectProps) => {
                       ))
                   : teams.map((team) => {
                       const isSelected = value.includes(team.team_id);
-                      const isDisabled =
-                        maxTeams && value.length >= maxTeams && !isSelected;
+                      const isDisabled = 
+                        (team.players_count || 0) < 11 || // Disable if less than 11 players
+                        (maxTeams && value.length >= maxTeams && !isSelected); // Disable if max teams reached
+
+                      if (team.players_count && team.players_count < 11) {
+                        console.log("heree ", team.name);
+                      }
 
                       return (
                         <CommandItem
@@ -101,7 +106,7 @@ const TeamSelect = ({ value, onChange, maxTeams }: TeamSelectProps) => {
                               <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center">
                                 {team.name[0]}
                               </div>
-                              <span>{team.name}</span>
+                              <span>{team.name} {(team.players_count || 0) < 11 && "- Atleast 11 players required"}</span>
                             </div>
                             <Check
                               className={cn(
