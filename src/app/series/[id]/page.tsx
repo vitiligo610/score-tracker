@@ -1,15 +1,19 @@
-import BilateralSeriesSchedule from "@/components/matches/bilateral-series-schedule";
-import TrilateralSeriesSchedule from "@/components/matches/trilateral-series-schedule";
+import BilateralSeriesSchedule from "@/components/matches-schedule/bilateral-series-schedule";
+import TrilateralSeriesSchedule from "@/components/matches-schedule/trilateral-series-schedule";
 import CompetitionSkeleton from "@/components/ui/skeletons/competition-skeleton";
-import { fetchSeriesById, fetchSeriesMatches, fetchSeriesNameById } from "@/lib/actions";
+import {
+  fetchSeriesById,
+  fetchSeriesMatches,
+  fetchSeriesNameById,
+} from "@/lib/actions";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
 interface Props {
   params: {
     id: string;
-  }
-};
+  };
+}
 
 export const generateMetadata = async ({ params }: Props) => {
   const p = await params;
@@ -20,7 +24,7 @@ export const generateMetadata = async ({ params }: Props) => {
   return {
     title: name,
   };
-}
+};
 
 const SeriesPage = async ({ params }: Props) => {
   const p = await params;

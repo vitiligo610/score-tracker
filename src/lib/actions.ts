@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import {
+  Match,
   Player,
   PlayerWithoutId,
   PlayerWithTeam,
@@ -17,6 +18,7 @@ import {
 } from "@/lib/definitons";
 import { pool } from "@/lib/db";
 import { PLAYERS_PER_PAGE, TEAMS_PER_PAGE } from "@/lib/constants";
+import { getTransformedMatch } from "@/lib/utils";
 
 export const fetchPlayers = async (
   query: string,
@@ -600,39 +602,7 @@ export const fetchTournamentMatches = async (tournament_id: number) => {
       [tournament_id]
     );
 
-    const transformedMatches = matches.map((match: any) => {
-      const cleanedMatch = Object.fromEntries(
-        Object.entries(match).filter(
-          ([key]) =>
-            !key.startsWith("team1_") &&
-            !key.startsWith("team2_") &&
-            key !== "team1_id" &&
-            key !== "team2_id"
-        )
-      );
-
-      return {
-        ...cleanedMatch,
-        team1: match.team1_team_id
-          ? {
-              team_id: match.team1_team_id,
-              name: match.team1_name,
-              logo_url: match.team1_logo_url,
-              founded_year: match.team1_founded_year,
-              description: match.team1_description,
-            }
-          : null,
-        team2: match.team2_team_id
-          ? {
-              team_id: match.team2_team_id,
-              name: match.team2_name,
-              logo_url: match.team2_logo_url,
-              founded_year: match.team2_founded_year,
-              description: match.team2_description,
-            }
-          : null,
-      };
-    });
+    const transformedMatches = matches.map(getTransformedMatch);
 
     return { matches: transformedMatches as TournamentMatch[] };
   } catch (error) {
@@ -839,39 +809,7 @@ export const fetchSeriesMatches = async (series_id: number) => {
       [series_id]
     );
 
-    const transformedMatches = matches.map((match: any) => {
-      const cleanedMatch = Object.fromEntries(
-        Object.entries(match).filter(
-          ([key]) =>
-            !key.startsWith("team1_") &&
-            !key.startsWith("team2_") &&
-            key !== "team1_id" &&
-            key !== "team2_id"
-        )
-      );
-
-      return {
-        ...cleanedMatch,
-        team1: match.team1_team_id
-          ? {
-              team_id: match.team1_team_id,
-              name: match.team1_name,
-              logo_url: match.team1_logo_url,
-              founded_year: match.team1_founded_year,
-              description: match.team1_description,
-            }
-          : null,
-        team2: match.team2_team_id
-          ? {
-              team_id: match.team2_team_id,
-              name: match.team2_name,
-              logo_url: match.team2_logo_url,
-              founded_year: match.team2_founded_year,
-              description: match.team2_description,
-            }
-          : null,
-      };
-    });
+    const transformedMatches = matches.map(getTransformedMatch);
 
     return { matches: transformedMatches as SeriesMatch[] };
   } catch (error) {
@@ -879,3 +817,58 @@ export const fetchSeriesMatches = async (series_id: number) => {
     throw new Error("Failed to fetch series matches!");
   }
 };
+
+export const fetchMatchById = async (match_id: number) => {
+  try {
+    const [data]: any = await pool.query(
+      `SELECT 
+          m.match_id AS match_id,
+          m.tournament_id AS tournament_id,
+          m.team1_id AS team1_id,
+          m.team2_id AS team2_id,
+          m.winner_team_id AS winner_team_id,
+          m.match_date AS match_date,
+          m.location AS location,
+          m.round AS round,
+          m.status AS status,
+          t1.team_id AS team1_team_id,
+          t1.name AS team1_name,
+          t1.logo_url AS team1_logo_url,
+          t1.founded_year AS team1_founded_year,
+          t1.description AS team1_description,
+          t2.team_id AS team2_team_id,
+          t2.name AS team2_name,
+          t2.logo_url AS team2_logo_url,
+          t2.founded_year AS team2_founded_year,
+          t2.description AS team2_description
+      FROM matches m
+      LEFT JOIN teams t1 ON m.team1_id = t1.team_id
+      LEFT JOIN teams t2 ON m.team2_id = t2.team_id
+      WHERE m.match_id = ?`,
+      [match_id]
+    );
+
+    const match = getTransformedMatch(data[0]);
+
+    return { match: match as Match };
+  } catch (error) {
+    console.log("Error fetching match by id: ", error);
+    throw new Error("Failed to fetch match!");
+  }
+}
+
+export const updateMatchToss = async (match_id: number | string, toss_winner_id: number, toss_decision: string) => {
+  try {
+    await pool.query(
+      `UPDATE matches
+      SET toss_winner_id = ?,
+          toss_decision = ?,
+          status = ?
+      WHERE match_id = ?`,
+      [toss_winner_id, toss_decision, "started", match_id]
+    );
+  } catch (error) {
+    console.log("Error updating match toss: ", error);
+    throw new Error("Failed to update match toss!");
+  }
+}

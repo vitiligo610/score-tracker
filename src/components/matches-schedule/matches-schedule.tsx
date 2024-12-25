@@ -1,6 +1,9 @@
 import { Match, Tournament } from "@/lib/definitons";
-import { getExpectedMatchesForRound, generatePlaceholderMatches } from "@/lib/utils";
-import RoundSection from "@/components/matches/round-section";
+import {
+  getExpectedMatchesForRound,
+  generatePlaceholderMatches,
+} from "@/lib/utils";
+import RoundSection from "@/components/matches-schedule/round-section";
 
 interface MatchesScheduleProps {
   tournament: Tournament;
@@ -22,10 +25,8 @@ const MatchesSchedule = ({ tournament, matches }: MatchesScheduleProps) => {
 
       const isFutureRound =
         existingMatches.every((match) => match.status === "tbd") &&
-        existingMatches.length < getExpectedMatchesForRound(
-          tournament.total_teams ?? 0,
-          round
-        );
+        existingMatches.length <
+          getExpectedMatchesForRound(tournament.total_teams ?? 0, round);
       const placeholderMatches = isFutureRound
         ? generatePlaceholderMatches(round, tournament, existingMatches)
         : [];

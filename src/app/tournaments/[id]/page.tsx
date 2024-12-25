@@ -1,15 +1,18 @@
-import { fetchTournamentById, fetchTournamentMatches, fetchTournamentNameById } from "@/lib/actions";
-import { Metadata } from "next";
+import {
+  fetchTournamentById,
+  fetchTournamentMatches,
+  fetchTournamentNameById,
+} from "@/lib/actions";
 import { notFound } from "next/navigation";
-import MatchSchedule from "@/components/matches/matches-schedule";
+import MatchSchedule from "@/components/matches-schedule/matches-schedule";
 import { Suspense } from "react";
 import CompetitionSkeleton from "@/components/ui/skeletons/competition-skeleton";
 
 interface Props {
   params: {
     id: string;
-  }
-};
+  };
+}
 
 export const generateMetadata = async ({ params }: Props) => {
   const p = await params;
@@ -20,7 +23,7 @@ export const generateMetadata = async ({ params }: Props) => {
   return {
     title: name,
   };
-}
+};
 
 const TournamentPage = async ({ params }: Props) => {
   const p = await params;

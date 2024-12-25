@@ -1,13 +1,12 @@
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Match } from "@/lib/definitons";
-import EditMatchDialog from "@/components/matches/edit-match-dialog";
-import MatchStatusBadge from "@/components/matches/match-status-badge";
+import EditMatchDialog from "@/components/matches-schedule/edit-match-dialog";
+import MatchStatusBadge from "@/components/matches-schedule/match-status-badge";
 import { Activity, CalendarDays, MapPin, PlayIcon } from "lucide-react";
 import { format } from "date-fns";
 import { getInitials } from "@/lib/utils";
 import { EditIcon } from "lucide-react";
-import MatchButton from "./match-button";
 import Link from "next/link";
 
 interface MatchCardProps {
@@ -24,12 +23,22 @@ const MatchCard = ({
   locations,
 }: MatchCardProps) => {
   const isTBD = !match.team1?.team_id && !match.team2?.team_id;
-  const isPartial =
-    Boolean(match.team1?.team_id) !== Boolean(match.team2?.team_id);
   const canStart =
-    match.status === "scheduled" &&
+    match.status !== "tbd" &&
     match.team1?.team_id &&
     match.team2?.team_id;
+
+  const getButtonLabel = (status: string) => {
+    switch (status) {
+      case "tbd":
+      case "scheduled":
+        return "Start Match";
+      case "started":
+        return "Continue Match";
+      default:
+        return "Show Match";
+    }
+  }
 
   return (
     <Card className="relative hover:shadow-lg transition-all">
@@ -92,9 +101,12 @@ const MatchCard = ({
 
       <CardFooter className="bg-muted/50 p-4 flex gap-2">
         <Button className="w-full gap-2" disabled={!canStart}>
-          <Link href={`/match/${match.match_id}`} className="flex gap-2 items-center justify-center">
+          <Link
+            href={`/match/${match.match_id}`}
+            className="flex gap-2 items-center justify-center"
+          >
             <PlayIcon className="h-4 w-4" />
-            Start Match
+            {getButtonLabel(match.status)}
           </Link>
         </Button>
         <EditMatchDialog

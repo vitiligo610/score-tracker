@@ -47,6 +47,11 @@ const seedPlayers = async () => {
     )
   `);
 
+  console.log("Adding FK constraint to teams table for captain_id...");
+  await pool.query(
+    `ALTER TABLE teams ADD FOREIGN KEY (captain_id) REFERENCES players (player_id) ON DELETE SET NULL`
+  );
+
   console.log("Seeding players...");
   await Promise.all(
     players.map((player) =>
@@ -137,8 +142,11 @@ const seedMatches = async () => {
       location VARCHAR (100),
       round VARCHAR (50),
       status ENUM('started', 'scheduled', 'completed', 'tbd'),
+      toss_winner_id INT,
+      toss_decision ENUM('batting', 'bowling'),
       FOREIGN KEY (team1_id) REFERENCES teams (team_id) ON DELETE CASCADE,
       FOREIGN KEY (team2_id) REFERENCES teams (team_id) ON DELETE CASCADE,
+      FOREIGN KEY (toss_winner_id) REFERENCES teams (team_id),
       FOREIGN KEY (winner_team_id) REFERENCES teams (team_id)
     )
   `);

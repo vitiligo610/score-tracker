@@ -1,5 +1,5 @@
 import { Match } from "@/lib/definitons";
-import MatchCard from "@/components/matches/match-card";
+import MatchCard from "@/components/matches-schedule/match-card";
 
 interface RoundSectionProps {
   roundNumber: number;

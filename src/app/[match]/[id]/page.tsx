@@ -1,3 +1,6 @@
+import MatchToss from "@/components/matches/match-toss";
+import TeamsMatch from "@/components/matches/teams-match";
+import { fetchMatchById } from "@/lib/actions";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -10,9 +13,16 @@ interface Props {
   }
 };
 
-const MatchPage = ({ params }: Props) => {
+const MatchPage = async ({ params }: Props) => {
+  const p = await params;
+  const match_id = Number(p.id);
+  const { match } = await fetchMatchById(match_id);
+
   return (
-    <div>MatchPage</div>
+    <div>
+      {match.status === "scheduled" && <MatchToss match={match} />}
+      {match.status === "started" && <TeamsMatch />}
+    </div>
   )
 }
 
