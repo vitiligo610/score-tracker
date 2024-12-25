@@ -66,6 +66,28 @@ const seedPlayers = async () => {
   );
 };
 
+const createSetBattingAndBowlingOrderTrigger = async () => {
+  await pool.query("DROP TRIGGER IF EXISTS SetBattingAndBowlingOrder");
+  await pool.query(
+    `CREATE TRIGGER SetBattingAndBowlingOrder
+    BEFORE INSERT ON team_players
+    FOR EACH ROW
+    BEGIN
+        SET NEW.batting_order = (
+            SELECT COALESCE(MAX(batting_order), 0) + 1
+            FROM team_players
+            WHERE team_id = NEW.team_id
+        );
+
+        SET NEW.bowling_order = (
+            SELECT COALESCE(MAX(bowling_order), 0) + 1
+            FROM team_players
+            WHERE team_id = NEW.team_id
+        );
+    END`
+  );
+}
+
 const seedTeamPlayers = async () => {
   console.log("Creating team players table...");
   await pool.query(`
@@ -73,6 +95,7 @@ const seedTeamPlayers = async () => {
       team_id INT,
       player_id INT,
       batting_order INT,
+      bowling_order INT,
       FOREIGN KEY (team_id) REFERENCES teams(team_id) ON DELETE CASCADE,
       FOREIGN KEY (player_id) REFERENCES players(player_id) ON DELETE CASCADE,
       PRIMARY KEY (team_id, player_id)
@@ -83,12 +106,20 @@ const seedTeamPlayers = async () => {
   await Promise.all(
     team_players.map((team_player) =>
       pool.query(
-        `INSERT INTO team_players (team_id, player_id, batting_order)
-        VALUES (?, ?, ?)`,
-        [team_player.team_id, team_player.player_id, team_player.batting_order]
+        `INSERT INTO team_players (team_id, player_id, batting_order, bowling_order)
+        VALUES (?, ?, ?, ?)`,
+        [
+          team_player.team_id,
+          team_player.player_id,
+          team_player.batting_order,
+          team_player.bowling_order,
+        ]
       )
     )
   );
+
+  console.log("Creating teams_players trigger....");
+  await createSetBattingAndBowlingOrderTrigger();
 };
 
 const seedMatches = async () => {
@@ -295,8 +326,12 @@ const seedTournaments = async () => {
       ]);
     }
 
-    await pool.query("CALL SetTournamentDetails(?)", [tournament.tournament_id]);
-    await pool.query("CALL CreateInitialTournamentSchedule(?)", [tournament.tournament_id]);
+    await pool.query("CALL SetTournamentDetails(?)", [
+      tournament.tournament_id,
+    ]);
+    await pool.query("CALL CreateInitialTournamentSchedule(?)", [
+      tournament.tournament_id,
+    ]);
   }
 };
 
@@ -367,7 +402,7 @@ const createInitialSeriesScheduleProc = async () => {
         DROP TEMPORARY TABLE temp_teams;
     END;`
   );
-}
+};
 
 const seedSeries = async () => {
   console.log("Creating series table...");
@@ -409,7 +444,7 @@ const seedSeries = async () => {
     )
   `);
 
-  console.log("Creating series_points table...") // for trilateral series
+  console.log("Creating series_points table..."); // for trilateral series
   await pool.query(
     `CREATE TABLE IF NOT EXISTS series_points (
       series_id INT NOT NULL,
@@ -439,14 +474,7 @@ const seedSeries = async () => {
     await pool.query(
       `INSERT INTO series (name, start_date, end_date, format, type, total_rounds)
       VALUES (?, ?, ?, ?, ?, ?)`,
-      [
-        s.name,
-        s.start_date,
-        s.end_date,
-        s.format,
-        s.type,
-        s.total_rounds,
-      ]
+      [s.name, s.start_date, s.end_date, s.format, s.type, s.total_rounds]
     );
 
     for (const location of s.locations) {
@@ -467,7 +495,7 @@ const seedSeries = async () => {
 
     await pool.query("CALL CreateInitialSeriesSchedule(?)", [s.series_id]);
   }
-}
+};
 
 const main = async () => {
   console.log("🌱 Starting database seed...");

@@ -22,7 +22,7 @@ const TeamsInfo = async ({ query, page }: Props) => {
       </div>
 
       <BottomPagiation
-        path="tems"
+        path="teams"
         perPage={TEAMS_PER_PAGE}
         page={page}
         count={count}

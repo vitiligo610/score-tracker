@@ -1,4 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import OrderListSkeleton from "@/components/ui/skeletons/order-list-skeleton";
 import TeamPlayersListSkeleton from "@/components/ui/skeletons/team-players-list-skeleton";
 
 const Loading = () => {
@@ -12,8 +13,12 @@ const Loading = () => {
         <Skeleton className="h-10 w-40" />
       </div>
       <TeamPlayersListSkeleton />
+      <div className="flex flex-col md:flex-row gap-8">
+        <OrderListSkeleton />
+        <OrderListSkeleton />
+      </div>
     </div>
   );
-}
+};
 
 export default Loading;

@@ -66,8 +66,8 @@ export default function AddTeamPlayer({ teamId, existingPlayerIds }: AddTeamPlay
       toast({
         description: "Players added successfully",
       });
-      router.refresh();
       setOpen(false);
+      router.refresh();
     } catch (error) {
       toast({
         variant: "destructive",

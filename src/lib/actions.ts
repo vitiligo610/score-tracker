@@ -1,7 +1,20 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { Player, PlayerWithoutId, PlayerWithTeam, Series, SeriesMatch, SeriesWithoutId, Team, TeamPlayer, TeamWithoutId, Tournament, TournamentMatch, TournamentWithoutId } from "@/lib/definitons";
+import {
+  Player,
+  PlayerWithoutId,
+  PlayerWithTeam,
+  Series,
+  SeriesMatch,
+  SeriesWithoutId,
+  Team,
+  TeamPlayer,
+  TeamWithoutId,
+  Tournament,
+  TournamentMatch,
+  TournamentWithoutId,
+} from "@/lib/definitons";
 import { pool } from "@/lib/db";
 import { PLAYERS_PER_PAGE, TEAMS_PER_PAGE } from "@/lib/constants";
 
@@ -79,7 +92,7 @@ export const fetchAllPlayers = async () => {
     console.log("Error is: ", error);
     throw new Error("Failed to fetch all players.");
   }
-}
+};
 
 export const insertPlayer = async (player: PlayerWithoutId) => {
   try {
@@ -131,19 +144,16 @@ export const updatePlayer = async (player: Player) => {
     console.log("error is ", error);
     throw new Error("Failed to update player!");
   }
-}
+};
 
 export const deletePlayer = async (player_id: number) => {
   try {
-    await pool.query(
-      `DELETE FROM players WHERE player_id = ?`,
-      [player_id]
-    );
+    await pool.query(`DELETE FROM players WHERE player_id = ?`, [player_id]);
     revalidatePath("/players");
   } catch (error) {
     throw new Error("Failed to delete player!");
   }
-}
+};
 
 export const fetchTeams = async (query: string, page: number) => {
   try {
@@ -151,8 +161,10 @@ export const fetchTeams = async (query: string, page: number) => {
     const params = [];
 
     if (query) {
-      conditions.push("name LIKE ? OR founded_year LIKE ? OR description LIKE ?");
-      params.push(`%${query}%`, `%${query}%`, `%${query}%`)
+      conditions.push(
+        "name LIKE ? OR founded_year LIKE ? OR description LIKE ?"
+      );
+      params.push(`%${query}%`, `%${query}%`, `%${query}%`);
     }
 
     const whereClause =
@@ -168,7 +180,8 @@ export const fetchTeams = async (query: string, page: number) => {
       params
     );
 
-    const [data]: any = await pool.query(`
+    const [data]: any = await pool.query(
+      `
       SELECT COUNT(*) AS count FROM teams
       ${whereClause}`,
       params
@@ -182,19 +195,17 @@ export const fetchTeams = async (query: string, page: number) => {
     console.log("error is ", error);
     throw new Error("Failed to fetch teams!");
   }
-}
+};
 
 export const fetchAllTeams = async () => {
   try {
-    const [teams] = await pool.query(
-      `SELECT * FROM teams`
-    );
+    const [teams] = await pool.query(`SELECT * FROM teams`);
 
     return { allTeams: teams as Team[] };
   } catch (error) {
     throw new Error("Failed to fetch all teams!");
   }
-}
+};
 
 export const fetchTeamNameById = async (team_id: number) => {
   try {
@@ -209,7 +220,7 @@ export const fetchTeamNameById = async (team_id: number) => {
     console.log("Error fetching team name: ", error);
     throw new Error("Failed to fetch team name!");
   }
-}
+};
 
 export const fetchTeamById = async (team_id: number) => {
   try {
@@ -224,24 +235,20 @@ export const fetchTeamById = async (team_id: number) => {
     console.log("Error fetching team having id", team_id, error);
     throw new Error("Failed to fetch team by id");
   }
-}
+};
 
 export const insertTeam = async (team: TeamWithoutId) => {
   try {
     await pool.query(
       `INSERT INTO teams (name, founded_year, description)
       VALUES (?, ?, ?)`,
-      [
-        team.name,
-        team.founded_year,
-        team.description
-      ]
+      [team.name, team.founded_year, team.description]
     );
     // revalidatePath("/teams");
   } catch (error) {
     throw new Error("Failed to insert team!");
   }
-}
+};
 
 export const updateTeam = async (team: Team) => {
   try {
@@ -251,31 +258,69 @@ export const updateTeam = async (team: Team) => {
           founded_year = ?,
           description = ?
       WHERE team_id = ?`,
-      [
-        team.name,
-        team.founded_year,
-        team.description,
-        team.team_id
-      ]
+      [team.name, team.founded_year, team.description, team.team_id]
     );
     // revalidatePath("/teams");
   } catch (error) {
     console.log("error is ", error);
     throw new Error("Failed to update team!");
   }
-}
+};
+
+export const updateTeamBattingOrder = async (
+  teamId: number,
+  updatedOrders: { player_id: number; batting_order: number }[]
+) => {
+  try {
+    console.log("here ", updatedOrders);
+    await Promise.all(
+      updatedOrders.map(order =>
+        pool.query(
+          `UPDATE team_players
+          SET batting_order = ?
+          WHERE team_id = ?
+          AND player_id = ?`,
+          [order.batting_order, teamId, order.player_id]
+        )
+      )
+    );
+  } catch (error) {
+    console.log("Failed to update batting order: ", error);
+    throw new Error("Failed to update team's batting order!");
+  }
+};
+
+export const updateTeamBowlingOrder = async (
+  teamId: number,
+  updatedOrders: { player_id: number; bowling_order: number }[]
+) => {
+  try {
+    console.log("here ", updatedOrders);
+    await Promise.all(
+      updatedOrders.map(order =>
+        pool.query(
+          `UPDATE team_players
+          SET bowling_order = ?
+          WHERE team_id = ?
+          AND player_id = ?`,
+          [order.bowling_order, teamId, order.player_id]
+        )
+      )
+    );
+  } catch (error) {
+    console.log("Failed to update bowling order: ", error);
+    throw new Error("Failed to update team's bowling order!");
+  }
+};
 
 export const deleteTeam = async (team_id: number) => {
   try {
-    await pool.query(
-      `DELETE FROM teams WHERE team_id = ?`,
-      [team_id]
-    );
+    await pool.query(`DELETE FROM teams WHERE team_id = ?`, [team_id]);
     // revalidatePath("/teams");
   } catch (error) {
     throw new Error("Failed to delete team!");
   }
-}
+};
 
 export const fetchTeamPlayers = async (team_id: number) => {
   try {
@@ -291,25 +336,26 @@ export const fetchTeamPlayers = async (team_id: number) => {
     console.log("Error fetching team players having team id", team_id);
     throw new Error("Failed to fetch team players");
   }
-}
+};
 
 export const fetchAddedPlayers = async () => {
   try {
-    const [players] = await pool.query(
-      `SELECT * FROM team_players`
-    );
+    const [players] = await pool.query(`SELECT * FROM team_players`);
 
     return { addedPlayers: players as TeamPlayer[] };
   } catch (error) {
     console.log("Error fetching added players", error);
     throw new Error("Failed to fetch team players");
   }
-}
+};
 
-export const addPlayersToTeam = async (team_id: number, player_ids: number[]) => {
+export const addPlayersToTeam = async (
+  team_id: number,
+  player_ids: number[]
+) => {
   try {
     await Promise.all(
-      player_ids.map(player_id => 
+      player_ids.map((player_id) =>
         pool.query(
           `INSERT INTO team_players (team_id, player_id)
           VALUES (?, ?)`,
@@ -321,9 +367,12 @@ export const addPlayersToTeam = async (team_id: number, player_ids: number[]) =>
     console.log("Error adding players to team: ", error);
     throw new Error("Error adding players to team.");
   }
-}
+};
 
-export const removePlayerFromTeam = async (team_id: number, player_id: number) => {
+export const removePlayerFromTeam = async (
+  team_id: number,
+  player_id: number
+) => {
   try {
     await pool.query(
       `DELETE FROM team_players 
@@ -334,13 +383,14 @@ export const removePlayerFromTeam = async (team_id: number, player_id: number) =
     console.log("Failed to delete player: ", error);
     throw new Error("Failed to delete player");
   }
-}
+};
 
 export const fetchTournaments = async (filter: string) => {
   try {
-    const whereClause = !filter || filter === "all"
-      ? ""
-      : `WHERE finished IS ${filter === 'finished' ? 'TRUE' : 'FALSE'}`;
+    const whereClause =
+      !filter || filter === "all"
+        ? ""
+        : `WHERE finished IS ${filter === "finished" ? "TRUE" : "FALSE"}`;
     const [data]: any = await pool.query(
       `SELECT * FROM tournaments
       LEFT JOIN tournament_teams USING (tournament_id)
@@ -361,7 +411,7 @@ export const fetchTournaments = async (filter: string) => {
           total_rounds: current.total_rounds,
           locations: new Set(),
           team_ids: new Set(),
-        }
+        };
       }
 
       acc[key].locations.add(current.location_name);
@@ -374,22 +424,20 @@ export const fetchTournaments = async (filter: string) => {
       ...tournament,
       locations: Array.from(tournament.locations),
       team_ids: Array.from(tournament.team_ids),
-    }))
+    }));
 
     return { tournaments: tournaments as Tournament[] };
   } catch (error) {
     console.log("Failed to fetch tournaments: ", error);
     throw new Error("Failed to fetch tournaments!");
   }
-}
+};
 
 const getLastInsertedId = async () => {
-  const [data]: any = await pool.query(
-    `SELECT LAST_INSERT_ID() AS last_id`
-  );
+  const [data]: any = await pool.query(`SELECT LAST_INSERT_ID() AS last_id`);
 
   return data[0].last_id as number;
-}
+};
 
 export const insertTournament = async (tournament: TournamentWithoutId) => {
   try {
@@ -407,7 +455,7 @@ export const insertTournament = async (tournament: TournamentWithoutId) => {
     const tournament_id = await getLastInsertedId();
 
     await Promise.all(
-      tournament.locations.map(location => 
+      tournament.locations.map((location) =>
         pool.query(
           `INSERT INTO tournament_locations (tournament_id, location_name)
           VALUES (?, ?)`,
@@ -417,21 +465,20 @@ export const insertTournament = async (tournament: TournamentWithoutId) => {
     );
 
     await Promise.all(
-      tournament.team_ids.map(team_id => 
-        pool.query(
-          `CALL AddTeamToTournament(?, ?)`,
-          [tournament_id, team_id]
-        )
+      tournament.team_ids.map((team_id) =>
+        pool.query(`CALL AddTeamToTournament(?, ?)`, [tournament_id, team_id])
       )
     );
 
     await pool.query("CALL SetTournamentDetails(?)", [tournament_id]);
-    await pool.query("CALL CreateInitialTournamentSchedule(?)", [tournament_id]);
+    await pool.query("CALL CreateInitialTournamentSchedule(?)", [
+      tournament_id,
+    ]);
   } catch (error) {
     console.log("Error adding new tournament: ", error);
     throw new Error("Failed creating new tournament!");
   }
-}
+};
 
 export const fetchTournamentNameById = async (tournament_id: number) => {
   try {
@@ -446,7 +493,7 @@ export const fetchTournamentNameById = async (tournament_id: number) => {
     console.log("Error fetching tournament name: ", error);
     throw new Error("Failed to fetch tournament name!");
   }
-}
+};
 
 export const fetchTournamentById = async (tournament_id: number) => {
   try {
@@ -470,7 +517,7 @@ export const fetchTournamentById = async (tournament_id: number) => {
           total_rounds: current.total_rounds,
           total_teams: current.total_teams,
           locations: new Set(),
-        }
+        };
       }
 
       acc[key].locations.add(current.location_name);
@@ -488,7 +535,7 @@ export const fetchTournamentById = async (tournament_id: number) => {
     console.log("Error fetching tournament by id: ", error);
     throw new Error("Failed to fetch tournament!");
   }
-}
+};
 
 export const fetchTournamentMatches = async (tournament_id: number) => {
   try {
@@ -522,42 +569,50 @@ export const fetchTournamentMatches = async (tournament_id: number) => {
 
     const transformedMatches = matches.map((match: any) => {
       const cleanedMatch = Object.fromEntries(
-        Object.entries(match).filter(([key]) => 
-          !key.startsWith('team1_') && 
-          !key.startsWith('team2_') &&
-          key !== "team1_id" &&
-          key !== "team2_id"
+        Object.entries(match).filter(
+          ([key]) =>
+            !key.startsWith("team1_") &&
+            !key.startsWith("team2_") &&
+            key !== "team1_id" &&
+            key !== "team2_id"
         )
       );
-    
+
       return {
         ...cleanedMatch,
-        team1: match.team1_team_id ? {
-          team_id: match.team1_team_id,
-          name: match.team1_name,
-          logo_url: match.team1_logo_url,
-          founded_year: match.team1_founded_year,
-          description: match.team1_description,
-        } : null,
-        team2: match.team2_team_id ? {
-          team_id: match.team2_team_id,
-          name: match.team2_name,
-          logo_url: match.team2_logo_url,
-          founded_year: match.team2_founded_year,
-          description: match.team2_description,
-        } : null
+        team1: match.team1_team_id
+          ? {
+              team_id: match.team1_team_id,
+              name: match.team1_name,
+              logo_url: match.team1_logo_url,
+              founded_year: match.team1_founded_year,
+              description: match.team1_description,
+            }
+          : null,
+        team2: match.team2_team_id
+          ? {
+              team_id: match.team2_team_id,
+              name: match.team2_name,
+              logo_url: match.team2_logo_url,
+              founded_year: match.team2_founded_year,
+              description: match.team2_description,
+            }
+          : null,
       };
     });
-    
 
     return { matches: transformedMatches as TournamentMatch[] };
   } catch (error) {
     console.log("Error fetching tournament matches: ", error);
     throw new Error("Failed to fetch tournament matches!");
   }
-}
+};
 
-export const setMatchDetails = async (match_id: number | string, match_date: Date | null, location: string | null) => {
+export const setMatchDetails = async (
+  match_id: number | string,
+  match_date: Date | null,
+  location: string | null
+) => {
   try {
     await pool.query(
       `UPDATE matches
@@ -570,19 +625,20 @@ export const setMatchDetails = async (match_id: number | string, match_date: Dat
     console.log("Failed to update match details: ", error);
     throw new Error("Failed to update match details!");
   }
-}
+};
 
 export const fetchSeries = async (filter: string) => {
   try {
-    const whereClause = !filter || filter === "all"
-      ? ""
-      : `WHERE finished IS ${filter === 'finished' ? 'TRUE' : 'FALSE'}`;
+    const whereClause =
+      !filter || filter === "all"
+        ? ""
+        : `WHERE finished IS ${filter === "finished" ? "TRUE" : "FALSE"}`;
     const [data]: any = await pool.query(
       `SELECT * FROM series
       LEFT JOIN series_locations USING (series_id)
       ${whereClause}`
     );
-    
+
     const dataSet = data.reduce((acc: any[], current: any) => {
       const key = current.series_id;
       if (acc[key] == undefined) {
@@ -599,7 +655,7 @@ export const fetchSeries = async (filter: string) => {
           total_rounds: current.total_rounds,
           finished: current.finished,
           locations: new Set(),
-        }
+        };
       }
 
       acc[key].locations.add(current.location_name);
@@ -617,7 +673,7 @@ export const fetchSeries = async (filter: string) => {
     console.log("Failed to fetch series: ", error);
     throw new Error("Failed to fetch series!");
   }
-}
+};
 
 export const insertSeries = async (series: SeriesWithoutId) => {
   try {
@@ -637,7 +693,7 @@ export const insertSeries = async (series: SeriesWithoutId) => {
     const series_id = await getLastInsertedId();
 
     await Promise.all(
-      series.team_ids.map(team_id =>
+      series.team_ids.map((team_id) =>
         pool.query(
           `INSERT INTO series_teams (series_id, team_id)
           VALUES (?, ?)`,
@@ -647,7 +703,7 @@ export const insertSeries = async (series: SeriesWithoutId) => {
     );
 
     await Promise.all(
-      series.locations.map(location => 
+      series.locations.map((location) =>
         pool.query(
           `INSERT INTO series_locations (series_id, location_name)
           VALUES (?, ?)`,
@@ -661,7 +717,7 @@ export const insertSeries = async (series: SeriesWithoutId) => {
     console.log("Error inserting new series: ", error);
     throw new Error("Failed to create series!");
   }
-}
+};
 
 export const fetchSeriesNameById = async (series_id: number) => {
   try {
@@ -676,7 +732,7 @@ export const fetchSeriesNameById = async (series_id: number) => {
     console.log("Error fetching series name: ", error);
     throw new Error("Failed to fetch series name!");
   }
-}
+};
 
 export const fetchSeriesById = async (series_id: number) => {
   try {
@@ -700,7 +756,7 @@ export const fetchSeriesById = async (series_id: number) => {
           total_rounds: current.total_rounds,
           type: current.type,
           locations: new Set(),
-        }
+        };
       }
 
       acc[key].locations.add(current.location_name);
@@ -718,7 +774,7 @@ export const fetchSeriesById = async (series_id: number) => {
     console.log("Error fetching series by id: ", error);
     throw new Error("Failed to fetch series!");
   }
-}
+};
 
 export const fetchSeriesMatches = async (series_id: number) => {
   try {
@@ -752,37 +808,41 @@ export const fetchSeriesMatches = async (series_id: number) => {
 
     const transformedMatches = matches.map((match: any) => {
       const cleanedMatch = Object.fromEntries(
-        Object.entries(match).filter(([key]) => 
-          !key.startsWith('team1_') && 
-          !key.startsWith('team2_') &&
-          key !== "team1_id" &&
-          key !== "team2_id"
+        Object.entries(match).filter(
+          ([key]) =>
+            !key.startsWith("team1_") &&
+            !key.startsWith("team2_") &&
+            key !== "team1_id" &&
+            key !== "team2_id"
         )
       );
-    
+
       return {
         ...cleanedMatch,
-        team1: match.team1_team_id ? {
-          team_id: match.team1_team_id,
-          name: match.team1_name,
-          logo_url: match.team1_logo_url,
-          founded_year: match.team1_founded_year,
-          description: match.team1_description,
-        } : null,
-        team2: match.team2_team_id ? {
-          team_id: match.team2_team_id,
-          name: match.team2_name,
-          logo_url: match.team2_logo_url,
-          founded_year: match.team2_founded_year,
-          description: match.team2_description,
-        } : null
+        team1: match.team1_team_id
+          ? {
+              team_id: match.team1_team_id,
+              name: match.team1_name,
+              logo_url: match.team1_logo_url,
+              founded_year: match.team1_founded_year,
+              description: match.team1_description,
+            }
+          : null,
+        team2: match.team2_team_id
+          ? {
+              team_id: match.team2_team_id,
+              name: match.team2_name,
+              logo_url: match.team2_logo_url,
+              founded_year: match.team2_founded_year,
+              description: match.team2_description,
+            }
+          : null,
       };
     });
-    
 
     return { matches: transformedMatches as SeriesMatch[] };
   } catch (error) {
     console.log("Error fetching series matches: ", error);
     throw new Error("Failed to fetch series matches!");
   }
-}
+};

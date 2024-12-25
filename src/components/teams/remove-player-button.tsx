@@ -37,10 +37,11 @@ const RemovePlayerButton = ({ player_id, team_id }: Props) => {
   const handleRemove = async () => {
     try {
       await removePlayerFromTeam(team_id, player_id);
-      router.refresh();
+      setOpen(false);
       toast({
         description: "Player successfully removed from team.",
       });
+      router.refresh();
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -52,18 +53,18 @@ const RemovePlayerButton = ({ player_id, team_id }: Props) => {
   return (
     <AlertDialog open={open} onOpenChange={setOpen}>
       <AlertDialogTrigger>
-        <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
+      {/* <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild> */}
                 <Button size="icon" variant="ghost">
                   <XIcon />
                 </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Remove player</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+            {/* </TooltipTrigger>
+            <TooltipContent>
+              <p>Remove player</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider> */}
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>

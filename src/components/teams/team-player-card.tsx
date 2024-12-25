@@ -5,7 +5,7 @@ const TeamPlayerCard = ({ player }: { player: PlayerWithTeam }) => {
   return (
     <div
       key={player.player_id}
-      className="relative snap-start flex-none w-72 bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 border border-gray-100 overflow-hidden"
+      className="relative snap-start flex-none w-72 bg-card rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 border border-primary overflow-hidden"
     >
       <div className="relative">
         <div className="absolute -left-4 top-4 bg-primary text-white py-2 px-6 rounded-r-full shadow-md">

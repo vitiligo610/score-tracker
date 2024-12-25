@@ -31,6 +31,7 @@ export type Player = {
   player_role: PlayerRole;
   jersey_number: number;
   batting_order?: number;
+  bowling_order?: number;
 };
 
 export type PlayerWithoutId = Omit<Player, "player_id">;
@@ -43,6 +44,7 @@ export interface TeamPlayer {
   team_id: number;
   player_id: number;
   batting_order?: number;
+  bowling_order?: number;
 }
 
 export type MatchStatus = (typeof MATCH_STATUS)[number];

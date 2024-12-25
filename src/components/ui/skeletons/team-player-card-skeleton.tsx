@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const TeamPlayerCardSkeleton = () => {
   return (
-    <div className="relative snap-start flex-none w-72 bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+    <div className="relative snap-start flex-none w-72 bg-card rounded-xl shadow-lg border border-primary overflow-hidden">
       <div className="relative">
         <div className="absolute -left-4 top-4">
           <Skeleton className="h-8 w-16 rounded-r-full" />

@@ -1,7 +1,8 @@
 import AddTeamPlayer from "@/components/teams/add-team-player";
+import BattingOrderList from "@/components/teams/batting-order-list";
+import BowlingOrderList from "@/components/teams/bowling-order-list";
 import TeamPlayersList from "@/components/teams/team-players-list";
 import { fetchTeamById, fetchTeamNameById, fetchTeamPlayers } from "@/lib/actions";
-import { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 interface Props {
@@ -49,6 +50,16 @@ const TeamPage = async ({ params }: Props) => {
       <TeamPlayersList
         players={teamPlayers}
       />
+      <div className="flex flex-col md:flex-row gap-8" key={`${team_id}-${teamPlayers.length}`}>
+        <BattingOrderList
+          players={teamPlayers}
+          teamId={team_id}
+        />
+        <BowlingOrderList
+          players={teamPlayers}
+          teamId={team_id}
+        />
+      </div>
     </div>
   );
 };
