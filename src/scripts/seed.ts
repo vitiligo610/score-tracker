@@ -582,13 +582,100 @@ const seedSeries = async () => {
   }
 };
 
+const seedInnings = async () => {
+  console.log("Creating innings table...");
+  await pool.query(
+    `CREATE TABLE IF NOT EXISTS innings (
+      inning_id INT PRIMARY KEY AUTO_INCREMENT,
+      match_id INT NOT NULL,
+      team_id INT NOT NULL,
+      number INT,
+      total_runs INT DEFAULT 0,
+      total_wickets INT DEFAULT 0,
+      total_overs INT DEFAULT 0,
+      FOREIGN KEY (match_id) REFERENCES matches (match_id) ON DELETE CASCADE,
+      FOREIGN KEY (team_id) REFERENCES teams (team_id) ON DELETE CASCADE
+    )`
+  );
+}
+
+const seedOvers = async () => {
+  console.log("Creating overs table...");
+  await pool.query(
+    `CREATE TABLE IF NOT EXISTS overs (
+      inning_id INT NOT NULL,
+      over_number INT,
+      bowler_id INT NOT NULL,
+      total_runs INT,
+      total_wickets INT,
+      FOREIGN KEY (inning_id) REFERENCES innings (inning_id) ON DELETE CASCADE,
+      PRIMARY KEY (inning_id, over_number)
+    )`
+  );
+}
+
+const seedBalls = async () => {
+  console.log("Creating balls table...");
+  await pool.query(
+    `CREATE TABLE IF NOT EXISTS balls (
+      ball_id INT PRIMARY KEY AUTO_INCREMENT,
+      inning_id INT NOT NULL,
+      over_number INT NOT NULL,
+      ball_number INT,
+      batsman_id INT,
+      non_striker_id INT,
+      bowler_id INT,
+      runs_scored INT DEFAULT 0,
+      is_wicket BOOLEAN DEFAULT FALSE,
+      FOREIGN KEY (inning_id) REFERENCES innings (inning_id) ON DELETE CASCADE,
+      FOREIGN KEY (batsman_id) REFERENCES players (player_id) ON DELETE SET NULL,
+      FOREIGN KEY (non_striker_id) REFERENCES players (player_id) ON DELETE SET NULL,
+      FOREIGN KEY (bowler_id) REFERENCES players (player_id) ON DELETE SET NULL
+    )`
+  );
+
+  console.log("Creating dismissals table...");
+  await pool.query(
+    `CREATE TABLE IF NOT EXISTS dismissals (
+      dismissal_id INT PRIMARY KEY AUTO_INCREMENT,
+      inning_id INT NOT NULL,
+      ball_id INT NOT NULL,
+      batsman_id INT,
+      bowler_id INT,
+      fielder_id INT,
+      dismissal_type ENUM('Bowled', 'Caught', 'LBW', 'Run Out', 'Stumped', 'Hit Wicket', 'Others'),
+      FOREIGN KEY (inning_id) REFERENCES innings (inning_id) ON DELETE CASCADE,
+      FOREIGN KEY (ball_id) REFERENCES balls (ball_id) ON DELETE CASCADE,
+      FOREIGN KEY (batsman_id) REFERENCES players (player_id) ON DELETE SET NULL,
+      FOREIGN KEY (bowler_id) REFERENCES players (player_id) ON DELETE SET NULL,
+      FOREIGN KEY (fielder_id) REFERENCES players (player_id) ON DELETE SET NULL
+    )`
+  );
+
+  console.log("Creating extras table...");
+  await pool.query(
+    `CREATE TABLE IF NOT EXISTS extras (
+      extra_id INT PRIMARY KEY AUTO_INCREMENT,
+      ball_id INT NOT NULL,
+      type ENUM('Wide', 'No Ball', 'Bye', 'Leg Bye', 'Penalty'),
+      runs INT,
+      FOREIGN KEY (ball_id) REFERENCES balls (ball_id) ON DELETE CASCADE
+    )`
+  );
+}
+
 const main = async () => {
   console.log("🌱 Starting database seed...");
 
   try {
     console.log("Dropping existing tables...");
     await pool.query(`
-      DROP TABLE IF EXISTS matches,
+      DROP TABLE IF EXISTS extras,
+                           dismissals,
+                           balls,
+                           overs,
+                           innings,
+                           matches,
                            series_locations,
                            series_points,
                            series_teams,
@@ -597,8 +684,8 @@ const main = async () => {
                            tournament_teams,
                            tournaments,
                            team_players,
-                           players,
-                           teams
+                           teams,
+                           players
     `);
 
     await seedTeams();
@@ -607,6 +694,9 @@ const main = async () => {
     await seedMatches();
     await seedTournaments();
     await seedSeries();
+    await seedInnings();
+    await seedOvers();
+    await seedBalls();
 
     console.log("✅ Database seeded successfully");
     process.exit(0);
