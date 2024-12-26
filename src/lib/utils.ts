@@ -80,7 +80,17 @@ export const getMatchDetails = (match: any) => {
     innings: {
       team_id: match.batting_team_id,
       number: match.inning_number,
+      total_runs: match.total_runs,
+      total_wickets: match.total_wickets,
+      total_overs: match.total_overs,
       target_score: match.target_score,
+    },
+    over: {
+      inning_id: match.inning_id,
+      over_number: match.over_number,
+      bowler_id: match.bowler_id,
+      total_runs: match.over_total_runs,
+      total_wickets: match.over_total_wickets,
     }
   }
 }

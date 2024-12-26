@@ -42,6 +42,22 @@ export interface PlayerWithTeam extends Player {
   team_id: number;
 }
 
+export interface MatchPlayer {
+  player_id: number;
+  name: string;
+}
+
+export interface MatchBatsman extends MatchPlayer {
+  runs_scored: number;
+  balls_faced: number;
+}
+
+export interface MatchBowler extends MatchPlayer {
+  bowling_style: string;
+  runs_conceded: number;
+  balls_bowled: number;
+}
+
 export interface TeamPlayer {
   team_id: number;
   player_id: number;
@@ -64,8 +80,12 @@ export type Match = {
   toss_decision?: "batting" | "bowling";
   team1: Team | null;
   team2: Team | null;
+  batsmen?: MatchBatsman[];
+  bowlers?: MatchBowler[];
+  striker_player_id?: number;
   competition?: Competition;
   innings?: Innings;
+  over?: Over;
 };
 
 type MatchFormat = (typeof MATCH_FORMATS)[number];
@@ -115,4 +135,25 @@ export interface Innings {
   total_wickets: number;
   total_overs: number;
   target_score: number;
+}
+
+export interface Over {
+  inning_id: number;
+  over_number: number;
+  bowler_id: number;
+  total_runs: number;
+  total_wickets: number;
+  balls: Ball[];
+}
+
+export interface Ball {
+  inning_id: number;
+  over_number: number;
+  ball_number: number;
+  batsman_id: number;
+  non_striker_id: number;
+  bowler_id: number;
+  runs_scored: number;
+  is_wicket: boolean;
+  is_legal: boolean;
 }

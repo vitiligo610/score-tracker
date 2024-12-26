@@ -17,12 +17,12 @@ const MatchPage = async ({ params }: Props) => {
   const p = await params;
   const match_id = Number(p.id);
   const { match } = await fetchMatchById(match_id);
-  console.log("match is ", match);
+  // console.log("match is ", match);
 
   return (
     <div>
       {match.status === "scheduled" && <MatchToss match={match} />}
-      {match.status === "started" && <TeamsMatch match={match} />}
+      {match.status === "started" && <TeamsMatch match_id={match_id} match={match} />}
     </div>
   )
 }

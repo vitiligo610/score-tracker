@@ -596,10 +596,25 @@ const seedInnings = async () => {
   console.log("Creating procedure for initial innings...");
   await pool.query("DROP PROCEDURE IF EXISTS CreateFirstInningsForMatch");
   await pool.query(
-    `CREATE PROCEDURE CreateFirstInningsForMatch (IN p_match_id INT, IN batting_team_id INT)
+    `CREATE PROCEDURE CreateFirstInningsForMatch (IN p_match_id INT, IN batting_team_id INT, IN bowling_team_id INT)
     BEGIN
+        DECLARE p_inning_id INT;
+        DECLARE p_bowler_id INT;
+
         INSERT INTO innings (match_id, team_id, number)
         VALUES (p_match_id, batting_team_id, 1);
+
+        SELECT LAST_INSERT_ID() INTO p_inning_id;
+        SET p_bowler_id = (
+            SELECT player_id FROM team_players
+            WHERE team_id = bowling_team_id
+            AND bowling_order IS NOT NULL
+            ORDER BY bowling_order
+            LIMIT 1
+        );
+
+        INSERT INTO overs (inning_id, over_number, bowler_id)
+        VALUES (p_inning_id, 1, p_bowler_id);
     END`
   );
 }
@@ -611,8 +626,8 @@ const seedOvers = async () => {
       inning_id INT NOT NULL,
       over_number INT,
       bowler_id INT NOT NULL,
-      total_runs INT,
-      total_wickets INT,
+      total_runs INT DEFAULT 0,
+      total_wickets INT DEFAULT 0,
       FOREIGN KEY (inning_id) REFERENCES innings (inning_id) ON DELETE CASCADE,
       PRIMARY KEY (inning_id, over_number)
     )`

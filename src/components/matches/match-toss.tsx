@@ -30,7 +30,7 @@ const MatchToss = ({ match }: MatchTossProps) => {
       match.match_id,
       selectedTeam,
       tossDecision,
-      match.team1?.team_id === selectedTeam
+      match.team1?.team_id !== selectedTeam
         ? match.team1?.team_id
         : match.team2?.team_id
     );
