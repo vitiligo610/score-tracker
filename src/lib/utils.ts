@@ -22,6 +22,19 @@ export const getInitials = (str: string) => {
   return initials;
 };
 
+export const toOrdinal = (number: number) => {
+  switch (number) {
+    case 1:
+      return "1st";
+    case 2:
+      return "2nd";
+    case 3:
+      return "3rd";
+    default:
+      return `${number}th`;
+  }
+}
+
 export const getTransformedMatch = (match: any) => {
   const cleanedMatch = Object.fromEntries(
     Object.entries(match).filter(
@@ -53,6 +66,24 @@ export const getTransformedMatch = (match: any) => {
       : null,
   };
 };
+
+export const getMatchDetails = (match: any) => {
+  const transformedMatch = getTransformedMatch(match);
+  return {
+    ...transformedMatch,
+    competition: {
+      name: match.tournament_name || match.series_name,
+      format: match.tournament_format || match.series_format,
+      total_rounds: match.tournament_rounds || match.series_rounds,
+      type: match.series_type || null,
+    },
+    innings: {
+      team_id: match.batting_team_id,
+      number: match.inning_number,
+      target_score: match.target_score,
+    }
+  }
+}
 
 // Calculate the number of matches expected for a specific round
 export const getExpectedMatchesForRound = (

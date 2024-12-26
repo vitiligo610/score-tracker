@@ -18,7 +18,7 @@ import {
 } from "@/lib/definitons";
 import { pool } from "@/lib/db";
 import { PLAYERS_PER_PAGE, TEAMS_PER_PAGE } from "@/lib/constants";
-import { getTransformedMatch } from "@/lib/utils";
+import { getMatchDetails, getTransformedMatch } from "@/lib/utils";
 
 export const fetchPlayers = async (
   query: string,
@@ -299,6 +299,32 @@ export const updateTeamCaptain = async (team_id: number, captain_id: number) => 
   } catch (error) {
     console.log("Error updating team captain: ", error);
     throw new Error("Failed to update team captain!");
+  }
+}
+
+export const updateTeamBowlers = async (team_id: number, player_ids: number[]) => {
+  try {
+    await Promise.all(
+      player_ids.map((player_id, index) => 
+        pool.query(
+          `UPDATE team_players
+          SET bowling_order = ?
+          WHERE team_id = ?
+          AND player_id = ?`,
+          [index + 1, team_id, player_id]
+        )
+      )
+    );
+    await pool.query(
+      `UPDATE team_players
+      SET bowling_order = NULL
+      WHERE team_id = ?
+      AND player_id NOT IN (?)`,
+      [team_id, player_ids]
+    );
+  } catch (error) {
+    console.log("Error updating team bowlers: ", error);
+    throw new Error("Failed to update team bowleres!");
   }
 }
 
@@ -818,6 +844,23 @@ export const fetchSeriesMatches = async (series_id: number) => {
   }
 };
 
+export const updateMatchToss = async (match_id: number | string, toss_winner_id: number, toss_decision: string, other_team_id?: number) => {
+  try {
+    await pool.query(
+      `UPDATE matches
+      SET toss_winner_id = ?,
+          toss_decision = ?,
+          status = ?
+      WHERE match_id = ?`,
+      [toss_winner_id, toss_decision, "started", match_id]
+    );
+    await pool.query("CALL CreateFirstInningsForMatch(?, ?)", [match_id, toss_decision === "batting" ? toss_winner_id : other_team_id]);
+  } catch (error) {
+    console.log("Error updating match toss: ", error);
+    throw new Error("Failed to update match toss!");
+  }
+};
+
 export const fetchMatchById = async (match_id: number) => {
   try {
     const [data]: any = await pool.query(
@@ -831,6 +874,8 @@ export const fetchMatchById = async (match_id: number) => {
           m.location AS location,
           m.round AS round,
           m.status AS status,
+          m.toss_winner_id AS toss_winner_id,
+          m.toss_decision AS toss_decision,
           t1.team_id AS team1_team_id,
           t1.name AS team1_name,
           t1.logo_url AS team1_logo_url,
@@ -840,35 +885,34 @@ export const fetchMatchById = async (match_id: number) => {
           t2.name AS team2_name,
           t2.logo_url AS team2_logo_url,
           t2.founded_year AS team2_founded_year,
-          t2.description AS team2_description
+          t2.description AS team2_description,
+          t.name AS tournament_name,
+          t.format AS tournament_format,
+          t.total_rounds AS tournament_rounds,
+          s.name AS series_name,
+          s.format AS series_format,
+          s.total_rounds AS series_rounds,
+          s.type AS series_type,
+          i.team_id AS batting_team_id,
+          i.number AS inning_number,
+          i.target_score AS target_score
       FROM matches m
+      LEFT JOIN tournaments t ON m.tournament_id = t.tournament_id
+      LEFT JOIN series s ON m.series_id = s.series_id
+      LEFT JOIN innings i ON m.match_id = i.match_id
       LEFT JOIN teams t1 ON m.team1_id = t1.team_id
       LEFT JOIN teams t2 ON m.team2_id = t2.team_id
       WHERE m.match_id = ?`,
       [match_id]
     );
 
-    const match = getTransformedMatch(data[0]);
+    console.log('Data is ', data[0]);
 
-    return { match: match as Match };
+    const match = getMatchDetails(data[0]);
+
+    return { match: match as unknown as Match };
   } catch (error) {
     console.log("Error fetching match by id: ", error);
     throw new Error("Failed to fetch match!");
-  }
-}
-
-export const updateMatchToss = async (match_id: number | string, toss_winner_id: number, toss_decision: string) => {
-  try {
-    await pool.query(
-      `UPDATE matches
-      SET toss_winner_id = ?,
-          toss_decision = ?,
-          status = ?
-      WHERE match_id = ?`,
-      [toss_winner_id, toss_decision, "started", match_id]
-    );
-  } catch (error) {
-    console.log("Error updating match toss: ", error);
-    throw new Error("Failed to update match toss!");
   }
 }

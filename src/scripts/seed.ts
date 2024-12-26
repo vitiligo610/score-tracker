@@ -72,28 +72,6 @@ const seedPlayers = async () => {
   );
 };
 
-const createSetBattingAndBowlingOrderTrigger = async () => {
-  await pool.query("DROP TRIGGER IF EXISTS SetBattingAndBowlingOrder");
-  await pool.query(
-    `CREATE TRIGGER SetBattingAndBowlingOrder
-    BEFORE INSERT ON team_players
-    FOR EACH ROW
-    BEGIN
-        SET NEW.batting_order = (
-            SELECT COALESCE(MAX(batting_order), 0) + 1
-            FROM team_players
-            WHERE team_id = NEW.team_id
-        );
-
-        SET NEW.bowling_order = (
-            SELECT COALESCE(MAX(bowling_order), 0) + 1
-            FROM team_players
-            WHERE team_id = NEW.team_id
-        );
-    END`
-  );
-}
-
 const seedTeamPlayers = async () => {
   console.log("Creating team players table...");
   await pool.query(`
@@ -118,15 +96,31 @@ const seedTeamPlayers = async () => {
           team_player.team_id,
           team_player.player_id,
           team_player.batting_order,
-          team_player.bowling_order,
+          team_player.bowling_order ?? null,
         ]
       )
     )
   );
 
   console.log("Creating teams_players trigger....");
-  await createSetBattingAndBowlingOrderTrigger();
+  await createSetBattingOrderTrigger();
 };
+
+const createSetBattingOrderTrigger = async () => {
+  await pool.query("DROP TRIGGER IF EXISTS SetBattingOrder");
+  await pool.query(
+    `CREATE TRIGGER SetBattingOrder
+    BEFORE INSERT ON team_players
+    FOR EACH ROW
+    BEGIN
+        SET NEW.batting_order = (
+            SELECT COALESCE(MAX(batting_order), 0) + 1
+            FROM team_players
+            WHERE team_id = NEW.team_id
+        );
+    END`
+  );
+}
 
 const seedMatches = async () => {
   console.log("Creating matches table...");
@@ -150,6 +144,90 @@ const seedMatches = async () => {
       FOREIGN KEY (winner_team_id) REFERENCES teams (team_id)
     )
   `);
+};
+
+const seedTournaments = async () => {
+  console.log("Creating tournaments table...");
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS tournaments (
+      tournament_id INT PRIMARY KEY AUTO_INCREMENT,
+      name VARCHAR(100) NOT NULL,
+      start_date DATE,
+      end_date DATE,
+      format ENUM('T20', 'ODI', 'Test'),
+      total_rounds INT DEFAULT 0,
+      total_teams INT DEFAULT 0,
+      finished BOOLEAN DEFAULT FALSE
+    )
+  `);
+
+  console.log("Creating tournaments_locations table...");
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS tournament_locations (
+      tournament_id INT,
+      location_name VARCHAR(100),
+      FOREIGN KEY (tournament_id) REFERENCES tournaments (tournament_id) ON DELETE CASCADE,
+      PRIMARY KEY (tournament_id, location_name)
+    )
+  `);
+
+  console.log("Creating tournament_teams table...");
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS tournament_teams (
+      tournament_id INT,
+      team_id INT,
+      FOREIGN KEY (tournament_id) REFERENCES tournaments (tournament_id) ON DELETE CASCADE,
+      FOREIGN KEY (team_id) REFERENCES teams (team_id) ON DELETE CASCADE,
+      PRIMARY KEY (tournament_id, team_id)
+    )
+  `);
+
+  console.log("Adding FK constraint to matches table for tournament_id...");
+  await pool.query(
+    `ALTER TABLE matches ADD FOREIGN KEY (tournament_id) REFERENCES tournaments (tournament_id) ON DELETE CASCADE`
+  );
+
+  console.log("Creating tournament procedures...");
+  await createAddTeamToTournamentProc();
+  await createSetTournamentDetailsProc();
+  await createInitialTournamentScheduleProc();
+
+  console.log("Seeding tournaments...");
+
+  for (const tournament of tournaments) {
+    await pool.query(
+      `INSERT INTO tournaments (name, start_date, end_date, format)
+      VALUES (?, ?, ?, ?)`,
+      [
+        tournament.name,
+        tournament.start_date,
+        tournament.end_date,
+        tournament.format,
+      ]
+    );
+
+    for (const location of tournament.locations) {
+      await pool.query(
+        `INSERT INTO tournament_locations (tournament_id, location_name)
+        VALUES (?, ?)`,
+        [tournament.tournament_id, location]
+      );
+    }
+
+    for (const team_id of tournament.team_ids) {
+      await pool.query(`CALL AddTeamToTournament(?, ?)`, [
+        tournament.tournament_id,
+        team_id,
+      ]);
+    }
+
+    await pool.query("CALL SetTournamentDetails(?)", [
+      tournament.tournament_id,
+    ]);
+    await pool.query("CALL CreateInitialTournamentSchedule(?)", [
+      tournament.tournament_id,
+    ]);
+  }
 };
 
 const createAddTeamToTournamentProc = async () => {
@@ -299,87 +377,96 @@ const createInitialTournamentScheduleProc = async () => {
   );
 };
 
-const seedTournaments = async () => {
-  console.log("Creating tournaments table...");
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS tournaments (
-      tournament_id INT PRIMARY KEY AUTO_INCREMENT,
-      name VARCHAR(100) NOT NULL,
+const seedSeries = async () => {
+  console.log("Creating series table...");
+  await pool.query(
+    `CREATE TABLE IF NOT EXISTS series (
+      series_id INT PRIMARY KEY AUTO_INCREMENT,
+      name VARCHAR (100) NOT NULL,
+      format ENUM('T20', 'ODI', 'Test'),
+      type ENUM ('bilateral', 'trilateral'),
       start_date DATE,
       end_date DATE,
-      format ENUM('T20', 'ODI', 'Test'),
-      total_rounds INT DEFAULT 0,
-      total_teams INT DEFAULT 0,
+      total_rounds INT DEFAULT 3,
+      team1_id INT NOT NULL,
+      team2_id INT NOT NULL,
+      team3_id INT,
+      winner_team_id INT,
       finished BOOLEAN DEFAULT FALSE
-    )
-  `);
-
-  console.log("Creating tournaments_locations table...");
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS tournament_locations (
-      tournament_id INT,
-      location_name VARCHAR(100),
-      FOREIGN KEY (tournament_id) REFERENCES tournaments (tournament_id) ON DELETE CASCADE,
-      PRIMARY KEY (tournament_id, location_name)
-    )
-  `);
-
-  console.log("Creating tournament_teams table...");
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS tournament_teams (
-      tournament_id INT,
-      team_id INT,
-      FOREIGN KEY (tournament_id) REFERENCES tournaments (tournament_id) ON DELETE CASCADE,
-      FOREIGN KEY (team_id) REFERENCES teams (team_id) ON DELETE CASCADE,
-      PRIMARY KEY (tournament_id, team_id)
-    )
-  `);
-
-  console.log("Adding FK constraint to matches table for tournament_id...");
-  await pool.query(
-    `ALTER TABLE matches ADD FOREIGN KEY (tournament_id) REFERENCES tournaments (tournament_id) ON DELETE CASCADE`
+    )`
   );
 
-  console.log("Creating tournament procedures...");
-  await createAddTeamToTournamentProc();
-  await createSetTournamentDetailsProc();
-  await createInitialTournamentScheduleProc();
+  console.log("Creating series_locations table...");
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS series_locations (
+      series_id INT,
+      location_name VARCHAR(100),
+      FOREIGN KEY (series_id) REFERENCES series (series_id) ON DELETE CASCADE,
+      PRIMARY KEY (series_id, location_name)
+    )
+  `);
 
-  console.log("Seeding tournaments...");
+  console.log("Creating series_teams table...");
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS series_teams (
+      series_id INT,
+      team_id INT,
+      FOREIGN KEY (series_id) REFERENCES series (series_id) ON DELETE CASCADE,
+      FOREIGN KEY (team_id) REFERENCES teams (team_id) ON DELETE CASCADE,
+      PRIMARY KEY (series_id, team_id)
+    )
+  `);
 
-  for (const tournament of tournaments) {
+  console.log("Creating series_points table..."); // for trilateral series
+  await pool.query(
+    `CREATE TABLE IF NOT EXISTS series_points (
+      series_id INT NOT NULL,
+      team_id INT NOT NULL,
+      matches_played INT DEFAULT 0,
+      wins INT DEFAULT 0,
+      losses INT DEFAULT 0,
+      ties INT DEFAULT 0,
+      points INT DEFAULT 0,
+      net_run_rate FLOAT DEFAULT 0.0,
+      FOREIGN KEY (series_id) REFERENCES series (series_id) ON DELETE CASCADE,
+      FOREIGN KEY (team_id) REFERENCES teams (team_id) ON DELETE CASCADE,
+      PRIMARY KEY (series_id, team_id)
+    )`
+  );
+
+  console.log("Adding FK constraint to matches table for series_id...");
+  await pool.query(
+    `ALTER TABLE matches ADD FOREIGN KEY (series_id) REFERENCES series (series_id) ON DELETE CASCADE`
+  );
+
+  console.log("Creating series procedures...");
+  await createInitialSeriesScheduleProc();
+
+  console.log("Seeding series...");
+  for (const s of series) {
     await pool.query(
-      `INSERT INTO tournaments (name, start_date, end_date, format)
-      VALUES (?, ?, ?, ?)`,
-      [
-        tournament.name,
-        tournament.start_date,
-        tournament.end_date,
-        tournament.format,
-      ]
+      `INSERT INTO series (name, start_date, end_date, format, type, total_rounds)
+      VALUES (?, ?, ?, ?, ?, ?)`,
+      [s.name, s.start_date, s.end_date, s.format, s.type, s.total_rounds]
     );
 
-    for (const location of tournament.locations) {
+    for (const location of s.locations) {
       await pool.query(
-        `INSERT INTO tournament_locations (tournament_id, location_name)
+        `INSERT INTO series_locations (series_id, location_name)
         VALUES (?, ?)`,
-        [tournament.tournament_id, location]
+        [s.series_id, location]
       );
     }
 
-    for (const team_id of tournament.team_ids) {
-      await pool.query(`CALL AddTeamToTournament(?, ?)`, [
-        tournament.tournament_id,
-        team_id,
-      ]);
+    for (const team_id of s.team_ids) {
+      await pool.query(
+        `INSERT INTO series_teams (series_id, team_id)
+        VALUES (?, ?)`,
+        [s.series_id, team_id]
+      );
     }
 
-    await pool.query("CALL SetTournamentDetails(?)", [
-      tournament.tournament_id,
-    ]);
-    await pool.query("CALL CreateInitialTournamentSchedule(?)", [
-      tournament.tournament_id,
-    ]);
+    await pool.query("CALL CreateInitialSeriesSchedule(?)", [s.series_id]);
   }
 };
 
@@ -489,99 +576,6 @@ const createInitialSeriesScheduleProc = async () => {
   );
 };
 
-const seedSeries = async () => {
-  console.log("Creating series table...");
-  await pool.query(
-    `CREATE TABLE IF NOT EXISTS series (
-      series_id INT PRIMARY KEY AUTO_INCREMENT,
-      name VARCHAR (100) NOT NULL,
-      format ENUM('T20', 'ODI', 'Test'),
-      type ENUM ('bilateral', 'trilateral'),
-      start_date DATE,
-      end_date DATE,
-      total_rounds INT DEFAULT 3,
-      team1_id INT NOT NULL,
-      team2_id INT NOT NULL,
-      team3_id INT,
-      winner_team_id INT,
-      finished BOOLEAN DEFAULT FALSE
-    )`
-  );
-
-  console.log("Creating series_locations table...");
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS series_locations (
-      series_id INT,
-      location_name VARCHAR(100),
-      FOREIGN KEY (series_id) REFERENCES series (series_id) ON DELETE CASCADE,
-      PRIMARY KEY (series_id, location_name)
-    )
-  `);
-
-  console.log("Creating series_teams table...");
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS series_teams (
-      series_id INT,
-      team_id INT,
-      FOREIGN KEY (series_id) REFERENCES series (series_id) ON DELETE CASCADE,
-      FOREIGN KEY (team_id) REFERENCES teams (team_id) ON DELETE CASCADE,
-      PRIMARY KEY (series_id, team_id)
-    )
-  `);
-
-  console.log("Creating series_points table..."); // for trilateral series
-  await pool.query(
-    `CREATE TABLE IF NOT EXISTS series_points (
-      series_id INT NOT NULL,
-      team_id INT NOT NULL,
-      matches_played INT DEFAULT 0,
-      wins INT DEFAULT 0,
-      losses INT DEFAULT 0,
-      ties INT DEFAULT 0,
-      points INT DEFAULT 0,
-      net_run_rate FLOAT DEFAULT 0.0,
-      FOREIGN KEY (series_id) REFERENCES series (series_id) ON DELETE CASCADE,
-      FOREIGN KEY (team_id) REFERENCES teams (team_id) ON DELETE CASCADE,
-      PRIMARY KEY (series_id, team_id)
-    )`
-  );
-
-  console.log("Adding FK constraint to matches table for series_id...");
-  await pool.query(
-    `ALTER TABLE matches ADD FOREIGN KEY (series_id) REFERENCES series (series_id) ON DELETE CASCADE`
-  );
-
-  console.log("Creating series procedures...");
-  await createInitialSeriesScheduleProc();
-
-  console.log("Seeding series...");
-  for (const s of series) {
-    await pool.query(
-      `INSERT INTO series (name, start_date, end_date, format, type, total_rounds)
-      VALUES (?, ?, ?, ?, ?, ?)`,
-      [s.name, s.start_date, s.end_date, s.format, s.type, s.total_rounds]
-    );
-
-    for (const location of s.locations) {
-      await pool.query(
-        `INSERT INTO series_locations (series_id, location_name)
-        VALUES (?, ?)`,
-        [s.series_id, location]
-      );
-    }
-
-    for (const team_id of s.team_ids) {
-      await pool.query(
-        `INSERT INTO series_teams (series_id, team_id)
-        VALUES (?, ?)`,
-        [s.series_id, team_id]
-      );
-    }
-
-    await pool.query("CALL CreateInitialSeriesSchedule(?)", [s.series_id]);
-  }
-};
-
 const seedInnings = async () => {
   console.log("Creating innings table...");
   await pool.query(
@@ -593,9 +587,20 @@ const seedInnings = async () => {
       total_runs INT DEFAULT 0,
       total_wickets INT DEFAULT 0,
       total_overs INT DEFAULT 0,
+      target_score INT DEFAULT 0,
       FOREIGN KEY (match_id) REFERENCES matches (match_id) ON DELETE CASCADE,
       FOREIGN KEY (team_id) REFERENCES teams (team_id) ON DELETE CASCADE
     )`
+  );
+
+  console.log("Creating procedure for initial innings...");
+  await pool.query("DROP PROCEDURE IF EXISTS CreateFirstInningsForMatch");
+  await pool.query(
+    `CREATE PROCEDURE CreateFirstInningsForMatch (IN p_match_id INT, IN batting_team_id INT)
+    BEGIN
+        INSERT INTO innings (match_id, team_id, number)
+        VALUES (p_match_id, batting_team_id, 1);
+    END`
   );
 }
 

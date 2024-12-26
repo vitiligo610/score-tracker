@@ -20,16 +20,23 @@ import SortablePlayerCard from "@/components/teams/sortable-player-card";
 import { PlayerWithTeam } from "@/lib/definitons";
 import { updateTeamBowlingOrder } from "@/lib/actions";
 import { useToast } from "@/hooks/use-toast";
+import { SelectBowlersDialog } from "./select-bowlers-dialog";
 
 interface BowlingOrderList {
   players: PlayerWithTeam[];
+  bowlers: PlayerWithTeam[];
   teamId: number;
   captainId?: number;
 }
 
-const BowlingOrderList = ({ players, teamId, captainId }: BowlingOrderList) => {
+const BowlingOrderList = ({
+  players,
+  bowlers,
+  teamId,
+  captainId,
+}: BowlingOrderList) => {
   const [sortedPlayers, setSortedPlayers] = useState(
-    players.sort((a, b) => (a.bowling_order || 0) - (b.bowling_order || 0))
+    bowlers.sort((a, b) => (a.bowling_order || 0) - (b.bowling_order || 0))
   );
   const { toast } = useToast();
 
@@ -74,7 +81,14 @@ const BowlingOrderList = ({ players, teamId, captainId }: BowlingOrderList) => {
 
   return (
     <div className="mt-8 flex-1">
-      <h2 className="text-2xl font-semibold mb-4">Bowling Order</h2>
+      <div className="flex items-start justify-start">
+        <h2 className="text-2xl font-semibold mb-4">Bowling Order</h2>
+        <SelectBowlersDialog
+          players={players}
+          bowlers={bowlers.map((bowler) => bowler.player_id)}
+          teamId={teamId}
+        />
+      </div>
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -99,6 +113,6 @@ const BowlingOrderList = ({ players, teamId, captainId }: BowlingOrderList) => {
       </DndContext>
     </div>
   );
-}
+};
 
 export default BowlingOrderList;

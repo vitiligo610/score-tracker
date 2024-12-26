@@ -60,8 +60,12 @@ export type Match = {
   location?: string;
   round: number;
   status: MatchStatus;
+  toss_winner_id?: number;
+  toss_decision?: "batting" | "bowling";
   team1: Team | null;
   team2: Team | null;
+  competition?: Competition;
+  innings?: Innings;
 };
 
 type MatchFormat = (typeof MATCH_FORMATS)[number];
@@ -101,3 +105,14 @@ export interface SeriesMatch extends Match {
   [x: string]: any;
   series_id: number;
 };
+
+export interface Innings {
+  inning_id: number;
+  match_id: number;
+  team_id: number;
+  number: number;
+  total_runs: number;
+  total_wickets: number;
+  total_overs: number;
+  target_score: number;
+}

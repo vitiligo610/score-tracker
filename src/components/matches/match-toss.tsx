@@ -26,14 +26,20 @@ const MatchToss = ({ match }: MatchTossProps) => {
     if (!selectedTeam || !tossDecision) return;
 
     setIsUpdating(true);
-    await updateMatchToss(match.match_id, selectedTeam, tossDecision);
+    await updateMatchToss(
+      match.match_id,
+      selectedTeam,
+      tossDecision,
+      match.team1?.team_id === selectedTeam
+        ? match.team1?.team_id
+        : match.team2?.team_id
+    );
     setIsUpdating(false);
     router.refresh();
   };
 
   return (
     <div className="max-w-4xl mx-auto p-6 space-y-8">
-      
       {/* Teams Header */}
       <div className="text-center space-y-6">
         <div>

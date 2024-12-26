@@ -2,14 +2,18 @@ import AddTeamPlayer from "@/components/teams/add-team-player";
 import BattingOrderList from "@/components/teams/batting-order-list";
 import BowlingOrderList from "@/components/teams/bowling-order-list";
 import TeamPlayersList from "@/components/teams/team-players-list";
-import { fetchTeamById, fetchTeamNameById, fetchTeamPlayers } from "@/lib/actions";
+import {
+  fetchTeamById,
+  fetchTeamNameById,
+  fetchTeamPlayers,
+} from "@/lib/actions";
 import { notFound } from "next/navigation";
 
 interface Props {
   params: {
     id: string;
-  }
-};
+  };
+}
 
 export const generateMetadata = async ({ params }: Props) => {
   const p = await params;
@@ -20,7 +24,7 @@ export const generateMetadata = async ({ params }: Props) => {
   return {
     title: name,
   };
-}
+};
 
 const TeamPage = async ({ params }: Props) => {
   const p = await params;
@@ -28,6 +32,7 @@ const TeamPage = async ({ params }: Props) => {
   const team_id = Number(id);
   const { team } = await fetchTeamById(team_id);
   const { teamPlayers } = await fetchTeamPlayers(team_id);
+  const bowlers = teamPlayers.filter(player => player.bowling_order);
 
   if (!team) {
     notFound();
@@ -44,7 +49,7 @@ const TeamPage = async ({ params }: Props) => {
         </div>
         <AddTeamPlayer
           teamId={team_id}
-          existingPlayerIds={teamPlayers.map(p => p.player_id)}
+          existingPlayerIds={teamPlayers.map((p) => p.player_id)}
         />
       </div>
       <TeamPlayersList
@@ -52,18 +57,24 @@ const TeamPage = async ({ params }: Props) => {
         teamId={team_id}
         captainId={team.captain_id}
       />
-      <div className="flex flex-col md:flex-row gap-8" key={`${team_id}-${teamPlayers.length}`}>
-        <BattingOrderList
-          players={teamPlayers}
-          teamId={team_id}
-          captainId={team.captain_id}
-        />
-        <BowlingOrderList
-          players={teamPlayers}
-          teamId={team_id}
-          captainId={team.captain_id}
-        />
-      </div>
+      {teamPlayers.length > 0 && (
+        <div
+          className="flex flex-col md:flex-row gap-8"
+          key={`${team_id}-${teamPlayers.length}-${bowlers.map(p => p.player_id).join("")}`}
+        >
+          <BattingOrderList
+            players={teamPlayers}
+            teamId={team_id}
+            captainId={team.captain_id}
+          />
+          <BowlingOrderList
+            players={teamPlayers}
+            bowlers={bowlers}
+            teamId={team_id}
+            captainId={team.captain_id}
+          />
+        </div>
+      )}
     </div>
   );
 };

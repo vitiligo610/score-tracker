@@ -73,7 +73,7 @@ const BattingOrderList = ({ players, teamId, captainId }: BattingOrderListProps)
   };
 
   return (
-    <div className="mt-8 flex-1">
+    <div className="mt-8 w-full lg:w-1/2">
       <h2 className="text-2xl font-semibold mb-4">Batting Order</h2>
       <DndContext
         sensors={sensors}

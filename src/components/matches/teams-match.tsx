@@ -1,6 +1,15 @@
-const TeamsMatch = () => {
+import { Match } from "@/lib/definitons";
+import MatchHeader from "./match-header";
+
+interface TeamsMatchProps {
+  match: Match;
+}
+
+const TeamsMatch = ({ match }: TeamsMatchProps) => {
   return (
-    <div>Match</div>
+    <div className="flex flex-col">
+      <MatchHeader match={match} />
+    </div>
   )
 }
 

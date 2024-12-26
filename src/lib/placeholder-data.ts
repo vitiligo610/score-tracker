@@ -48,6 +48,7 @@ export const players: Player[] = [
     bowling_style: "Right-arm Fast",
     player_role: "All-rounder",
     jersey_number: 10,
+    bowling_order: 1,
   },
   {
     player_id: 2,
@@ -58,6 +59,7 @@ export const players: Player[] = [
     bowling_style: "Left-arm Spin",
     player_role: "Bowler",
     jersey_number: 22,
+    bowling_order: 2,
   },
   {
     player_id: 3,
@@ -68,6 +70,7 @@ export const players: Player[] = [
     bowling_style: "Right-arm Medium",
     player_role: "Batsman",
     jersey_number: 7,
+    bowling_order: 3,
   },
   {
     player_id: 4,
@@ -78,6 +81,7 @@ export const players: Player[] = [
     bowling_style: "None",
     player_role: "Wicket-keeper",
     jersey_number: 5,
+    bowling_order: 4,
   },
   {
     player_id: 5,
@@ -88,6 +92,7 @@ export const players: Player[] = [
     bowling_style: "Right-arm Spin",
     player_role: "All-rounder",
     jersey_number: 18,
+    bowling_order: 5,
   },
   {
     player_id: 6,
@@ -168,6 +173,7 @@ export const players: Player[] = [
     bowling_style: "Left-arm Spin",
     player_role: "All-rounder",
     jersey_number: 4,
+    bowling_order: 1,
   },
   {
     player_id: 14,
@@ -178,6 +184,7 @@ export const players: Player[] = [
     bowling_style: "Right-arm Fast",
     player_role: "All-rounder",
     jersey_number: 5,
+    bowling_order: 2,
   },
   {
     player_id: 15,
@@ -188,6 +195,7 @@ export const players: Player[] = [
     bowling_style: "None",
     player_role: "Wicket-keeper",
     jersey_number: 6,
+    bowling_order: 3,
   },
   {
     player_id: 16,
@@ -198,6 +206,7 @@ export const players: Player[] = [
     bowling_style: "Left-arm Fast",
     player_role: "Bowler",
     jersey_number: 7,
+    bowling_order: 4,
   },
   {
     player_id: 17,
@@ -208,6 +217,7 @@ export const players: Player[] = [
     bowling_style: "Right-arm Spin",
     player_role: "Batsman",
     jersey_number: 9,
+    bowling_order: 5,
   },
   {
     player_id: 18,
@@ -288,6 +298,7 @@ export const players: Player[] = [
     bowling_style: "Right-arm Fast",
     player_role: "Bowler",
     jersey_number: 11,
+    bowling_order: 1,
   },
   {
     player_id: 26,
@@ -298,6 +309,7 @@ export const players: Player[] = [
     bowling_style: "Right-arm Medium",
     player_role: "Batsman",
     jersey_number: 41,
+    bowling_order: 2,
   },
   {
     player_id: 27,
@@ -308,6 +320,7 @@ export const players: Player[] = [
     bowling_style: "Right-arm Spin",
     player_role: "All-rounder",
     jersey_number: 5,
+    bowling_order: 3,
   },
   {
     player_id: 28,
@@ -318,6 +331,7 @@ export const players: Player[] = [
     bowling_style: "Right-arm Spin",
     player_role: "Bowler",
     jersey_number: 3,
+    bowling_order: 4,
   },
   {
     player_id: 29,
@@ -328,6 +342,7 @@ export const players: Player[] = [
     bowling_style: "Right-arm Medium",
     player_role: "Batsman",
     jersey_number: 77,
+    bowling_order: 5,
   },
   {
     player_id: 30,
@@ -408,6 +423,7 @@ export const players: Player[] = [
     bowling_style: "Right-arm Fast",
     player_role: "Bowler",
     jersey_number: 71,
+    bowling_order: 1,
   },
   {
     player_id: 38,
@@ -418,6 +434,7 @@ export const players: Player[] = [
     bowling_style: "Left-arm Spin",
     player_role: "All-rounder",
     jersey_number: 21,
+    bowling_order: 2,
   },
   {
     player_id: 39,
@@ -428,6 +445,7 @@ export const players: Player[] = [
     bowling_style: "Right-arm Medium",
     player_role: "Batsman",
     jersey_number: 42,
+    bowling_order: 3,
   },
   {
     player_id: 40,
@@ -438,6 +456,7 @@ export const players: Player[] = [
     bowling_style: "Right-arm Spin",
     player_role: "All-rounder",
     jersey_number: 23,
+    bowling_order: 4,
   },
   {
     player_id: 41,
@@ -448,6 +467,7 @@ export const players: Player[] = [
     bowling_style: "None",
     player_role: "Wicket-keeper",
     jersey_number: 48,
+    bowling_order: 5,
   },
   {
     player_id: 42,
@@ -546,25 +566,25 @@ export const team_players: TeamPlayer[] = [
     team_id: 1, 
     player_id: player.player_id,
     batting_order: index % 12 + 1,
-    bowling_order: index % 12 + 1,
+    bowling_order: player.bowling_order ?? undefined,
   }))),
   ...(players.slice(12, 24).map((player, index) => ({ 
     team_id: 2, 
     player_id: player.player_id,
     batting_order: index % 12 + 1,
-    bowling_order: index % 12 + 1,
+    bowling_order: player.bowling_order ?? undefined,
   }))),
   ...(players.slice(24, 36).map((player, index) => ({ 
     team_id: 3, 
     player_id: player.player_id,
     batting_order: index % 12 + 1,
-    bowling_order: index % 12 + 1,
+    bowling_order: player.bowling_order ?? undefined,
   }))),
   ...(players.slice(36, 48).map((player, index) => ({ 
     team_id: 4, 
     player_id: player.player_id,
     batting_order: index % 12 + 1,
-    bowling_order: index % 12 + 1,
+    bowling_order: player.bowling_order ?? undefined,
   }))),
 ];
 
