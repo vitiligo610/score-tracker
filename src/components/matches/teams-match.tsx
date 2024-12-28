@@ -1,32 +1,30 @@
-import { Match } from "@/lib/definitons";
+"use client";
+
 import MatchHeader from "@/components/matches/match-header";
-import { MatchProvider } from "@/contexts/match-context";
 import BattingTeamCard from "@/components/matches/batting-team-card";
 import BowlingTeamCard from "@/components/matches/bowling-team-card";
 import ScoreCard from "@/components/matches/score-card";
 import MatchInputCard from "@/components/matches/match-input-card";
+import { useMatch } from "@/contexts/match-context";
 
-interface TeamsMatchProps {
-  match_id: number;
-  match: Match;
-}
+const TeamsMatch = () => {
+  const { loading } = useMatch();
 
-const TeamsMatch = ({ match_id, match }: TeamsMatchProps) => {
-  return (
-    <MatchProvider match_id={match_id}>
-      <div className="flex flex-col">
-        <MatchHeader />
-        <div className="container mx-auto py-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <BattingTeamCard />
-            <ScoreCard />
-            <BowlingTeamCard />
-          </div>
-          <MatchInputCard />
+  return loading ? (
+    <div>Loading...</div>
+  ) : (
+    <div className="flex flex-col">
+      <MatchHeader />
+      <div className="container mx-auto py-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <BattingTeamCard />
+          <ScoreCard />
+          <BowlingTeamCard />
         </div>
+        <MatchInputCard />
       </div>
-    </MatchProvider>
-  )
+    </div>
+  );
 };
 
 export default TeamsMatch;

@@ -2,7 +2,7 @@
 
 import { Card } from "@/components/ui/card";
 import { useMatch } from "@/contexts/match-context";
-import { cn } from "@/lib/utils";
+import { cn, getStrikeRate } from "@/lib/utils";
 import { ChevronRight } from "lucide-react";
 
 interface BattingTeamCardProps {
@@ -13,6 +13,7 @@ interface BattingTeamCardProps {
 
 const BattingTeamCard = ({ nextBatsman }: BattingTeamCardProps) => {
   const { matchDetails: match } = useMatch();
+  if (!match) return null;
 
   return (
     <Card className="p-4">
@@ -22,26 +23,26 @@ const BattingTeamCard = ({ nextBatsman }: BattingTeamCardProps) => {
 
       <div className="space-y-4">
         {/* Current Batsmen */}
-        {match?.batsmen?.map((batsman) => (
+        {match.batsmen.map((batsman) => (
           <div
             key={batsman.player_id}
             className={cn(
               "p-2 py-4 rounded-md bg-primary/5",
-              match?.striker_player_id === batsman.player_id &&
+              match.striker_player_id === batsman.player_id &&
                 "border border-primary"
             )}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="relative px-2 flex gap-2">
-                  {match?.striker_player_id === batsman.player_id && (
+                  {match.striker_player_id === batsman.player_id && (
                     <ChevronRight className="text-primary" />
                   )}
                   <span className="font-medium">{batsman.name}</span>
                 </div>
               </div>
               <div className="text-sm">
-                <span className="font-semibold">{batsman.runs_scored}</span>
+                <span className="font-semibold">{batsman.runs_scored} </span>
                 <span className="text-muted-foreground">
                   ({batsman.balls_faced})
                 </span>
@@ -52,7 +53,7 @@ const BattingTeamCard = ({ nextBatsman }: BattingTeamCardProps) => {
                 {batsman.batting_style}
               </span>
               <span>
-                SR 0.0
+                SR {batsman.strike_rate ? batsman.strike_rate.toFixed(2) : "0.00"}
               </span>
             </div>
           </div>

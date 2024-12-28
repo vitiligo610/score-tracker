@@ -30,3 +30,26 @@ export const MATCH_STATUS = [
 export const SERIES_TYPES = ["bilateral", "trilateral"] as const;
 
 export const SERIES_ROUNDS = [3, 5, 7] as const;
+
+export const EXTRAS_TYPES = [
+  "No Ball",
+  "Wide",
+  "Bye",
+  "Leg Bye",
+  "Penalty",
+] as const;
+
+export const DISMISSAL_TYPES = [
+  "Bowled",
+  "Caught",
+  "LBW",
+  "Run Out",
+  "Stumped",
+  "Hit Wicket",
+] as const;
+
+export const OVERS_FOR_FORMAT = {
+  T20: 20,
+  ODI: 50,
+  Test: 100,
+};

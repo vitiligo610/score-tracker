@@ -2,9 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import {
+  Ball,
+  ExtrasCount,
   Match,
   MatchBatsman,
   MatchBowler,
+  OngoingMatch,
   Player,
   PlayerWithoutId,
   PlayerWithTeam,
@@ -391,12 +394,14 @@ export const deleteTeam = async (team_id: number) => {
   }
 };
 
-export const fetchTeamPlayers = async (team_id: number) => {
+export const fetchTeamPlayers = async (team_id: number, limit?: number) => {
   try {
     const [players] = await pool.query(
       `SELECT * FROM team_players
       NATURAL JOIN players
-      WHERE team_id = ?`,
+      WHERE team_id = ?
+      ORDER BY batting_order
+      ${limit ? `LIMIT ${limit}` : ""}`,
       [team_id]
     );
 
@@ -884,6 +889,43 @@ export const updateMatchToss = async (
   }
 };
 
+export const getExtrasCountByMatchId = async (match_id: number) => {
+  const [data]: any = await pool.query(
+    `SELECT
+        COUNT(CASE WHEN type = 'No Ball' THEN 1 END) AS nb_count,
+        COUNT(CASE WHEN type = 'Wide' THEN 1 END) AS wd_count,
+        COUNT(CASE WHEN type = 'Bye' THEN 1 END) AS b_count,
+        COUNT(CASE WHEN type = 'Leg Bye' THEN 1 END) AS lb_count,
+        COUNT(CASE WHEN type = 'Penalty' THEN 1 END) AS p_count,
+        COUNT(*) AS total_count
+    FROM balls
+    LEFT JOIN extras USING (ball_id)
+    WHERE inning_id = (
+        SELECT inning_id FROM innings
+        WHERE match_id = ?
+        ORDER BY number DESC
+        LIMIT 1
+    )
+    AND is_legal IS FALSE`,
+    [match_id]
+  );
+
+  return { extras_count: data[0] as ExtrasCount };
+}
+
+export const getOverBallsForMatch = async (inning_id: number, over_number: number) => {
+  const [data] = await pool.query(
+    `SELECT *, type AS extra_type FROM balls
+    NATURAL JOIN extras
+    WHERE inning_id = ?
+      AND over_number = ?
+    ORDER BY ball_number`,
+    [inning_id, over_number]
+  );
+
+  return { balls: data as Ball[] };
+}
+
 export const fetchMatchById = async (match_id: number) => {
   try {
     const [data]: any = await pool.query(
@@ -940,10 +982,13 @@ export const fetchMatchById = async (match_id: number) => {
     );
 
     // console.log("Data is ", data[0]);
+    const { extras_count } = await getExtrasCountByMatchId(match_id);
+    const { balls } = await getOverBallsForMatch(data[0].inning_id, data[0].over_number);
+    // console.log("extras for match ", match_id, "is ", extras_count);
 
-    const match = getMatchDetails(data[0]);
+    const match = getMatchDetails(data[0], extras_count, balls);
 
-    return { match: match as unknown as Match };
+    return { match: match as unknown as OngoingMatch };
   } catch (error) {
     console.log("Error fetching match by id: ", error);
     throw new Error("Failed to fetch match!");
@@ -960,6 +1005,13 @@ export const fetchInningsBatsmen = async (team_id?: number, inning_id?: number) 
           ORDER BY over_number DESC, ball_number DESC
           LIMIT 1
       ),
+      current_batsmen AS (
+          SELECT batsman_id AS player_id
+          FROM last_ball
+          UNION
+          SELECT non_striker_id
+          FROM last_ball
+      ),
       dismissed AS (
           SELECT batsman_id AS dismissed_batsman
           FROM dismissals
@@ -968,12 +1020,14 @@ export const fetchInningsBatsmen = async (team_id?: number, inning_id?: number) 
       next_batsman AS (
           SELECT player_id
           FROM team_players
-          WHERE team_id = ?
-          AND player_id NOT IN (
-              SELECT batsman_id FROM dismissals
-              WHERE inning_id = ?
+          WHERE team_id = 1
+              AND player_id NOT IN (SELECT player_id FROM current_batsmen)
+              AND player_id NOT IN (
+                  SELECT batsman_id
+                  FROM dismissals
+                  WHERE inning_id = 1
           )
-          ORDER BY batting_order DESC
+          ORDER BY batting_order
           LIMIT 1
       ),
       ball_count AS (
@@ -982,29 +1036,46 @@ export const fetchInningsBatsmen = async (team_id?: number, inning_id?: number) 
           WHERE inning_id = ?
       ),
       initial_batsmen AS (
-          SELECT
-              (SELECT player_id FROM team_players WHERE team_id = ? ORDER BY batting_order LIMIT 1) AS batsman_id,
-              (SELECT player_id FROM team_players WHERE team_id = ? ORDER BY batting_order LIMIT 1 OFFSET 1) AS non_striker_id
+      SELECT
+          (SELECT player_id FROM team_players WHERE team_id = ? ORDER BY batting_order LIMIT 1) AS batsman_id,
+      (SELECT player_id FROM team_players WHERE team_id = ? ORDER BY batting_order LIMIT 1 OFFSET 1) AS non_striker_id
       ),
       final_selection AS (
           SELECT
+          CASE
+              WHEN (SELECT total_balls FROM ball_count) = 0 THEN
+              (SELECT batsman_id FROM initial_batsmen)
+              ELSE
               CASE
-                  WHEN (SELECT total_balls FROM ball_count) = 0 THEN
-                      (SELECT batsman_id FROM initial_batsmen)
-                  ELSE
-                      CASE
-                          WHEN (SELECT COUNT(*) FROM dismissed) > 0 THEN
-                              (SELECT player_id FROM next_batsman)
-                          ELSE
-                              batsman_id
-                          END
+              WHEN (SELECT COUNT(*) FROM dismissed) > 0 THEN
+                  -- Replace the dismissed batsman with the next batsman
+                  CASE
+                      WHEN batsman_id IN (SELECT dismissed_batsman FROM dismissed) THEN
+                          (SELECT player_id FROM next_batsman)
+                      ELSE
+                          batsman_id
+                      END
+              ELSE
+                  batsman_id
+              END
               END AS batsman_id,
+          CASE
+          WHEN (SELECT total_balls FROM ball_count) = 0 THEN
+              (SELECT non_striker_id FROM initial_batsmen)
+          ELSE
               CASE
-                  WHEN (SELECT total_balls FROM ball_count) = 0 THEN
-                      (SELECT non_striker_id FROM initial_batsmen)
+                  WHEN (SELECT COUNT(*) FROM dismissed) > 0 THEN
+                      -- Replace the dismissed non-striker with the next batsman
+                      CASE
+                          WHEN non_striker_id IN (SELECT dismissed_batsman FROM dismissed) THEN
+                            (SELECT player_id FROM next_batsman)
+                          ELSE
+                            non_striker_id
+                          END
                   ELSE
-                      non_striker_id
-              END AS non_striker_id
+                    non_striker_id
+                  END
+          END AS non_striker_id
           FROM last_ball
           UNION ALL
           SELECT batsman_id, non_striker_id
@@ -1016,16 +1087,30 @@ export const fetchInningsBatsmen = async (team_id?: number, inning_id?: number) 
           CONCAT(batsman.first_name, ' ', batsman.last_name) AS batsman_name,
           batsman.player_role AS batsman_role,
           batsman.batting_style AS batsman_style,
+          batsman_t.batting_order AS batsman_order,
+          batsman_bt.runs_scored AS batsman_runs_scored,
+          batsman_bt.balls_faced AS batsman_balls_faced,
+          batsman_bt.strike_rate AS batsman_strike_rate,
+          batsman_bt.fours AS batsman_fours,
+          batsman_bt.sixes AS batsman_sixes,
           non_striker.player_id AS non_striker_id,
           CONCAT(non_striker.first_name, ' ', non_striker.last_name) AS non_striker_name,
           non_striker.player_role AS non_striker_role,
-          non_striker.batting_style AS non_striker_style
+          non_striker.batting_style AS non_striker_style,
+          non_striker_t.batting_order AS non_striker_order,
+          non_striker_bt.runs_scored AS non_striker_runs_scored,
+          non_striker_bt.balls_faced AS non_striker_balls_faced,
+          non_striker_bt.strike_rate AS non_striker_strike_rate,
+          non_striker_bt.fours AS non_striker_fours,
+          non_striker_bt.sixes AS non_striker_sixes
       FROM final_selection
       LEFT JOIN players AS batsman ON batsman.player_id = final_selection.batsman_id
-      LEFT JOIN players AS non_striker ON non_striker.player_id = final_selection.non_striker_id`,
+      LEFT JOIN team_players AS batsman_t ON batsman_t.player_id = batsman.player_id
+      LEFT JOIN players AS non_striker ON non_striker.player_id = final_selection.non_striker_id
+      LEFT JOIN team_players AS non_striker_t ON non_striker_t.player_id = non_striker.player_id
+      LEFT JOIN match_batting_performance AS batsman_bt ON batsman.player_id = batsman_bt.player_id
+      LEFT JOIN match_batting_performance AS non_striker_bt ON non_striker.player_id = non_striker_bt.player_id`,
       [
-        inning_id,
-        team_id,
         inning_id,
         inning_id,
         team_id,
@@ -1037,16 +1122,24 @@ export const fetchInningsBatsmen = async (team_id?: number, inning_id?: number) 
       {
         player_id: data[0].batsman_id,
         name: data[0].batsman_name,
-        runs_scored: data[0].batsman_runs || 0,
-        balls_faced: data[0].balls_faced || 0,
         batting_style: data[0].batsman_style || "",
+        batting_order: data[0].batsman_order || 0,
+        runs_scored: data[0].batsman_runs_scored || 0,
+        balls_faced: data[0].batsman_balls_faced || 0,
+        strike_rate: Number(data[0].batsman_strike_rate) || 0,
+        fours: data[0].batsman_fours || 0,
+        sixes: data[0].batsman_sixes || 0,
       },
       {
         player_id: data[0].non_striker_id,
         name: data[0].non_striker_name,
-        runs_scored: data[0].non_striker_runs || 0,
-        balls_faced: data[0].balls_faced || 0,
         batting_style: data[0].non_striker_style || "",
+        batting_order: data[0].non_striker_order || 0,
+        runs_scored: data[0].non_striker_runs_scored || 0,
+        balls_faced: data[0].non_striker_balls_faced || 0,
+        strike_rate: Number(data[0].non_striker_strike_rate) || 0,
+        fours: data[0].non_striker_fours || 0,
+        sixes: data[0].non_striker_sixes || 0,
       }
     ];
 
@@ -1062,26 +1155,79 @@ export const fetchInningsBowlers = async (team_id?: number) => {
     const [data]: any = await pool.query(
       `SELECT player_id,
             CONCAT(first_name, ' ', last_name) AS name,
-            bowling_style
+            bowling_style,
+            bowling_order,
+            overs_bowled,
+            runs_conceded,
+            wickets_taken,
+            economy_rate
       FROM team_players
       LEFT JOIN players USING (player_id)
+      LEFT JOIN match_bowling_performance USING (player_id)
       WHERE bowling_order IS NOT NULL
-      AND team_id = ?
+        AND team_id = ?
       ORDER BY bowling_order`,
       [team_id]
     );
 
-    const bowlers: MatchBowler[] = data.map((b: any) => ({
-      player_id: b.player_id,
-      name: b.name,
-      bowling_style: b.bowling_style,
-      runs_conceded: b.runs_conceded || 0,
-      balls_bowled: b.runs_bowled || 0,
+    const bowlers: MatchBowler[] = data.map((bowler: any) => ({
+      ...bowler,
+      overs_bowled: Number(bowler.overs_bowled),
+      economy_rate: Number(bowler.economy_rate),
     }));
+    // console.log("all bowlers are: ", bowlers);
 
     return { bowlers };
   } catch (error) {
     console.log("Error fetching innings bowlers: ", error);
     throw new Error("Failed to fetch innings bowlers!");
+  }
+}
+
+export const insertBallForInning = async (ball: Ball) => {
+  console.log("submitting ball data: ", ball);
+  await pool.query(
+    `INSERT INTO balls (inning_id, over_number, ball_number, batsman_id, non_striker_id, bowler_id, runs_scored, is_wicket, is_legal)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      ball.inning_id,
+      ball.over_number,
+      ball.ball_number,
+      ball.batsman_id,
+      ball.non_striker_id,
+      ball.bowler_id,
+      ball.runs_scored,
+      ball.is_wicket,
+      ball.is_legal,
+    ]
+  );
+
+  if (ball.dismissal) {
+    const ball_id = await getLastInsertedId();
+    await pool.query(
+      `INSERT INTO dismissals (inning_id, ball_id, batsman_id, bowler_id, fielder_id, dismissal_type)
+      VALUES (?, ?, ?, ?, ?, ?)`,
+      [
+        ball.inning_id,
+        ball_id,
+        ball?.dismissal?.dismissed_batsman_id,
+        ball.bowler_id,
+        ball?.dismissal?.fielder_id,
+        ball?.dismissal?.type,
+      ]
+    );
+  }
+
+  if (ball.extra) {
+    const ball_id = await getLastInsertedId();
+    await pool.query(
+      `INSERT INTO extras (ball_id, type, runs)
+      VALUES (?, ?, ?)`,
+      [
+        ball_id,
+        ball?.extra?.type,
+        ball?.extra?.runs,
+      ]
+    );
   }
 }

@@ -4,21 +4,21 @@ import { Card } from "@/components/ui/card";
 import { useMatch } from "@/contexts/match-context";
 import { CircleDot, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
+import BowlersStats from "@/components/matches/bowlers-stats";
 
 const BowlingTeamCard = () => {
   const { matchDetails: match } = useMatch();
-  const currentBowler = match?.bowlers?.find(bowler => bowler.player_id === match?.over?.bowler_id);
-  const currentOver = match?.over;
-
-  const calculateOvers = (balls: number) => {
-    const complete = Math.floor(balls / 6);
-    const remaining = balls % 6;
-    return `${complete}.${remaining}`;
-  };
+  if (!match) return null;
+  const currentBowler = match.bowlers.find(
+    (bowler) => bowler.player_id === match.over.bowler_id
+  );
 
   return (
     <Card className="p-4">
-      <h3 className="text-lg font-semibold mb-4">Bowling</h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold">Bowling</h3>
+        <BowlersStats />
+      </div>
 
       {currentBowler && (
         <div className="space-y-6">
@@ -29,14 +29,16 @@ const BowlingTeamCard = () => {
                 <Target className="w-5 h-5 text-primary" />
                 <h4 className="font-semibold">{currentBowler.name}</h4>
               </div>
-              <span className="text-muted-foreground text-sm">{currentBowler.bowling_style}</span>
+              <span className="text-muted-foreground text-sm">
+                {currentBowler.bowling_style}
+              </span>
             </div>
 
             <div className="grid grid-cols-4 gap-3 text-center">
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">OVERS</p>
                 <p className="font-semibold">
-                  {calculateOvers(currentBowler.balls_bowled)}
+                  {currentBowler.overs_bowled.toFixed(1)}
                 </p>
               </div>
               <div className="space-y-1">
@@ -45,12 +47,12 @@ const BowlingTeamCard = () => {
               </div>
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">WICKETS</p>
-                <p className="font-semibold">0</p>
+                <p className="font-semibold">{currentBowler.wickets_taken}</p>
               </div>
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">ECON</p>
                 <p className="font-semibold">
-                  {((currentBowler.runs_conceded / (currentBowler.balls_bowled / 6)) || 0).toFixed(1)}
+                  {currentBowler.economy_rate.toFixed(2)}
                 </p>
               </div>
             </div>

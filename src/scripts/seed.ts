@@ -643,6 +643,7 @@ const seedBalls = async () => {
       non_striker_id INT,
       bowler_id INT,
       runs_scored INT DEFAULT 0,
+      is_legal BOOLEAN DEFAULT TRUE,
       is_wicket BOOLEAN DEFAULT FALSE,
       FOREIGN KEY (inning_id) REFERENCES innings (inning_id) ON DELETE CASCADE,
       FOREIGN KEY (batsman_id) REFERENCES players (player_id) ON DELETE SET NULL,
@@ -704,7 +705,7 @@ const seedPerformances = async () => {
     `CREATE TABLE IF NOT EXISTS match_bowling_performance (
       match_id INT,
       player_id INT,
-      overs_bowled DECIMAL(5, 2) DEFAULT 0.0,
+      overs_bowled DECIMAL(5, 1) DEFAULT 0.0,
       maiden_overs INT DEFAULT 0,
       runs_conceded INT DEFAULT 0,
       wickets_taken INT DEFAULT 0,

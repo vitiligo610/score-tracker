@@ -1,5 +1,6 @@
 import MatchToss from "@/components/matches/match-toss";
 import TeamsMatch from "@/components/matches/teams-match";
+import { MatchProvider } from "@/contexts/match-context";
 import { fetchMatchById } from "@/lib/actions";
 import { Metadata } from "next";
 
@@ -22,7 +23,11 @@ const MatchPage = async ({ params }: Props) => {
   return (
     <div>
       {match.status === "scheduled" && <MatchToss match={match} />}
-      {match.status === "started" && <TeamsMatch match_id={match_id} match={match} />}
+      {match.status === "started" && (
+        <MatchProvider match_id={match_id}>
+          <TeamsMatch />
+        </MatchProvider>
+      )}
     </div>
   )
 }
