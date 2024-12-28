@@ -18,8 +18,8 @@ const TeamsMatch = ({ match_id, match }: TeamsMatchProps) => {
         <MatchHeader />
         <div className="container mx-auto py-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <ScoreCard />
             <BattingTeamCard />
+            <ScoreCard />
             <BowlingTeamCard />
           </div>
           <MatchInputCard />
