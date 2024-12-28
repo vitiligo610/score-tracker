@@ -388,9 +388,6 @@ const seedSeries = async () => {
       start_date DATE,
       end_date DATE,
       total_rounds INT DEFAULT 3,
-      team1_id INT,
-      team2_id INT,
-      team3_id INT,
       winner_team_id INT,
       finished BOOLEAN DEFAULT FALSE
     )`
