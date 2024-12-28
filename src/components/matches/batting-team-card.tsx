@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
 import { Card } from "@/components/ui/card";
 import { useMatch } from "@/contexts/match-context";
-import { MatchBatsman } from "@/lib/definitons";
 import { cn } from "@/lib/utils";
+import { ChevronRight } from "lucide-react";
 
 interface BattingTeamCardProps {
   nextBatsman?: {
@@ -16,32 +16,43 @@ const BattingTeamCard = ({ nextBatsman }: BattingTeamCardProps) => {
 
   return (
     <Card className="p-4">
-      <h3 className="text-lg font-semibold mb-4">Batting</h3>
-      
+      <h3 className="text-lg font-semibold mb-4">
+        Batting
+      </h3>
+
       <div className="space-y-4">
         {/* Current Batsmen */}
         {match?.batsmen?.map((batsman) => (
           <div
             key={batsman.player_id}
             className={cn(
-              "flex items-center justify-between p-2 rounded-md",
-              match?.striker_player_id === batsman.player_id && "bg-primary/10"
+              "p-2 py-4 rounded-md bg-primary/5",
+              match?.striker_player_id === batsman.player_id &&
+                "border border-primary"
             )}
           >
-            <div className="flex items-center gap-2">
-              <div className="relative px-4">
-                {match?.striker_player_id === batsman.player_id && (
-                  <span className="absolute left-1 top-1/2 -translate-y-1/2 text-primary">
-                    •
-                  </span>
-                )}
-                <span className="font-medium">{batsman.name}</span>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="relative px-2 flex gap-2">
+                  {match?.striker_player_id === batsman.player_id && (
+                    <ChevronRight className="text-primary" />
+                  )}
+                  <span className="font-medium">{batsman.name}</span>
+                </div>
+              </div>
+              <div className="text-sm">
+                <span className="font-semibold">{batsman.runs_scored}</span>
+                <span className="text-muted-foreground">
+                  ({batsman.balls_faced})
+                </span>
               </div>
             </div>
-            <div className="text-sm">
-              <span className="font-semibold">{batsman.runs_scored}</span>
-              <span className="text-muted-foreground">
-                ({batsman.balls_faced})
+            <div className="ml-2 flex items-center justify-between text-sm text-muted-foreground">
+              <span>
+                {batsman.batting_style}
+              </span>
+              <span>
+                SR 0.0
               </span>
             </div>
           </div>

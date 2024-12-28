@@ -134,3 +134,13 @@ export const generatePlaceholderMatches = (
     team2: null,
   }));
 };
+
+export const getCurrentRunRate = (runs: number, balls: number) => {
+  if (balls === 0) return 0;
+  return ((runs * 6) / balls).toFixed(2);
+};
+
+export const getRequiredRunRate = (runsNeeded: number, ballsLeft: number) => {
+  if (ballsLeft === 0) return 0;
+  return ((runsNeeded * 6) / ballsLeft).toFixed(2);
+};

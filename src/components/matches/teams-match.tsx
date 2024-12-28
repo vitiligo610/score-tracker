@@ -2,6 +2,9 @@ import { Match } from "@/lib/definitons";
 import MatchHeader from "@/components/matches/match-header";
 import { MatchProvider } from "@/contexts/match-context";
 import BattingTeamCard from "@/components/matches/batting-team-card";
+import BowlingTeamCard from "@/components/matches/bowling-team-card";
+import ScoreCard from "@/components/matches/score-card";
+import MatchInputCard from "@/components/matches/match-input-card";
 
 interface TeamsMatchProps {
   match_id: number;
@@ -15,17 +18,11 @@ const TeamsMatch = ({ match_id, match }: TeamsMatchProps) => {
         <MatchHeader />
         <div className="container mx-auto py-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Scorecard */}
-            <div className="bg-card rounded-lg border p-4">
-              {/* Scorecard content will go here */}
-            </div>
-            {/* Batting Team Card */}
+            <ScoreCard />
             <BattingTeamCard />
-            {/* Bowling Team Card */}
-            <div className="bg-card rounded-lg border p-4">
-              {/* Bowling team content will go here */}
-            </div>
+            <BowlingTeamCard />
           </div>
+          <MatchInputCard />
         </div>
       </div>
     </MatchProvider>

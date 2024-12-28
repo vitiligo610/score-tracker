@@ -1015,9 +1015,11 @@ export const fetchInningsBatsmen = async (team_id?: number, inning_id?: number) 
           batsman.player_id AS batsman_id,
           CONCAT(batsman.first_name, ' ', batsman.last_name) AS batsman_name,
           batsman.player_role AS batsman_role,
+          batsman.batting_style AS batsman_style,
           non_striker.player_id AS non_striker_id,
           CONCAT(non_striker.first_name, ' ', non_striker.last_name) AS non_striker_name,
-          non_striker.player_role AS non_striker_role
+          non_striker.player_role AS non_striker_role,
+          non_striker.batting_style AS non_striker_style
       FROM final_selection
       LEFT JOIN players AS batsman ON batsman.player_id = final_selection.batsman_id
       LEFT JOIN players AS non_striker ON non_striker.player_id = final_selection.non_striker_id`,
@@ -1037,12 +1039,14 @@ export const fetchInningsBatsmen = async (team_id?: number, inning_id?: number) 
         name: data[0].batsman_name,
         runs_scored: data[0].batsman_runs || 0,
         balls_faced: data[0].balls_faced || 0,
+        batting_style: data[0].batsman_style || "",
       },
       {
         player_id: data[0].non_striker_id,
         name: data[0].non_striker_name,
         runs_scored: data[0].non_striker_runs || 0,
         balls_faced: data[0].balls_faced || 0,
+        batting_style: data[0].non_striker_style || "",
       }
     ];
 

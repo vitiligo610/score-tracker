@@ -48,6 +48,7 @@ export interface MatchPlayer {
 }
 
 export interface MatchBatsman extends MatchPlayer {
+  batting_style: string;
   runs_scored: number;
   balls_faced: number;
 }
