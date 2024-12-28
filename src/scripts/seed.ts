@@ -762,13 +762,13 @@ const main = async () => {
   try {
     console.log("Dropping existing tables...");
     await pool.query(`
-      DROP TABLE IF EXISTS extras,
+      DROP TABLE IF EXISTS match_batting_performance,
+                           match_bowling_performance,
+                           extras,
                            dismissals,
                            balls,
                            overs,
                            innings,
-                           match_batting_performance,
-                           match_bowling_performance,
                            matches,
                            series_locations,
                            series_points,
@@ -786,12 +786,12 @@ const main = async () => {
     await seedPlayers();
     await seedTeamPlayers();
     await seedMatches();
-    await seedPerformances();
     await seedTournaments();
     await seedSeries();
     await seedInnings();
     await seedOvers();
     await seedBalls();
+    await seedPerformances();
 
     console.log("✅ Database seeded successfully");
     process.exit(0);
