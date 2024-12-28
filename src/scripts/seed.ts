@@ -681,6 +681,81 @@ const seedBalls = async () => {
   );
 }
 
+const seedPerformances = async () => {
+  console.log("Creating match_batting_performance table...");
+  await pool.query(
+    `CREATE TABLE IF NOT EXISTS match_batting_performance (
+      match_id INT,
+      player_id INT,
+      runs_scored INT DEFAULT 0,
+      balls_faced INT DEFAULT 0,
+      fours INT DEFAULT 0,
+      sixes INT DEFAULT 0,
+      strike_rate DECIMAL(6, 2) DEFAULT 0.00,
+      dismissal_id INT,
+      FOREIGN KEY (match_id) REFERENCES matches (match_id),
+      FOREIGN KEY (dismissal_id) REFERENCES dismissals (dismissal_id),
+      PRIMARY KEY (match_id, player_id)
+    )`
+  );
+
+  console.log("Creating match_bowling_performance table...");
+  await pool.query(
+    `CREATE TABLE IF NOT EXISTS match_bowling_performance (
+      match_id INT,
+      player_id INT,
+      overs_bowled DECIMAL(5, 2) DEFAULT 0.0,
+      maiden_overs INT DEFAULT 0,
+      runs_conceded INT DEFAULT 0,
+      wickets_taken INT DEFAULT 0,
+      economy_rate DECIMAL(6, 2) DEFAULT 0.0,
+      FOREIGN KEY (match_id) REFERENCES matches (match_id),
+      PRIMARY KEY (match_id, player_id)
+    )`
+  );
+
+  console.log("Creating trigger for inserting match performances...");
+  await createInsertMatchPerformanceEntriesTrigger();
+}
+
+const createInsertMatchPerformanceEntriesTrigger = async () => {
+  await pool.query("DROP TRIGGER IF EXISTS InsertMatchPerformanceEntries");
+  await pool.query(
+    `CREATE TRIGGER InsertMatchPerformanceEntries
+    AFTER UPDATE ON matches
+    FOR EACH ROW BEGIN
+        IF NEW.toss_decision IS NOT NULL AND NEW.toss_winner_id IS NOT NULL THEN
+            INSERT INTO match_batting_performance (match_id, player_id)
+            SELECT (SELECT NEW.match_id), player_id
+            FROM team_players
+            WHERE team_id = NEW.team1_id
+            LIMIT 11;
+
+            INSERT INTO match_batting_performance (match_id, player_id)
+            SELECT (SELECT NEW.match_id), player_id
+            FROM team_players
+            WHERE team_id = NEW.team2_id
+            LIMIT 11;
+
+            INSERT INTO match_bowling_performance (match_id, player_id)
+            SELECT (SELECT NEW.match_id), player_id
+            FROM team_players
+            WHERE team_id = NEW.team1_id
+              AND bowling_order IS NOT NULL
+            ORDER BY bowling_order;
+
+            INSERT INTO match_bowling_performance (match_id, player_id)
+            SELECT (SELECT NEW.match_id), player_id
+            FROM team_players
+            WHERE team_id = NEW.team2_id
+              AND bowling_order IS NOT NULL
+            ORDER BY bowling_order;
+        END IF;
+    END`
+  );
+}
+
+
 const main = async () => {
   console.log("🌱 Starting database seed...");
 
@@ -692,6 +767,8 @@ const main = async () => {
                            balls,
                            overs,
                            innings,
+                           match_batting_performance,
+                           match_bowling_performance,
                            matches,
                            series_locations,
                            series_points,
@@ -709,6 +786,7 @@ const main = async () => {
     await seedPlayers();
     await seedTeamPlayers();
     await seedMatches();
+    await seedPerformances();
     await seedTournaments();
     await seedSeries();
     await seedInnings();
