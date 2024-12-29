@@ -2,6 +2,7 @@
 
 import {
   fetchInningsBatsmen,
+  fetchInningsBatsmenAndBowlers,
   fetchInningsBowlers,
   fetchMatchById,
   fetchTeamPlayers,
@@ -42,87 +43,87 @@ export const MatchProvider = ({ match_id, children }: MatchProviderProps) => {
   >([]);
   const { toast } = useToast();
 
-  const getBattingTeamId = (match: OngoingMatch) => {
-    console.log("match inside is", match);
-    return match.innings.team_id === match.team1.team_id
-      ? match.team1.team_id
-      : match.team2.team_id;
-  };
-
-  const getBowlingTeamId = (match: OngoingMatch) => {
-    return match.innings.team_id !== match.team1.team_id
-      ? match.team1.team_id
-      : match.team2.team_id;
-  };
-
   const fetchMatchDetails = async () => {
     setLoading(true);
     console.log("fetching match detilas from context");
-    const { match } = await fetchMatchById(match_id);
-    const { batsmen } = await fetchInningsBatsmen(
-      match.innings?.team_id,
-      match.innings?.inning_id
-    );
-    const { bowlers } = await fetchInningsBowlers(
-      match.team1?.team_id !== match.innings?.team_id
-        ? match.team1?.team_id
-        : match.team2?.team_id
-    );
-    const battingTeamId = getBattingTeamId(match);
-    const { teamPlayers: battingTeam } = await fetchTeamPlayers(
+    const {
+      match,
+      battingTeamPlayers: battingTeam,
+      bowlingTeamPlayers: bowlingTeam,
+    } = await fetchMatchById(match_id);
+
+    const battingTeamId = match.innings.team_id;
+    const inningsId = match.innings.inning_id;
+    const bowlingTeamId =
+      match.team1.team_id !== match.innings.team_id
+        ? match.team1.team_id
+        : match.team2.team_id;
+    const { batsmen, bowlers } = await fetchInningsBatsmenAndBowlers(
       battingTeamId,
-      11
+      inningsId,
+      bowlingTeamId
     );
+
     setBattingTeamPlayers(battingTeam);
+    setBowlingTeamPlayers(bowlingTeam);
 
     const currentBowler = bowlers.find(
       (bowler) => bowler.player_id === match.over.bowler_id
     )!;
-    const nextBowlerId = bowlers.find(
+    const nextBowlerId =
+      bowlers.find(
         (bowler) => bowler.bowling_order > currentBowler!.bowling_order
       )?.player_id || bowlers[0].player_id;
 
     // Get last ball details
     const lastBall = match.over.balls[match.over.balls.length - 1];
     const isNewOver = lastBall?.ball_number === 6;
-    
+
     // Handle dismissal from last ball
     let updatedBatsmen = [...batsmen];
     let newStrikerId = batsmen[0].player_id;
 
     if (lastBall?.is_wicket && lastBall.dismissal?.dismissed_batsman_id) {
       const dismissedId = lastBall.dismissal.dismissed_batsman_id;
-      const maxBattingOrder = Math.max(...batsmen.map(b => b.batting_order));
-      const nextBatsman = battingTeam.find(p => p.batting_order! > maxBattingOrder);
+      const maxBattingOrder = Math.max(...batsmen.map((b) => b.batting_order));
+      const nextBatsman = battingTeam.find(
+        (p) => p.batting_order! > maxBattingOrder
+      );
 
       if (nextBatsman) {
-        updatedBatsmen = batsmen.map(b => 
-          b.player_id === dismissedId ? {
-            player_id: nextBatsman.player_id,
-            name: nextBatsman.first_name + " " + nextBatsman.last_name,
-            batting_order: nextBatsman.batting_order!,
-            batting_style: nextBatsman.batting_style,
-            runs_scored: 0,
-            balls_faced: 0,
-            fours: 0,
-            sixes: 0,
-            strike_rate: 0
-          } : b
+        updatedBatsmen = batsmen.map((b) =>
+          b.player_id === dismissedId
+            ? {
+                player_id: nextBatsman.player_id,
+                name: nextBatsman.first_name + " " + nextBatsman.last_name,
+                batting_order: nextBatsman.batting_order!,
+                batting_style: nextBatsman.batting_style,
+                runs_scored: 0,
+                balls_faced: 0,
+                fours: 0,
+                sixes: 0,
+                strike_rate: 0,
+              }
+            : b
         );
       }
 
       // Determine striker after wicket
       const wasStrikerDismissed = lastBall.batsman_id === dismissedId;
       if (wasStrikerDismissed) {
-        newStrikerId = nextBatsman?.player_id || batsmen.find(b => b.player_id !== dismissedId)?.player_id!;
+        newStrikerId =
+          nextBatsman?.player_id ||
+          batsmen.find((b) => b.player_id !== dismissedId)?.player_id!;
       } else {
         newStrikerId = lastBall.batsman_id;
       }
     } else if (lastBall) {
       // No wicket - determine striker based on runs and over
       const lastBallStriker = lastBall.batsman_id;
-      const nonStriker = batsmen.find(b => b.player_id !== lastBall.batsman_id)?.player_id!;
-      
+      const nonStriker = batsmen.find(
+        (b) => b.player_id !== lastBall.batsman_id
+      )?.player_id!;
+
       if (isNewOver) {
         newStrikerId = nonStriker;
       } else if (lastBall.runs_scored % 2 === 1) {
@@ -134,7 +135,7 @@ export const MatchProvider = ({ match_id, children }: MatchProviderProps) => {
 
     setMatchState({
       ...match,
-      batsmen: updatedBatsmen,
+      batsmen: [...batsmen],
       striker_player_id: newStrikerId,
       bowlers: [...bowlers],
       innings: {
@@ -150,13 +151,6 @@ export const MatchProvider = ({ match_id, children }: MatchProviderProps) => {
         total_wickets: !isNewOver ? match.over.total_wickets : 0,
       },
     });
-
-    const bowlingTeamId = getBowlingTeamId(match);
-    const { teamPlayers: bowlingTeam } = await fetchTeamPlayers(
-      bowlingTeamId,
-      11
-    );
-    setBowlingTeamPlayers(bowlingTeam);
 
     setLoading(false);
   };
@@ -233,7 +227,10 @@ export const MatchProvider = ({ match_id, children }: MatchProviderProps) => {
             ...bowler,
             runs_conceded: bowler.runs_conceded + totalRuns,
             wickets_taken: bowler.wickets_taken + (ballData.is_wicket ? 1 : 0),
-            overs_bowled: updateBowlerOvers(bowler.overs_bowled, ballData.is_legal),
+            overs_bowled: updateBowlerOvers(
+              bowler.overs_bowled,
+              ballData.is_legal
+            ),
             economy_rate: getEconomyRate(
               bowler.runs_conceded + totalRuns,
               bowler.overs_bowled

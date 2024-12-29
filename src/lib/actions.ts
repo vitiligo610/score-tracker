@@ -394,14 +394,13 @@ export const deleteTeam = async (team_id: number) => {
   }
 };
 
-export const fetchTeamPlayers = async (team_id: number, limit?: number) => {
+export const fetchTeamPlayers = async (team_id: number) => {
   try {
     const [players] = await pool.query(
       `SELECT * FROM team_players
       NATURAL JOIN players
       WHERE team_id = ?
-      ORDER BY batting_order
-      ${limit ? `LIMIT ${limit}` : ""}`,
+      ORDER BY batting_order`,
       [team_id]
     );
 
@@ -889,6 +888,44 @@ export const updateMatchToss = async (
   }
 };
 
+export const fetchMatchPlayers = async (team_id: number, limit: number) => {
+  try {
+    const [players] = await pool.query(
+      `SELECT * FROM team_players
+      NATURAL JOIN players
+      WHERE team_id = ?
+      ORDER BY batting_order
+      LIMIT ?`,
+      [team_id, limit]
+    );
+
+    return { teamPlayers: players as PlayerWithTeam[] };
+  } catch (error) {
+    console.log("Error fetching team players having team id", team_id);
+    throw new Error("Failed to fetch team players");
+  }
+}
+
+export const fetchMatchTeamBatsmen = async (team_id: number, match_id: number | string, limit: number) => {
+  try {
+    const [players] = await pool.query(
+      `SELECT * FROM team_players
+      NATURAL JOIN players
+      NATURAL JOIN match_batting_performance
+      WHERE team_id = ?
+      AND match_id = ?
+      ORDER BY batting_order
+      LIMIT ?`,
+      [team_id, match_id, limit]
+    );
+
+    return { teamPlayers: players as PlayerWithTeam[] };
+  } catch (error) {
+    console.log("Error fetching team players having team id", team_id);
+    throw new Error("Failed to fetch team players");
+  }
+};
+
 export const getExtrasCountByMatchId = async (match_id: number) => {
   const [data]: any = await pool.query(
     `SELECT
@@ -925,6 +962,18 @@ export const getOverBallsForMatch = async (inning_id: number, over_number: numbe
 
   return { balls: data as Ball[] };
 }
+
+const getBattingTeamId = (match: OngoingMatch) => {
+  return match.innings.team_id === match.team1.team_id
+    ? match.team1.team_id
+    : match.team2.team_id;
+};
+
+const getBowlingTeamId = (match: OngoingMatch) => {
+  return match.innings.team_id !== match.team1.team_id
+    ? match.team1.team_id
+    : match.team2.team_id;
+};
 
 export const fetchMatchById = async (match_id: number) => {
   try {
@@ -986,11 +1035,25 @@ export const fetchMatchById = async (match_id: number) => {
     const { balls } = await getOverBallsForMatch(data[0].inning_id, data[0].over_number);
     // console.log("extras for match ", match_id, "is ", extras_count);
 
-    const match = getMatchDetails(data[0], extras_count, balls);
+    const match = getMatchDetails(data[0], extras_count, balls) as unknown as OngoingMatch;
 
-    console.log("fetched match is ", match);
+    const battingTeamId = getBattingTeamId(match);
+    const { teamPlayers: battingTeamPlayers } = await fetchMatchPlayers(
+      battingTeamId,
+      11
+    );
 
-    return { match: match as unknown as OngoingMatch };
+    const bowlingTeamId = getBowlingTeamId(match);
+    const { teamPlayers: bowlingTeamPlayers } = await fetchMatchPlayers(
+      bowlingTeamId,
+      11
+    );
+
+    return {
+      match,
+      battingTeamPlayers,
+      bowlingTeamPlayers,
+    };
   } catch (error) {
     console.log("Error fetching match by id: ", error);
     throw new Error("Failed to fetch match!");
@@ -1183,6 +1246,21 @@ export const fetchInningsBowlers = async (team_id?: number) => {
   } catch (error) {
     console.log("Error fetching innings bowlers: ", error);
     throw new Error("Failed to fetch innings bowlers!");
+  }
+}
+
+export const fetchInningsBatsmenAndBowlers = async (battingTeamId: number, inning_id: number, bowlingTeamId: number) => {
+  try {
+    const { batsmen } = await fetchInningsBatsmen(
+      battingTeamId,
+      inning_id
+    );
+    const { bowlers } = await fetchInningsBowlers(bowlingTeamId);
+
+    return { batsmen, bowlers };
+  } catch (error) {
+    console.log("Error fetching innings batsmen and bowlers: ", error);
+    throw new Error("Failed to fetch innings batsmen and bowlers!");
   }
 }
 
