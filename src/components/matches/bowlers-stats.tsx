@@ -11,7 +11,7 @@ import {
   SheetTrigger
 } from "@/components/ui/sheet";
 import { useMatch } from "@/contexts/match-context";
-import { cn } from "@/lib/utils";
+import { cn, formatNumber } from "@/lib/utils";
 import { Activity, Target } from "lucide-react";
 
 const BowlersStats = () => {
@@ -52,7 +52,7 @@ const BowlersStats = () => {
                       <Target className="h-4 w-4 text-primary" />
                     )}
                     <div>
-                      <h4 className="font-medium">{bowler.name}</h4>
+                      <h4 className="font-medium">{bowler.name || bowler.first_name + " " + bowler.last_name}</h4>
                       <p className="text-sm text-muted-foreground">
                         {bowler.bowling_style}
                       </p>
@@ -63,7 +63,7 @@ const BowlersStats = () => {
                       {bowler.wickets_taken}-{bowler.runs_conceded}
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      {bowler.overs_bowled.toFixed(1)} overs
+                      {formatNumber(bowler.overs_bowled, 1)} overs
                     </div>
                   </div>
                 </div>
@@ -72,7 +72,7 @@ const BowlersStats = () => {
                   <div className="space-y-1">
                     <p className="text-muted-foreground">Economy</p>
                     <p className="font-medium">
-                      {bowler.economy_rate.toFixed(2)}
+                      {formatNumber(bowler.economy_rate, 2)}
                     </p>
                   </div>
                   <div className="space-y-1">

@@ -185,6 +185,10 @@ export const updateBowlerOvers = (oversBowled: number, incrementByOne: boolean) 
   return newOvers;
 }
 
+export const formatNumber = (number: any, fractionDigits: number = 1) => {
+  return number ? Number(number).toFixed(1) : (0).toFixed(fractionDigits);
+}
+
 export const getExtrasDetails = (extras: Extras[]) => {
   const nb = extras.filter(extra => extra.type === "No Ball").length;
   const wd = extras.filter(extra => extra.type === "Wide").length;

@@ -48,6 +48,8 @@ export interface PlayerWithTeam extends Player {
 export interface MatchPlayer {
   player_id: number;
   name: string;
+  first_name?: string;
+  last_name?: string;
 }
 
 export interface MatchBatsman extends MatchPlayer {
@@ -58,6 +60,7 @@ export interface MatchBatsman extends MatchPlayer {
   strike_rate: number;
   fours: number;
   sixes: number;
+  dismissal_id?: number | null;
 }
 
 export interface MatchBowler extends MatchPlayer {
@@ -97,7 +100,7 @@ export interface OngoingMatch extends Match {
   team1: Team;
   team2: Team;
   batsmen: MatchBatsman[];
-  bowlers: MatchBowler[];
+  bowlers: BowlingTeamPlayer[];
   striker_player_id: number;
   competition: Competition;
   innings: OngoingInnings;
@@ -217,13 +220,16 @@ export interface CurrentBall {
   dismissal: Dismissal;
 }
 
+export type BattingTeamPlayer = PlayerWithTeam & MatchBatsman;
+export type BowlingTeamPlayer = PlayerWithTeam & MatchBowler;
+
 export interface MatchResponse {
   match: OngoingMatch;
-  battingTeamPlayers: PlayerWithTeam[];
-  bowlingTeamPlayers: PlayerWithTeam[];
+  battingTeamPlayers: BattingTeamPlayer[];
+  bowlingTeamPlayers: BowlingTeamPlayer[];
 }
 
 export interface InningsResponse {
   batsmen: MatchBatsman[];
-  bowlers: MatchBowler[];
+  bowlers: BowlingTeamPlayer[];
 }

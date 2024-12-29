@@ -2,18 +2,15 @@
 
 import { Card } from "@/components/ui/card";
 import { useMatch } from "@/contexts/match-context";
-import { cn, getStrikeRate } from "@/lib/utils";
+import { cn, formatNumber } from "@/lib/utils";
 import { ChevronRight } from "lucide-react";
 
-interface BattingTeamCardProps {
-  nextBatsman?: {
-    name: string;
-  };
-}
-
-const BattingTeamCard = ({ nextBatsman }: BattingTeamCardProps) => {
-  const { matchDetails: match } = useMatch();
+const BattingTeamCard = () => {
+  const { matchDetails: match, battingTeamPlayers } = useMatch();
   if (!match) return null;
+
+  console.log("match batsmen are: ", match.batsmen);
+  console.log("batting team players are: ", battingTeamPlayers);
 
   return (
     <Card className="p-4">
@@ -38,7 +35,7 @@ const BattingTeamCard = ({ nextBatsman }: BattingTeamCardProps) => {
                   {match.striker_player_id === batsman.player_id && (
                     <ChevronRight className="text-primary" />
                   )}
-                  <span className="font-medium">{batsman.name}</span>
+                  <span className="font-medium">{batsman.name || batsman.first_name + " " + batsman.last_name}</span>
                 </div>
               </div>
               <div className="text-sm">
@@ -53,18 +50,18 @@ const BattingTeamCard = ({ nextBatsman }: BattingTeamCardProps) => {
                 {batsman.batting_style}
               </span>
               <span>
-                SR {batsman.strike_rate ? batsman.strike_rate.toFixed(2) : "0.00"}
+                SR {formatNumber(batsman.strike_rate, 2)}
               </span>
             </div>
           </div>
         ))}
 
         {/* Next Batsman */}
-        {nextBatsman && (
+        {/* {nextBatsman && (
           <div className="text-sm text-muted-foreground mt-4 pt-2 border-t">
             Up next: {nextBatsman.name}
           </div>
-        )}
+        )} */}
       </div>
     </Card>
   );

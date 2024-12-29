@@ -3,6 +3,7 @@
 import BowlersStats from "@/components/matches/bowlers-stats";
 import { Card } from "@/components/ui/card";
 import { useMatch } from "@/contexts/match-context";
+import { formatNumber } from "@/lib/utils";
 import { Target } from "lucide-react";
 
 const BowlingTeamCard = () => {
@@ -27,7 +28,7 @@ const BowlingTeamCard = () => {
             <div className="flex items-center justify-between gap-2 mb-3">
               <div className="flex items-center gap-2">
                 <Target className="w-5 h-5 text-primary" />
-                <h4 className="font-semibold">{currentBowler.name}</h4>
+                <h4 className="font-semibold">{currentBowler.name || currentBowler.first_name + " " + currentBowler.last_name}</h4>
               </div>
               <span className="text-muted-foreground text-sm">
                 {currentBowler.bowling_style}
@@ -38,7 +39,7 @@ const BowlingTeamCard = () => {
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">OVERS</p>
                 <p className="font-semibold">
-                  {currentBowler.overs_bowled.toFixed(1)}
+                  {formatNumber(currentBowler.overs_bowled, 1)}
                 </p>
               </div>
               <div className="space-y-1">
@@ -52,7 +53,7 @@ const BowlingTeamCard = () => {
               <div className="space-y-1">
                 <p className="text-xs text-muted-foreground">ECON</p>
                 <p className="font-semibold">
-                  {currentBowler.economy_rate.toFixed(2)}
+                  {formatNumber(currentBowler.economy_rate, 2)}
                 </p>
               </div>
             </div>
@@ -83,7 +84,7 @@ const BowlingTeamCard = () => {
           {/* Next Bowler */}
           <div className="text-sm text-muted-foreground border-t pt-3">
             <div className="flex items-center justify-end gap-2">
-              <span>Next Bowler: {nextBowler.name}</span>
+              <span>Next Bowler: {nextBowler.name || nextBowler.first_name + " " + nextBowler.last_name}</span>
             </div>
           </div>
         </div>
