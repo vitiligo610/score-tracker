@@ -3,8 +3,9 @@
 import { Separator } from "@/components/ui/separator";
 import { MapPin, Calendar } from "lucide-react";
 import { format } from "date-fns";
-import { toOrdinal } from "@/lib/utils";
+import { getBattingTeamId, getBowlingTeamId, toOrdinal } from "@/lib/utils";
 import { useMatch } from "@/contexts/match-context";
+import { OVERS_FOR_FORMAT } from "../../lib/constants";
 
 const MatchHeader = () => {
   const { matchDetails: match } = useMatch();
@@ -17,6 +18,11 @@ const MatchHeader = () => {
     if (currentInningsNumber % 2 !== 0 || !targetScore) return null;
     return targetScore;
   };
+
+  const battingTeamId = getBattingTeamId(match.innings, match.team1, match.team2);
+  const bowlingTeamId = getBowlingTeamId(match.innings, match.team1, match.team2);
+
+  const lastBall = match.over.balls.at(-1);
 
   return (
     <div className="w-full bg-card border-b">
@@ -68,7 +74,53 @@ const MatchHeader = () => {
               </span>
             ) : (
               <span className="text-primary font-medium">
-                Target: {getRequiredRuns()} runs
+                Target: {getRequiredRuns() || 0} runs
+                {match.competition.format !== "Test" &&
+                  OVERS_FOR_FORMAT[match.competition.format] -
+                    match.innings.total_overs <=
+                    5 && (
+                    <span className="ml-2">
+                      ({targetScore - match.innings.total_runs} runs needed in{" "}
+                      {
+                        lastBall
+                          ? (OVERS_FOR_FORMAT[match.competition.format] - lastBall.over_number) * 6 + (6 - lastBall.ball_number)
+                          : (OVERS_FOR_FORMAT[match.competition.format] - match.innings.total_overs) * 6
+                      }
+                        {" "} balls)
+                    </span>
+                  )}
+                {match.competition.format === "Test" && match.innings.number !== 1 && (
+                  <span className="ml-2 text-muted-foreground text-xs font-normal">
+                    {match.innings.target_score ? (
+                      match.innings.total_runs >= match.innings.target_score ? (
+                        // Current batting team leads
+                        match.team1.team_id === battingTeamId ? (
+                          `${match.team1.name} leads by ${
+                            match.innings.total_runs - match.innings.target_score
+                          } runs`
+                        ) : (
+                          `${match.team2.name} leads by ${
+                            match.innings.total_runs - match.innings.target_score
+                          } runs`
+                        )
+                      ) : (
+                        // Current bowling team leads
+                        match.team1.team_id === bowlingTeamId ? (
+                          `${match.team1.name} leads by ${
+                            match.innings.target_score - match.innings.total_runs
+                          } runs`
+                        ) : (
+                          `${match.team2.name} leads by ${
+                            match.innings.target_score - match.innings.total_runs
+                          } runs`
+                        )
+                      )
+                    ) : (
+                      "Scores are level."
+                    )}
+                  </span>
+                )}
+
               </span>
             )}
           </div>

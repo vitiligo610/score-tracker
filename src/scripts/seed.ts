@@ -687,6 +687,7 @@ const seedPerformances = async () => {
   await pool.query(
     `CREATE TABLE IF NOT EXISTS match_batting_performance (
       match_id INT,
+      inning_id INT,
       player_id INT,
       runs_scored INT DEFAULT 0,
       balls_faced INT DEFAULT 0,
@@ -695,8 +696,9 @@ const seedPerformances = async () => {
       strike_rate DECIMAL(6, 2) DEFAULT 0.00,
       dismissal_id INT,
       FOREIGN KEY (match_id) REFERENCES matches (match_id) ON DELETE CASCADE,
+      FOREIGN KEY (inning_id) REFERENCES innings (inning_id) ON DELETE CASCADE,
       FOREIGN KEY (dismissal_id) REFERENCES dismissals (dismissal_id) ON DELETE SET NULL,
-      PRIMARY KEY (match_id, player_id)
+      PRIMARY KEY (match_id, inning_id, player_id)
     )`
   );
 
@@ -704,14 +706,16 @@ const seedPerformances = async () => {
   await pool.query(
     `CREATE TABLE IF NOT EXISTS match_bowling_performance (
       match_id INT,
+      inning_id INT,
       player_id INT,
       overs_bowled DECIMAL(5, 1) DEFAULT 0.0,
       maiden_overs INT DEFAULT 0,
       runs_conceded INT DEFAULT 0,
       wickets_taken INT DEFAULT 0,
       economy_rate DECIMAL(6, 2) DEFAULT 0.0,
-      FOREIGN KEY (match_id) REFERENCES matches (match_id),
-      PRIMARY KEY (match_id, player_id)
+      FOREIGN KEY (match_id) REFERENCES matches (match_id) ON DELETE CASCADE,
+      FOREIGN KEY (inning_id) REFERENCES innings (inning_id) ON DELETE CASCADE,
+      PRIMARY KEY (match_id, inning_id, player_id)
     )`
   );
 
@@ -723,36 +727,61 @@ const createInsertMatchPerformanceEntriesTrigger = async () => {
   await pool.query("DROP TRIGGER IF EXISTS InsertMatchPerformanceEntries");
   await pool.query(
     `CREATE TRIGGER InsertMatchPerformanceEntries
-    AFTER UPDATE ON matches
-    FOR EACH ROW BEGIN
-        IF (OLD.toss_decision IS NULL AND NEW.toss_decision IS NOT NULL)
-          OR (OLD.toss_winner_id IS NULL AND NEW.toss_winner_id IS NOT NULL) THEN
-            INSERT INTO match_batting_performance (match_id, player_id)
-            SELECT (SELECT NEW.match_id), player_id
-            FROM team_players
-            WHERE team_id = NEW.team1_id
-            LIMIT 11;
+    AFTER INSERT ON innings
+    FOR EACH ROW
+    BEGIN
+        DECLARE batting_team_id INT;
+        DECLARE bowling_team_id INT;
+        DECLARE previous_batting_team_id INT;
 
-            INSERT INTO match_batting_performance (match_id, player_id)
-            SELECT (SELECT NEW.match_id), player_id
-            FROM team_players
-            WHERE team_id = NEW.team2_id
-            LIMIT 11;
+        -- Check if it's the first inning
+        IF NEW.number = 1 THEN
+            -- Determine the batting and bowling teams based on the toss decision
+            SELECT
+                CASE
+                    WHEN toss_decision = 'batting' THEN toss_winner_id
+                    ELSE CASE WHEN team1_id = toss_winner_id THEN team2_id ELSE team1_id END
+                END AS batting_team,
+                CASE
+                    WHEN toss_decision = 'bowling' THEN toss_winner_id
+                    ELSE CASE WHEN team1_id = toss_winner_id THEN team2_id ELSE team1_id END
+                END AS bowling_team
+            INTO batting_team_id, bowling_team_id
+            FROM matches
+            WHERE match_id = NEW.match_id;
+        ELSE
+            SELECT team_id
+            INTO previous_batting_team_id
+            FROM innings
+            WHERE match_id = NEW.match_id AND number = NEW.number - 1
+            LIMIT 1;
 
-            INSERT INTO match_bowling_performance (match_id, player_id)
-            SELECT (SELECT NEW.match_id), player_id
-            FROM team_players
-            WHERE team_id = NEW.team1_id
-              AND bowling_order IS NOT NULL
-            ORDER BY bowling_order;
-
-            INSERT INTO match_bowling_performance (match_id, player_id)
-            SELECT (SELECT NEW.match_id), player_id
-            FROM team_players
-            WHERE team_id = NEW.team2_id
-              AND bowling_order IS NOT NULL
-            ORDER BY bowling_order;
+            -- Set batting and bowling teams for the current inning
+            SET bowling_team_id = previous_batting_team_id;
+            SELECT CASE
+                WHEN team1_id = bowling_team_id THEN team2_id
+                ELSE team1_id
+            END
+            INTO batting_team_id
+            FROM matches
+            WHERE match_id = NEW.match_id;
         END IF;
+
+        -- Insert players into match_batting_performance
+        INSERT INTO match_batting_performance (match_id, inning_id, player_id)
+        SELECT NEW.match_id, NEW.inning_id, player_id
+        FROM team_players
+        WHERE team_id = batting_team_id
+        LIMIT 11;
+
+        -- Insert players into match_bowling_performance
+        INSERT INTO match_bowling_performance (match_id, inning_id, player_id)
+        SELECT NEW.match_id, NEW.inning_id, player_id
+        FROM team_players
+        WHERE team_id = bowling_team_id
+          AND bowling_order IS NOT NULL
+        ORDER BY bowling_order;
+
     END`
   );
 }

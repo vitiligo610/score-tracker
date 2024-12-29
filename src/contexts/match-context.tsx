@@ -215,7 +215,7 @@ export const MatchProvider = ({ match_id, children }: MatchProviderProps) => {
       // Update local state
       setMatchState((prev) => {
         if (!prev) return prev;
-
+        
         const newOver = ballData.ball_number === 6;
         const currentBowler = prev.bowlers.find(
           (bowler) => bowler.player_id === prev.over.bowler_id
@@ -226,7 +226,6 @@ export const MatchProvider = ({ match_id, children }: MatchProviderProps) => {
           )?.player_id || prev.bowlers[0].player_id;
         const totalRuns = ballData.runs_scored + (ballData?.extra?.runs || 0);
 
-        // update bowlers
         const updatedBowlers = prev.bowlers.map((bowler) => {
           const isCurrentBowler = bowler.player_id === currentBowler!.player_id;
 
@@ -236,26 +235,16 @@ export const MatchProvider = ({ match_id, children }: MatchProviderProps) => {
             ...bowler,
             runs_conceded: bowler.runs_conceded + totalRuns,
             wickets_taken: bowler.wickets_taken + (ballData.is_wicket ? 1 : 0),
-            overs_bowled: updateBowlerOvers(
-              bowler.overs_bowled,
-              ballData.is_legal
-            ),
+            overs_bowled: ballData.is_legal
+              ? Number(bowler.overs_bowled) % 1 === 0.5
+                ? Math.ceil(Number(bowler.overs_bowled))
+                : Number(bowler.overs_bowled) + 0.1
+              : bowler.overs_bowled,
             economy_rate: getEconomyRate(
               bowler.runs_conceded + totalRuns,
               bowler.overs_bowled
             ),
           };
-
-          // Update match bowlers array
-          const matchBowlerIndex = matchState.bowlers.findIndex(
-            (b) => b.player_id === bowler.player_id
-          );
-          if (matchBowlerIndex !== -1) {
-            matchState.bowlers[matchBowlerIndex] = {
-              ...matchState.bowlers[matchBowlerIndex],
-              ...updatedBowler,
-            };
-          }
 
           return updatedBowler;
         });

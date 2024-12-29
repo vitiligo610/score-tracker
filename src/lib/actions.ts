@@ -9,6 +9,7 @@ import {
   Match,
   MatchBatsman,
   MatchBowler,
+  OngoingInnings,
   OngoingMatch,
   Player,
   PlayerWithoutId,
@@ -951,6 +952,7 @@ export const fetchMatchPlayers = async (team_id: number, limit: number) => {
 export const fetchMatchBattingTeam = async (
   team_id: number,
   match_id: number | string,
+  inning_id: number,
   limit: number
 ) => {
   try {
@@ -960,9 +962,10 @@ export const fetchMatchBattingTeam = async (
       LEFT JOIN match_batting_performance USING (player_id)
       WHERE team_id = ?
       AND match_id = ?
+      AND inning_id = ?
       ORDER BY batting_order
       LIMIT ?`,
-      [team_id, match_id, limit]
+      [team_id, match_id, inning_id, limit]
     );
 
     return { teamPlayers: players as BattingTeamPlayer[] };
@@ -975,18 +978,20 @@ export const fetchMatchBattingTeam = async (
 export const fetchMatchBowlingTeam = async (
   team_id: number,
   match_id: number | string,
+  inning_id: number,
   limit: number
 ) => {
   try {
     const [players] = await pool.query(
-      `SELECT * FROM team_players
+      `SELECT *, ISNULL(bowling_order) AS null_bowling FROM team_players
       NATURAL JOIN players
       LEFT JOIN match_bowling_performance USING (player_id)
       WHERE team_id = ?
-      AND match_id = ?
-      ORDER BY bowling_order
+      AND match_id IS NULL OR match_id = ?
+      AND inning_id IS NULL OR inning_id = ?
+      ORDER BY null_bowling, bowling_order
       LIMIT ?`,
-      [team_id, match_id, limit]
+      [team_id, match_id, inning_id, limit]
     );
 
     return { teamPlayers: players as BowlingTeamPlayer[] };
@@ -1122,6 +1127,7 @@ export const fetchMatchById = async (match_id: number) => {
     const { teamPlayers: battingTeamPlayers } = await fetchMatchBattingTeam(
       battingTeamId,
       match.match_id,
+      match.innings.inning_id,
       11
     );
 
@@ -1129,6 +1135,7 @@ export const fetchMatchById = async (match_id: number) => {
     const { teamPlayers: bowlingTeamPlayers } = await fetchMatchBowlingTeam(
       bowlingTeamId,
       match.match_id,
+      match.innings.inning_id,
       11
     );
 
@@ -1186,3 +1193,19 @@ export const insertBallForInning = async (ball: Ball) => {
     );
   }
 };
+
+export const fetchInningsDetails = async (match_id: number | string, inningNumber: number) => {
+  try {
+    const [data]: any = await pool.query(
+      `SELECT * FROM innings
+      WHERE match_id = ?
+      AND number = ?`,
+      [match_id, inningNumber]
+    );
+
+    return { innings: data[0] as OngoingInnings };
+  } catch (error) {
+    console.log("Error fetching inning details: ", error);
+    throw new Error("Failed to fetch innings details!");
+  }
+}

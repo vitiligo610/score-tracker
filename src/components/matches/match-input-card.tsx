@@ -17,7 +17,11 @@ import { cn, getBattingTeamId, getBowlingTeamId } from "@/lib/utils";
 import { Check, Loader } from "lucide-react";
 import { useEffect, useState } from "react";
 import InningsEndDialog from "./innings-end-dialog";
-import { insertInningsForMatch, setMatchToComplete } from "@/lib/actions";
+import {
+  insertInningsForMatch,
+  setMatchToComplete,
+  fetchInningsDetails,
+} from "@/lib/actions";
 import { useRouter } from "next/navigation";
 
 const DISMISSAL_TYPES_WITH_FIELDER: DismissalType[] = [
@@ -74,8 +78,12 @@ const MatchInputCard = () => {
         match.over.balls.length > 0
           ? match.over.balls[match.over.balls.length - 1]
           : null;
-      const targetAchieved = match.innings.number % 2 === 0 && match.innings.total_runs >= match.innings.target_score;
-  
+      const targetAchieved =
+        format === "Test"
+          ? match.innings.number === 4
+          : match.innings.number === 2 &&
+            match.innings.total_runs >= match.innings.target_score;
+
       if (format === "Test" && isAllOut) {
         setShowInningsEndDialog(true);
         return;
@@ -326,16 +334,10 @@ const MatchInputCard = () => {
     );
   };
 
-  
-
   const handleNextInnings = async () => {
     try {
       const isTestMatch = match.competition.format === "Test";
       const inningsNumber = match.innings.number;
-      const targetScore = match.innings.total_runs + 1;
-      const isMatchEnd = !isTestMatch
-        ? inningsNumber === 2
-        : inningsNumber === 4;
 
       const newBattingTeamId = getBowlingTeamId(
         match.innings,
@@ -348,28 +350,73 @@ const MatchInputCard = () => {
         match.team2
       );
 
-      if (!isMatchEnd) {
-        await insertInningsForMatch(
+      if (isTestMatch) {
+        const { innings: previousInnings } = await fetchInningsDetails(
           match.match_id,
-          newBattingTeamId,
-          newBowlingTeamId,
-          inningsNumber + 1,
-          targetScore
+          inningsNumber - 1
         );
-        await fetchMatchDetails();
-      } else {
-        const getBowlingTeamScore =
-          match.innings.number === 1 ? 0 : match.innings.total_runs;
-        const getBattingTeamScore = match.innings.target_score
-          ? match.innings.total_runs
-          : 0;
-        const winningTeamId =
-          getBowlingTeamScore > getBattingTeamScore
-            ? getBowlingTeamId(match.innings, match.team1, match.team2)
-            : getBattingTeamId(match.innings, match.team1, match.team2);
+        let targetScore = 0;
 
-        await setMatchToComplete(match.match_id, winningTeamId);
+        if (inningsNumber === 1) {
+          // After 1st innings, lead = total runs of team 1
+          targetScore = match.innings.total_runs;
+        } else if (inningsNumber === 2) {
+          // After 2nd innings, calculate lead for team 1
+          const lead = match.innings.total_runs - previousInnings.total_runs;
+          targetScore = Math.max(lead, 0); // Positive lead only
+        } else if (inningsNumber === 3) {
+          // After 3rd innings, set target for 4th innings
+          const lead = previousInnings.total_runs - match.innings.total_runs;
+          targetScore = lead + 1; // Team 2 must chase the lead + 1
+        }
+
+        const isMatchEnd = inningsNumber === 4;
+        if (isMatchEnd) {
+          const chasingTeamTotal = match.innings.total_runs;
+          const winningTeamId =
+            chasingTeamTotal >= targetScore
+              ? getBattingTeamId(match.innings, match.team1, match.team2)
+              : getBowlingTeamId(match.innings, match.team1, match.team2);
+
+          await setMatchToComplete(match.match_id, winningTeamId);
+        } else {
+          await insertInningsForMatch(
+            match.match_id,
+            newBattingTeamId,
+            newBowlingTeamId,
+            inningsNumber + 1,
+            targetScore
+          );
+          await fetchMatchDetails();
+        }
+      } else {
+        const targetScore = match.innings.total_runs + 1;
+        const isMatchEnd = inningsNumber === 2;
+
+        if (!isMatchEnd) {
+          await insertInningsForMatch(
+            match.match_id,
+            newBattingTeamId,
+            newBowlingTeamId,
+            inningsNumber + 1,
+            targetScore
+          );
+          await fetchMatchDetails();
+        } else {
+          const getBowlingTeamScore =
+            match.innings.number === 1 ? 0 : match.innings.total_runs;
+          const getBattingTeamScore = match.innings.target_score
+            ? match.innings.total_runs
+            : 0;
+          const winningTeamId =
+            getBowlingTeamScore > getBattingTeamScore
+              ? getBowlingTeamId(match.innings, match.team1, match.team2)
+              : getBattingTeamId(match.innings, match.team1, match.team2);
+
+          await setMatchToComplete(match.match_id, winningTeamId);
+        }
       }
+
       router.refresh();
     } catch (error: any) {
       toast({
@@ -515,12 +562,22 @@ const MatchInputCard = () => {
           >
             {currentBall.is_wicket ? "Cancel Wicket" : "Mark as Wicket"}
           </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={isSubmitDisabled() || submitting}
-          >
-            {submitting && <Loader className="animate-spin" />} Submit Ball
-          </Button>
+          <div className="space-x-4">
+            {match.competition.format === "Test" && (
+              <Button
+                variant="secondary"
+                onClick={() => setShowInningsEndDialog(true)}
+              >
+                Declare Innings
+              </Button>
+            )}
+            <Button
+              onClick={handleSubmit}
+              disabled={isSubmitDisabled() || submitting}
+            >
+              {submitting && <Loader className="animate-spin" />} Submit Ball
+            </Button>
+          </div>
         </div>
       </Card>
 

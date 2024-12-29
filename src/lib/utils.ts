@@ -170,20 +170,24 @@ export const getTotalOversOfFormat = (format?: string) => {
 }
 
 export const updateBowlerOvers = (oversBowled: number, incrementByOne: boolean) => {
-  const currentOverString = oversBowled.toString();
-  const [full, partial = '0'] = currentOverString.split('.');
   let newOvers = oversBowled;
 
   if (incrementByOne) {
-    if (partial === '5') {
-      newOvers = parseInt(full) + 1;
+    const fullOvers = Math.floor(oversBowled);
+    const ballsBowled = Math.round((oversBowled % 1) * 10);
+
+    if (ballsBowled === 5) {
+      newOvers = fullOvers + 1;
     } else {
-      newOvers = parseFloat((parseInt(full) + parseFloat(`0.${parseInt(partial) + 1}`)).toFixed(1));
+      newOvers = fullOvers + (ballsBowled + 1) / 10;
     }
   }
 
+  console.log("updating bowler overs: old ", oversBowled, "new ", newOvers);
+
   return newOvers;
-}
+};
+
 
 export const formatNumber = (number: any, fractionDigits: number = 1) => {
   return number ? Number(number).toFixed(1) : (0).toFixed(fractionDigits);
