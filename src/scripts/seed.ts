@@ -756,6 +756,91 @@ const createInsertMatchPerformanceEntriesTrigger = async () => {
   );
 }
 
+const createUpdateMatchStatusTrigger = async () => {
+  console.log("Create trigger for updating match status...");
+  await pool.query("DROP TRIGGER IF EXISTS UpdateMatchStatus");
+  await pool.query(
+    `CREATE TRIGGER UpdateMatchStatus
+    AFTER INSERT ON balls
+    FOR EACH ROW
+    BEGIN
+        DECLARE totalRuns INT;
+        DECLARE newOver BOOLEAN;
+
+        -- Calculate total runs including extras
+        SET totalRuns = NEW.runs_scored;
+
+        -- Check if this is the last ball of the over
+        SET newOver = (NEW.ball_number = 6);
+
+        -- Update bowlers' stats
+        UPDATE match_bowling_performance
+        SET
+            runs_conceded = runs_conceded + totalRuns,
+            wickets_taken = wickets_taken + IF(NEW.is_wicket, 1, 0),
+            overs_bowled =
+                CASE
+                    WHEN MOD(overs_bowled, 1) = 0.5 AND NEW.is_legal THEN
+                        CEILING(overs_bowled)
+                    WHEN MOD(overs_bowled, 1) = 0.5 AND NOT NEW.is_legal THEN
+                        overs_bowled
+                    ELSE
+                        overs_bowled + IF(NEW.is_legal, 0.1, 0)
+                    END,
+            economy_rate =
+                CASE
+                    WHEN overs_bowled + IF(NEW.is_legal, 0.1, 0) = 0 THEN 0
+                    ELSE
+                        (runs_conceded + totalRuns) /
+                        (
+                            CASE
+                                WHEN MOD(overs_bowled, 1) = 0.5 THEN
+                                    CEILING(overs_bowled)
+                                ELSE
+                                    overs_bowled + IF(NEW.is_legal, 0.1, 0)
+                                END
+                            )
+                    END
+        WHERE player_id = NEW.bowler_id;
+
+
+        -- Update batsmen' stats
+        UPDATE match_batting_performance
+        SET
+            runs_scored = runs_scored + NEW.runs_scored,
+            balls_faced = balls_faced + IF(NEW.is_legal, 1, 0),
+            fours = fours + IF(NEW.runs_scored = 4, 1, 0),
+            sixes = sixes + IF(NEW.runs_scored = 6, 1, 0),
+            strike_rate = (runs_scored + NEW.runs_scored) / (balls_faced + IF(NEW.is_legal, 1, 0)) * 100
+        WHERE player_id = NEW.batsman_id;
+
+        -- Update innings stats
+        UPDATE innings
+        SET
+            total_runs = total_runs + totalRuns,
+            total_wickets = total_wickets + IF(NEW.is_wicket, 1, 0),
+            total_overs = total_overs + IF(newOver, 1, 0)
+        WHERE inning_id = NEW.inning_id;
+
+        -- Update the overs table
+        IF EXISTS (
+            SELECT 1 FROM overs WHERE inning_id = NEW.inning_id AND over_number = NEW.over_number
+        ) THEN
+            -- Update the existing over
+            UPDATE overs
+            SET
+                total_runs = total_runs + totalRuns,
+                total_wickets = total_wickets + IF(NEW.is_wicket, 1, 0)
+            WHERE inning_id = NEW.inning_id AND over_number = NEW.over_number;
+        ELSE
+            -- Insert a new over
+            INSERT INTO overs (inning_id, over_number, bowler_id, total_runs, total_wickets)
+            VALUES (NEW.inning_id, NEW.over_number, NEW.bowler_id, totalRuns, IF(NEW.is_wicket, 1, 0));
+        END IF;
+
+    END`
+  );
+}
 
 const main = async () => {
   console.log("🌱 Starting database seed...");
@@ -793,6 +878,7 @@ const main = async () => {
     await seedOvers();
     await seedBalls();
     await seedPerformances();
+    await createUpdateMatchStatusTrigger();
 
     console.log("✅ Database seeded successfully");
     process.exit(0);

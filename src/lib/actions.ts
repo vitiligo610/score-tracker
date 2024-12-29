@@ -916,7 +916,7 @@ export const getExtrasCountByMatchId = async (match_id: number) => {
 export const getOverBallsForMatch = async (inning_id: number, over_number: number) => {
   const [data] = await pool.query(
     `SELECT *, type AS extra_type FROM balls
-    NATURAL JOIN extras
+    LEFT JOIN extras USING (ball_id)
     WHERE inning_id = ?
       AND over_number = ?
     ORDER BY ball_number`,
@@ -987,6 +987,8 @@ export const fetchMatchById = async (match_id: number) => {
     // console.log("extras for match ", match_id, "is ", extras_count);
 
     const match = getMatchDetails(data[0], extras_count, balls);
+
+    console.log("fetched match is ", match);
 
     return { match: match as unknown as OngoingMatch };
   } catch (error) {
