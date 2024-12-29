@@ -23,7 +23,7 @@ type MatchContextType = {
   submitting: boolean;
   matchDetails: OngoingMatch | undefined;
   setMatchDetails: (matchDetails: OngoingMatch) => void;
-  battingTeamPlayers: PlayerWithTeam[];
+  battingTeamPlayers: BattingTeamPlayer[];
   bowlingTeamPlayers: PlayerWithTeam[];
   submitBall: (ball: CurrentBall) => void;
 };

@@ -4,19 +4,18 @@ import { Card } from "@/components/ui/card";
 import { useMatch } from "@/contexts/match-context";
 import { cn, formatNumber } from "@/lib/utils";
 import { ChevronRight } from "lucide-react";
+import BatsmenStats from "@/components/matches/batsmen-stats";
 
 const BattingTeamCard = () => {
-  const { matchDetails: match, battingTeamPlayers } = useMatch();
+  const { matchDetails: match } = useMatch();
   if (!match) return null;
-
-  console.log("match batsmen are: ", match.batsmen);
-  console.log("batting team players are: ", battingTeamPlayers);
 
   return (
     <Card className="p-4">
-      <h3 className="text-lg font-semibold mb-4">
-        Batting
-      </h3>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold">Batting</h3>
+        <BatsmenStats />
+      </div>
 
       <div className="space-y-4">
         {/* Current Batsmen */}
@@ -35,7 +34,10 @@ const BattingTeamCard = () => {
                   {match.striker_player_id === batsman.player_id && (
                     <ChevronRight className="text-primary" />
                   )}
-                  <span className="font-medium">{batsman.name || batsman.first_name + " " + batsman.last_name}</span>
+                  <span className="font-medium">
+                    {batsman.name ||
+                      batsman.first_name + " " + batsman.last_name}
+                  </span>
                 </div>
               </div>
               <div className="text-sm">
@@ -46,22 +48,11 @@ const BattingTeamCard = () => {
               </div>
             </div>
             <div className="ml-2 flex items-center justify-between text-sm text-muted-foreground">
-              <span>
-                {batsman.batting_style}
-              </span>
-              <span>
-                SR {formatNumber(batsman.strike_rate, 2)}
-              </span>
+              <span>{batsman.batting_style}</span>
+              <span>SR {formatNumber(batsman.strike_rate, 2)}</span>
             </div>
           </div>
         ))}
-
-        {/* Next Batsman */}
-        {/* {nextBatsman && (
-          <div className="text-sm text-muted-foreground mt-4 pt-2 border-t">
-            Up next: {nextBatsman.name}
-          </div>
-        )} */}
       </div>
     </Card>
   );
