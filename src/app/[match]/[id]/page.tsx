@@ -1,3 +1,4 @@
+import MatchSummary from "@/components/matches/match-summary";
 import MatchToss from "@/components/matches/match-toss";
 import TeamsMatch from "@/components/matches/teams-match";
 import { MatchProvider } from "@/contexts/match-context";
@@ -10,13 +11,13 @@ export const metadata: Metadata = {
 
 interface Props {
   params: {
-    id: string;
+    id: number;
   }
 };
 
 const MatchPage = async ({ params }: Props) => {
   const p = await params;
-  const match_id = Number(p.id);
+  const match_id = p.id;
   const { match } = await fetchMatchById(match_id);
   // console.log("match is ", match);
 
@@ -28,6 +29,7 @@ const MatchPage = async ({ params }: Props) => {
           <TeamsMatch />
         </MatchProvider>
       )}
+      {match.status === "completed" && <MatchSummary />}
     </div>
   )
 }

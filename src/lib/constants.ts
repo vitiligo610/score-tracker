@@ -49,7 +49,9 @@ export const DISMISSAL_TYPES = [
 ] as const;
 
 export const OVERS_FOR_FORMAT = {
-  T20: 20,
+  T20: 5,
   ODI: 50,
   Test: 100,
 };
+
+export const TOTAL_WICKETS = 2;

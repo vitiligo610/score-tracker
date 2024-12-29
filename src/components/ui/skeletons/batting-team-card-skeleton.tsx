@@ -5,8 +5,9 @@ const BattingTeamCardSkeleton = () => {
   return (
     <Card className="p-4">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4 mt-2">
+      <div className="flex items-center justify-between mb-4 mt-3">
         <Skeleton className="h-6 w-20" />
+        <Skeleton className="h-5 w-24" />
       </div>
 
       <div className="space-y-4">
@@ -25,11 +26,6 @@ const BattingTeamCardSkeleton = () => {
             </div>
           </div>
         ))}
-
-        {/* Next Batsman */}
-        {/* <div className="mt-4 pt-2 border-t">
-          <Skeleton className="h-4 w-40" />
-        </div> */}
       </div>
     </Card>
   );

@@ -15,14 +15,14 @@ const BowlingTeamCard = () => {
   const nextBowler = match.bowlers.find(bowler => bowler.bowling_order > currentBowler!.bowling_order) ?? match.bowlers[0];
 
   return (
-    <Card className="p-4">
+    <Card className="p-4 flex flex-col">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold">Bowling</h3>
         <BowlersStats />
       </div>
 
       {currentBowler && (
-        <div className="space-y-6">
+        <div className="flex flex-col justify-between flex-1">
           {/* Current Bowler Stats */}
           <div className="bg-primary/5 rounded-lg p-4">
             <div className="flex items-center justify-between gap-2 mb-3">
@@ -59,30 +59,7 @@ const BowlingTeamCard = () => {
             </div>
           </div>
 
-          {/* Current Over */}
-          {/* <div className="space-y-2">
-            <h4 className="text-sm font-medium text-muted-foreground">This Over</h4>
-            <div className="flex gap-2">
-              {currentOver?.balls?.map((ball, index) => (
-                <div
-                  key={index}
-                  className={cn(
-                    "w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium",
-                    ball.is_wicket ? "bg-red-100 text-red-700" :
-                    ball.runs_scored === 0 ? "bg-slate-100" :
-                    ball.runs_scored === 4 ? "bg-blue-100 text-blue-700" :
-                    ball.runs_scored === 6 ? "bg-purple-100 text-purple-700" :
-                    "bg-primary/10"
-                  )}
-                >
-                  {ball.is_wicket ? "W" : ball.runs_scored}
-                </div>
-              ))}
-            </div>
-          </div> */}
-
-          {/* Next Bowler */}
-          <div className="text-sm text-muted-foreground border-t pt-3">
+          <div className="text-sm text-muted-foreground border-t pt-4">
             <div className="flex items-center justify-end gap-2">
               <span>Next Bowler: {nextBowler.name || nextBowler.first_name + " " + nextBowler.last_name}</span>
             </div>

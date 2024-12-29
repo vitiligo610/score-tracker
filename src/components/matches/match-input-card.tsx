@@ -1,16 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { useMatch } from "@/contexts/match-context";
-import { cn } from "@/lib/utils";
-import { Ball, CurrentBall, DismissalType, ExtrasType } from "@/lib/definitons";
-import { Check, Loader } from "lucide-react";
-import { DISMISSAL_TYPES, EXTRAS_TYPES } from "@/lib/constants";
 import PlayerSelect from "@/components/matches/player-select";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { useMatch } from "@/contexts/match-context";
 import { useToast } from "@/hooks/use-toast";
+import {
+  DISMISSAL_TYPES,
+  EXTRAS_TYPES,
+  OVERS_FOR_FORMAT,
+  TOTAL_WICKETS,
+} from "@/lib/constants";
+import { Ball, CurrentBall, DismissalType, ExtrasType } from "@/lib/definitons";
+import { cn, getBattingTeamId, getBowlingTeamId } from "@/lib/utils";
+import { Check, Loader } from "lucide-react";
+import { useEffect, useState } from "react";
+import InningsEndDialog from "./innings-end-dialog";
+import { insertInningsForMatch, setMatchToComplete } from "@/lib/actions";
+import { useRouter } from "next/navigation";
 
 const DISMISSAL_TYPES_WITH_FIELDER: DismissalType[] = [
   "Caught",
@@ -45,6 +53,9 @@ const MatchInputCard = () => {
   });
   const [errors, setErrors] = useState<string[]>([]);
   const { toast } = useToast();
+  const [showInningsEndDialog, setShowInningsEndDialog] = useState(false);
+  const router = useRouter();
+  const { fetchMatchDetails } = useMatch();
 
   if (!match) return null;
 
@@ -54,10 +65,42 @@ const MatchInputCard = () => {
     overBalls.length > 0 ? overBalls[overBalls.length - 1].ball_number : 0;
   const remainingBalls = 6 - lastBallNumber;
 
+  useEffect(() => {
+    const checkInningsEnd = () => {
+      const format = match.competition.format;
+      const totalOvers = OVERS_FOR_FORMAT[format];
+      const isAllOut = match.innings.total_wickets === TOTAL_WICKETS;
+      const lastBall =
+        match.over.balls.length > 0
+          ? match.over.balls[match.over.balls.length - 1]
+          : null;
+      const targetAchieved = match.innings.number % 2 === 0 && match.innings.total_runs >= match.innings.target_score;
+  
+      if (format === "Test" && isAllOut) {
+        setShowInningsEndDialog(true);
+        return;
+      }
+
+      const isOversComplete = match.innings.total_overs >= totalOvers;
+
+      if (isAllOut || isOversComplete || targetAchieved) {
+        setShowInningsEndDialog(true);
+      }
+    };
+
+    checkInningsEnd();
+  }, [match]);
+
   const getBallDisplay = (ball: Ball) => {
     if (!ball) return "";
     if (!ball.is_legal)
-      return `${ball?.extra?.runs || 1}${(ball?.extra_type || ball?.extra?.type || "")?.charAt(0).toUpperCase()}`;
+      return `${ball?.extra?.runs || 1}${(
+        ball?.extra_type ||
+        ball?.extra?.type ||
+        ""
+      )
+        ?.charAt(0)
+        .toUpperCase()}`;
     if (ball.is_wicket) return "W";
     if (ball.runs_scored === 0) return "0";
     return ball.runs_scored.toString();
@@ -283,148 +326,221 @@ const MatchInputCard = () => {
     );
   };
 
+  
+
+  const handleNextInnings = async () => {
+    try {
+      const isTestMatch = match.competition.format === "Test";
+      const inningsNumber = match.innings.number;
+      const targetScore = match.innings.total_runs + 1;
+      const isMatchEnd = !isTestMatch
+        ? inningsNumber === 2
+        : inningsNumber === 4;
+
+      const newBattingTeamId = getBowlingTeamId(
+        match.innings,
+        match.team1,
+        match.team2
+      );
+      const newBowlingTeamId = getBattingTeamId(
+        match.innings,
+        match.team1,
+        match.team2
+      );
+
+      if (!isMatchEnd) {
+        await insertInningsForMatch(
+          match.match_id,
+          newBattingTeamId,
+          newBowlingTeamId,
+          inningsNumber + 1,
+          targetScore
+        );
+        await fetchMatchDetails();
+      } else {
+        const getBowlingTeamScore =
+          match.innings.number === 1 ? 0 : match.innings.total_runs;
+        const getBattingTeamScore = match.innings.target_score
+          ? match.innings.total_runs
+          : 0;
+        const winningTeamId =
+          getBowlingTeamScore > getBattingTeamScore
+            ? getBowlingTeamId(match.innings, match.team1, match.team2)
+            : getBattingTeamId(match.innings, match.team1, match.team2);
+
+        await setMatchToComplete(match.match_id, winningTeamId);
+      }
+      router.refresh();
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message,
+      });
+    }
+  };
+
   return (
-    <Card className="p-6 mt-6 bg-card shadow-md rounded-lg">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold">
-          Over: {currentOver.over_number}
-        </h3>
-        {/* Past Balls */}
-        <div className="flex gap-3">
-          {overBalls.map((ball, i) => (
+    <div>
+      <Card className="p-6 mt-6 bg-card shadow-md rounded-lg">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-semibold">
+            Over: {currentOver.over_number}
+          </h3>
+          {/* Past Balls */}
+          <div className="flex gap-3">
+            {overBalls.map((ball, i) => (
+              <div
+                key={i}
+                className={cn(
+                  "w-9 h-9 rounded-full flex items-center justify-center",
+                  "text-sm font-medium border-2 transition-colors",
+                  getBallStyle(ball)
+                )}
+              >
+                {getBallDisplay(ball)}
+              </div>
+            ))}
+
+            {/* Future Balls */}
+            {Array.from({ length: remainingBalls }).map((_, i) => (
+              <div
+                key={`future-${i}`}
+                className={cn(
+                  "w-9 h-9 rounded-full flex items-center justify-center",
+                  "text-sm font-medium border-2 border-dashed border-muted-foreground",
+                  i === 0 && "border-solid border-primary animate-pulse"
+                )}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Score Input Grid */}
+        <div className="grid grid-cols-7 gap-2 mb-6">
+          {[0, 1, 2, 3, 4, 5, 6].map((runs) => (
             <div
-              key={i}
+              key={runs}
+              onClick={() =>
+                setCurrentBall((prev) => ({
+                  ...prev,
+                  runs_scored: runs,
+                }))
+              }
               className={cn(
-                "w-9 h-9 rounded-full flex items-center justify-center",
-                "text-sm font-medium border-2 transition-colors",
-                getBallStyle(ball)
+                "relative h-12 rounded-md flex items-center justify-center",
+                "cursor-pointer transition-all duration-200",
+                "hover:bg-primary/15 active:scale-95",
+                "border border-muted",
+                currentBall.runs_scored === runs
+                  ? "border-primary bg-primary/10"
+                  : "border-muted-foreground",
+                runs === 4 &&
+                  "border-primary/90 hover:border-primary/90 bg-secondary hover:bg-secondary/90",
+                runs === 6 &&
+                  "border-primary hover:border-primary bg-primary hover:bg-primary/90"
               )}
             >
-              {getBallDisplay(ball)}
+              {currentBall.runs_scored === runs && (
+                <div className="absolute -top-2 -right-2 w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                  <Check className="w-3 h-3 text-white" />
+                </div>
+              )}
+              <span
+                className={cn(
+                  "text-lg font-semibold",
+                  runs === 4 && "text-secondary-foreground",
+                  runs === 6 && "text-primary-foreground"
+                )}
+              >
+                {runs}
+              </span>
             </div>
           ))}
-
-          {/* Future Balls */}
-          {Array.from({ length: remainingBalls }).map((_, i) => (
-            <div
-              key={`future-${i}`}
-              className={cn(
-                "w-9 h-9 rounded-full flex items-center justify-center",
-                "text-sm font-medium border-2 border-dashed border-muted-foreground",
-                i === 0 && "border-solid border-primary animate-pulse"
-              )}
-            />
-          ))}
         </div>
-      </div>
 
-      {/* Score Input Grid */}
-      <div className="grid grid-cols-7 gap-2 mb-6">
-        {[0, 1, 2, 3, 4, 5, 6].map((runs) => (
-          <div
-            key={runs}
-            onClick={() =>
-              setCurrentBall((prev) => ({
-                ...prev,
-                runs_scored: runs,
-              }))
-            }
-            className={cn(
-              "relative h-12 rounded-md flex items-center justify-center",
-              "cursor-pointer transition-all duration-200",
-              "hover:bg-primary/15 active:scale-95",
-              "border border-muted",
-              currentBall.runs_scored === runs
-                ? "border-primary bg-primary/10"
-                : "border-muted-foreground",
-              runs === 4 &&
-                "border-primary/90 hover:border-primary/90 bg-secondary hover:bg-secondary/90",
-              runs === 6 &&
-                "border-primary hover:border-primary bg-primary hover:bg-primary/90"
-            )}
+        {/* Extras and Dismissals */}
+        <div className="flex justify-between gap-4 mb-6">
+          <div className="w-1/2">
+            <h4 className="text-md font-medium mb-2">Extras</h4>
+            <div className="flex gap-2 flex-wrap">
+              {EXTRAS_TYPES.map((extra) => (
+                <Badge
+                  key={extra}
+                  variant={
+                    currentBall.extra.type === extra ? "default" : "outline"
+                  }
+                  className={cn("cursor-pointer text-xs px-4 py-1")}
+                  onClick={() => handleExtraSelect(extra)}
+                >
+                  {extra}
+                </Badge>
+              ))}
+            </div>
+          </div>
+
+          <div className="w-1/2">
+            <h4 className="text-md font-medium mb-2">Dismissals</h4>
+            <div className="flex gap-2 flex-wrap">
+              {DISMISSAL_TYPES.map((dismissal) => (
+                <Badge
+                  key={dismissal}
+                  variant={
+                    currentBall.dismissal?.type === dismissal
+                      ? "default"
+                      : "outline"
+                  }
+                  className={cn(
+                    "cursor-pointer text-xs px-4 py-1",
+                    currentBall.extra.type !== null &&
+                      "cursor-not-allowed opacity-55"
+                  )}
+                  onClick={() => handleDismissalSelect(dismissal)}
+                >
+                  {dismissal}
+                </Badge>
+              ))}
+            </div>
+            {renderDismissalControls()}
+          </div>
+        </div>
+
+        {/* Wicket Toggle and Submit */}
+        <div className="flex items-center justify-between">
+          <Button
+            variant={currentBall.is_wicket ? "destructive" : "outline"}
+            onClick={handleWicketSelect}
+            disabled={currentBall.extra.type !== null}
           >
-            {currentBall.runs_scored === runs && (
-              <div className="absolute -top-2 -right-2 w-4 h-4 bg-primary rounded-full flex items-center justify-center">
-                <Check className="w-3 h-3 text-white" />
-              </div>
-            )}
-            <span
-              className={cn(
-                "text-lg font-semibold",
-                runs === 4 && "text-secondary-foreground",
-                runs === 6 && "text-primary-foreground"
-              )}
-            >
-              {runs}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      {/* Extras and Dismissals */}
-      <div className="flex justify-between gap-4 mb-6">
-        <div className="w-1/2">
-          <h4 className="text-md font-medium mb-2">Extras</h4>
-          <div className="flex gap-2 flex-wrap">
-            {EXTRAS_TYPES.map((extra) => (
-              <Badge
-                key={extra}
-                variant={
-                  currentBall.extra.type === extra ? "default" : "outline"
-                }
-                className={cn("cursor-pointer text-xs px-4 py-1")}
-                onClick={() => handleExtraSelect(extra)}
-              >
-                {extra}
-              </Badge>
-            ))}
-          </div>
+            {currentBall.is_wicket ? "Cancel Wicket" : "Mark as Wicket"}
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={isSubmitDisabled() || submitting}
+          >
+            {submitting && <Loader className="animate-spin" />} Submit Ball
+          </Button>
         </div>
+      </Card>
 
-        <div className="w-1/2">
-          <h4 className="text-md font-medium mb-2">Dismissals</h4>
-          <div className="flex gap-2 flex-wrap">
-            {DISMISSAL_TYPES.map((dismissal) => (
-              <Badge
-                key={dismissal}
-                variant={
-                  currentBall.dismissal?.type === dismissal
-                    ? "default"
-                    : "outline"
-                }
-                className={cn(
-                  "cursor-pointer text-xs px-4 py-1",
-                  currentBall.extra.type !== null &&
-                    "cursor-not-allowed opacity-55"
-                )}
-                onClick={() => handleDismissalSelect(dismissal)}
-              >
-                {dismissal}
-              </Badge>
-            ))}
-          </div>
-          {renderDismissalControls()}
-        </div>
-      </div>
-
-      {/* Wicket Toggle and Submit */}
-      <div className="flex items-center justify-between">
-        <Button
-          variant={currentBall.is_wicket ? "destructive" : "outline"}
-          onClick={handleWicketSelect}
-          disabled={currentBall.extra.type !== null}
-        >
-          {currentBall.is_wicket ? "Cancel Wicket" : "Mark as Wicket"}
-        </Button>
-        <Button
-          onClick={handleSubmit}
-          disabled={isSubmitDisabled() || submitting}
-        >
-          {submitting && <Loader className="animate-spin" />} Submit Ball
-        </Button>
-      </div>
-    </Card>
+      <InningsEndDialog
+        isOpen={showInningsEndDialog}
+        onClose={() => setShowInningsEndDialog(false)}
+        isMatchEnd={
+          match.competition.format !== "Test"
+            ? match.innings.number === 2
+            : match.innings.number === 4
+        }
+        onNextInnings={handleNextInnings}
+        lastBall={
+          match.over.balls.length > 0
+            ? match.over.balls[match.over.balls.length - 1]
+            : null
+        }
+        match={match}
+      />
+    </div>
   );
 };
 

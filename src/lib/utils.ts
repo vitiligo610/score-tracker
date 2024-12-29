@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { Tournament, Series, Match, Extras, ExtrasCount, Ball } from "@/lib/definitons";
+import { Tournament, Series, Match, Extras, ExtrasCount, Ball, OngoingInnings, Team } from "@/lib/definitons";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -198,3 +198,27 @@ export const getExtrasDetails = (extras: Extras[]) => {
 
   return `${nb}nb ${wd}wd ${b}b ${lb}lb ${p}p`;
 }
+
+export const getBattingTeamName = (innings: OngoingInnings, team1: Team, team2: Team) => {
+  return innings.team_id === team1.team_id
+    ? team1.name
+    : team2.name;
+};
+
+export const getBowlingTeamName = (innings: OngoingInnings, team1: Team, team2: Team) => {
+  return innings.team_id !== team1.team_id
+    ? team1.name
+    : team2.name;
+};
+
+export const getBattingTeamId = (innings: OngoingInnings, team1: Team, team2: Team) => {
+  return innings.team_id === team1.team_id
+  ? team1.team_id
+  : team2.team_id;
+};
+
+export const getBowlingTeamId = (innings: OngoingInnings, team1: Team, team2: Team) => {
+  return innings.team_id !== team1.team_id
+    ? team1.team_id
+    : team2.team_id;
+};

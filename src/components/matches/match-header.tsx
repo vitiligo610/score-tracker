@@ -11,13 +11,11 @@ const MatchHeader = () => {
   if (!match) return null;
 
   const currentInningsNumber = match.innings.number;
-  const firstInningsScore = match.innings.target_score;
-
-  console.log("match from context is ", match);
+  const targetScore = match.innings.target_score;
 
   const getRequiredRuns = () => {
-    if (currentInningsNumber !== 2 || !firstInningsScore) return null;
-    return firstInningsScore + 1;
+    if (currentInningsNumber % 2 !== 0 || !targetScore) return null;
+    return targetScore;
   };
 
   return (
@@ -49,7 +47,7 @@ const MatchHeader = () => {
           {/* Match Details */}
           <div className="flex flex-wrap items-center gap-x-6 text-sm text-muted-foreground">
             <span className="font-medium">
-              {match.competition.format.toUpperCase()} Match
+              {match.competition.format} Match
             </span>
 
             <Separator orientation="vertical" className="h-4" />

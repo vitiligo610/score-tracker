@@ -879,14 +879,54 @@ export const updateMatchToss = async (
     const bowling_team_id =
       other_team_id !== batting_team_id ? other_team_id : toss_winner_id;
 
-    await pool.query("CALL CreateFirstInningsForMatch(?, ?, ?)", [
+    await pool.query("CALL CreateInningsForMatch(?, ?, ?, ?, 0)", [
       match_id,
       batting_team_id,
       bowling_team_id,
+      1,
     ]);
   } catch (error) {
     console.log("Error updating match toss: ", error);
     throw new Error("Failed to update match toss!");
+  }
+};
+
+export const insertInningsForMatch = async (
+  match_id: number | string,
+  batting_team_id: number,
+  bowling_team_id: number,
+  inning_number: number,
+  target_score: number
+) => {
+  try {
+    await pool.query("CALL CreateInningsForMatch(?, ?, ?, ?, ?)", [
+      match_id,
+      batting_team_id,
+      bowling_team_id,
+      inning_number,
+      target_score,
+    ]);
+  } catch (error) {
+    console.log("Error inserting innings for match: ", error);
+    throw new Error("Failed to create innings for match!");
+  }
+};
+
+export const setMatchToComplete = async (
+  match_id: number | string,
+  winner_team_id: number | null
+) => {
+  try {
+    await pool.query(
+      `UPDATE matches
+      SET winner_team_id = ?,
+          status = ?
+      WHERE match_id = ?`,
+      [winner_team_id, "completed", match_id]
+    );
+  } catch (error) {
+    console.log("Error updating match status: ", error);
+    throw new Error("Failed to update match status!");
   }
 };
 
@@ -906,9 +946,13 @@ export const fetchMatchPlayers = async (team_id: number, limit: number) => {
     console.log("Error fetching team players having team id", team_id);
     throw new Error("Failed to fetch team players");
   }
-}
+};
 
-export const fetchMatchBattingTeam = async (team_id: number, match_id: number | string, limit: number) => {
+export const fetchMatchBattingTeam = async (
+  team_id: number,
+  match_id: number | string,
+  limit: number
+) => {
   try {
     const [players] = await pool.query(
       `SELECT * FROM team_players
@@ -928,7 +972,11 @@ export const fetchMatchBattingTeam = async (team_id: number, match_id: number | 
   }
 };
 
-export const fetchMatchBowlingTeam = async (team_id: number, match_id: number | string, limit: number) => {
+export const fetchMatchBowlingTeam = async (
+  team_id: number,
+  match_id: number | string,
+  limit: number
+) => {
   try {
     const [players] = await pool.query(
       `SELECT * FROM team_players
@@ -970,9 +1018,12 @@ export const getExtrasCountByMatchId = async (match_id: number) => {
   );
 
   return { extras_count: data[0] as ExtrasCount };
-}
+};
 
-export const getOverBallsForMatch = async (inning_id: number, over_number: number) => {
+export const getOverBallsForMatch = async (
+  inning_id: number,
+  over_number: number
+) => {
   const [data] = await pool.query(
     `SELECT *, type AS extra_type FROM balls
     LEFT JOIN extras USING (ball_id)
@@ -983,7 +1034,7 @@ export const getOverBallsForMatch = async (inning_id: number, over_number: numbe
   );
 
   return { balls: data as Ball[] };
-}
+};
 
 const getBattingTeamId = (match: OngoingMatch) => {
   return match.innings.team_id === match.team1.team_id
@@ -1055,10 +1106,17 @@ export const fetchMatchById = async (match_id: number) => {
 
     // console.log("Data is ", data[0]);
     const { extras_count } = await getExtrasCountByMatchId(match_id);
-    const { balls } = await getOverBallsForMatch(data[0].inning_id, data[0].over_number);
+    const { balls } = await getOverBallsForMatch(
+      data[0].inning_id,
+      data[0].over_number
+    );
     // console.log("extras for match ", match_id, "is ", extras_count);
 
-    const match = getMatchDetails(data[0], extras_count, balls) as unknown as OngoingMatch;
+    const match = getMatchDetails(
+      data[0],
+      extras_count,
+      balls
+    ) as unknown as OngoingMatch;
 
     const battingTeamId = getBattingTeamId(match);
     const { teamPlayers: battingTeamPlayers } = await fetchMatchBattingTeam(
@@ -1124,11 +1182,7 @@ export const insertBallForInning = async (ball: Ball) => {
     await pool.query(
       `INSERT INTO extras (ball_id, type, runs)
       VALUES (?, ?, ?)`,
-      [
-        ball_id,
-        ball?.extra?.type,
-        ball?.extra?.runs,
-      ]
+      [ball_id, ball?.extra?.type, ball?.extra?.runs]
     );
   }
-}
+};

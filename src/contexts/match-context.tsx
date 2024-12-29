@@ -22,7 +22,8 @@ type MatchContextType = {
   setMatchDetails: (matchDetails: OngoingMatch) => void;
   battingTeamPlayers: BattingTeamPlayer[];
   bowlingTeamPlayers: PlayerWithTeam[];
-  submitBall: (ball: CurrentBall) => void;
+  submitBall: (ball: CurrentBall) => Promise<void>;
+  fetchMatchDetails: () => Promise<void>;
 };
 
 const MatchContext = createContext<MatchContextType | undefined>(undefined);
@@ -163,6 +164,7 @@ export const MatchProvider = ({ match_id, children }: MatchProviderProps) => {
   };
 
   const submitBall = async (ball: CurrentBall) => {
+    // console.log("submitting hereeeaee", ball);
     try {
       setSubmitting(true);
 
@@ -434,6 +436,7 @@ export const MatchProvider = ({ match_id, children }: MatchProviderProps) => {
         battingTeamPlayers,
         bowlingTeamPlayers,
         submitBall,
+        fetchMatchDetails,
       }}
     >
       {children}

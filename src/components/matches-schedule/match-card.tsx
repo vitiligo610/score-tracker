@@ -36,7 +36,7 @@ const MatchCard = ({
       case "started":
         return "Continue Match";
       default:
-        return "Show Match";
+        return "Show Match Summary";
     }
   }
 
