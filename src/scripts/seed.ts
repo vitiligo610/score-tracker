@@ -694,8 +694,8 @@ const seedPerformances = async () => {
       sixes INT DEFAULT 0,
       strike_rate DECIMAL(6, 2) DEFAULT 0.00,
       dismissal_id INT,
-      FOREIGN KEY (match_id) REFERENCES matches (match_id),
-      FOREIGN KEY (dismissal_id) REFERENCES dismissals (dismissal_id),
+      FOREIGN KEY (match_id) REFERENCES matches (match_id) ON DELETE CASCADE,
+      FOREIGN KEY (dismissal_id) REFERENCES dismissals (dismissal_id) ON DELETE SET NULL,
       PRIMARY KEY (match_id, player_id)
     )`
   );
@@ -842,6 +842,30 @@ const createUpdateMatchStatusTrigger = async () => {
   );
 }
 
+const createUpdateBatsmanDismissalTrigger = async () => {
+  console.log("Create trigger for updating batsman dismissal...");
+  await pool.query("DROP TRIGGER IF EXISTS UpdateBatsmanDismissal");
+  await pool.query(
+    `CREATE TRIGGER UpdateBatsmanDismissal
+        AFTER INSERT ON dismissals
+        FOR EACH ROW
+    BEGIN
+        UPDATE match_batting_performance mbp
+        JOIN innings i ON mbp.match_id = i.match_id
+        SET mbp.dismissal_id = NEW.dismissal_id
+        WHERE i.inning_id = NEW.inning_id
+          AND mbp.player_id = NEW.batsman_id
+          AND mbp.dismissal_id IS NULL;
+    END;
+`
+  )
+}
+
+const seedRemainingTriggers = async () => {
+  await createUpdateMatchStatusTrigger();
+  await createUpdateBatsmanDismissalTrigger();
+}
+
 const main = async () => {
   console.log("🌱 Starting database seed...");
 
@@ -878,7 +902,7 @@ const main = async () => {
     await seedOvers();
     await seedBalls();
     await seedPerformances();
-    await createUpdateMatchStatusTrigger();
+    await seedRemainingTriggers();
 
     console.log("✅ Database seeded successfully");
     process.exit(0);
