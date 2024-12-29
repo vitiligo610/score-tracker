@@ -591,15 +591,15 @@ const seedInnings = async () => {
   );
 
   console.log("Creating procedure for initial innings...");
-  await pool.query("DROP PROCEDURE IF EXISTS CreateFirstInningsForMatch");
+  await pool.query("DROP PROCEDURE IF EXISTS CreateInningsForMatch");
   await pool.query(
-    `CREATE PROCEDURE CreateFirstInningsForMatch (IN p_match_id INT, IN batting_team_id INT, IN bowling_team_id INT)
+    `CREATE PROCEDURE CreateInningsForMatch (IN p_match_id INT, IN batting_team_id INT, IN bowling_team_id INT, IN inning_number INT, IN p_target_score INT)
     BEGIN
         DECLARE p_inning_id INT;
         DECLARE p_bowler_id INT;
 
-        INSERT INTO innings (match_id, team_id, number)
-        VALUES (p_match_id, batting_team_id, 1);
+        INSERT INTO innings (match_id, team_id, number, target_score)
+        VALUES (p_match_id, batting_team_id, inning_number, p_target_score);
 
         SELECT LAST_INSERT_ID() INTO p_inning_id;
         SET p_bowler_id = (
@@ -725,7 +725,8 @@ const createInsertMatchPerformanceEntriesTrigger = async () => {
     `CREATE TRIGGER InsertMatchPerformanceEntries
     AFTER UPDATE ON matches
     FOR EACH ROW BEGIN
-        IF NEW.toss_decision IS NOT NULL AND NEW.toss_winner_id IS NOT NULL THEN
+        IF (OLD.toss_decision IS NULL AND NEW.toss_decision IS NOT NULL)
+          OR (OLD.toss_winner_id IS NULL AND NEW.toss_winner_id IS NOT NULL) THEN
             INSERT INTO match_batting_performance (match_id, player_id)
             SELECT (SELECT NEW.match_id), player_id
             FROM team_players
