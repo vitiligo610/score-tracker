@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  fetchMatchById,
-  insertBallForInning,
-} from "@/lib/actions";
+import { fetchMatchById, insertBallForInning } from "@/lib/actions";
 import {
   Ball,
   CurrentBall,
@@ -98,16 +95,20 @@ export const MatchProvider = ({ match_id, children }: MatchProviderProps) => {
     const isNewOver = lastBall?.ball_number === 6;
 
     let updatedBatsmen = [...batsmen];
-    let newStrikerId = batsmen[0].player_id;
+    let newStrikerId;
 
     if (lastBall?.is_wicket && lastBall.dismissal?.dismissed_batsman_id) {
       const dismissedId = lastBall.dismissal.dismissed_batsman_id;
+
+      // Find the next batsman to come in
       const nextBatsman = battingTeam.find(
         (p) =>
+          !batsmen.some((b) => b.player_id === p.player_id) &&
           p.batting_order! > Math.max(...batsmen.map((b) => b.batting_order))
       );
 
       if (nextBatsman) {
+        // Replace the dismissed batsman with the next batsman
         updatedBatsmen = batsmen.map((b) =>
           b.player_id === dismissedId
             ? {
@@ -123,30 +124,24 @@ export const MatchProvider = ({ match_id, children }: MatchProviderProps) => {
               }
             : b
         );
+      } else {
+        // If no next batsman is available, leave the batsmen unchanged
+        updatedBatsmen = batsmen;
       }
-
-      const wasStrikerDismissed = lastBall.batsman_id === dismissedId;
-      newStrikerId = wasStrikerDismissed
-        ? nextBatsman?.player_id ||
-          batsmen.find((b) => b.player_id !== dismissedId)!.player_id
-        : lastBall.batsman_id;
-    } else if (lastBall) {
-      const nonStriker = batsmen.find(
-        (b) => b.player_id !== lastBall.batsman_id
-      )!.player_id;
-      newStrikerId = isNewOver
-        ? nonStriker
-        : lastBall.runs_scored % 2 === 1
-        ? nonStriker
-        : lastBall.batsman_id;
+    } else {
+      // If no wicket, retain current batsmen
+      updatedBatsmen = batsmen;
     }
+
+    // Select the first batsman in the array as the new striker
+    newStrikerId = updatedBatsmen[0]!.player_id;
 
     // Update match state
     setMatchState((prevState) => ({
       ...prevState,
       ...match,
       batsmen: updatedBatsmen,
-      striker_player_id: newStrikerId,
+      striker_player_id: newStrikerId!,
       bowlers,
       innings: {
         ...match.innings,
@@ -300,9 +295,11 @@ export const MatchProvider = ({ match_id, children }: MatchProviderProps) => {
                       fours: updatedStats.fours,
                       sixes: updatedStats.sixes,
                       strike_rate: updatedStats.strike_rate,
-                      dismissal_id: ball.is_wicket && ball.dismissal.dismissed_batsman_id === player.player_id
-                        ? player.player_id
-                        : null,
+                      dismissal_id:
+                        ball.is_wicket &&
+                        ball.dismissal.dismissed_batsman_id === player.player_id
+                          ? player.player_id
+                          : null,
                     }
                   : player
               )
