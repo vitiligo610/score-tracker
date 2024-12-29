@@ -216,3 +216,14 @@ export interface CurrentBall {
   };
   dismissal: Dismissal;
 }
+
+export interface MatchResponse {
+  match: OngoingMatch;
+  battingTeamPlayers: PlayerWithTeam[];
+  bowlingTeamPlayers: PlayerWithTeam[];
+}
+
+export interface InningsResponse {
+  batsmen: MatchBatsman[];
+  bowlers: MatchBowler[];
+}

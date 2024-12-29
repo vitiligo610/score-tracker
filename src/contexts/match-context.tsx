@@ -8,7 +8,7 @@ import {
   fetchTeamPlayers,
   insertBallForInning,
 } from "@/lib/actions";
-import { Ball, CurrentBall, OngoingMatch } from "@/lib/definitons";
+import { Ball, CurrentBall, OngoingMatch, MatchResponse, InningsResponse } from "@/lib/definitons";
 import { createContext, useContext, useEffect, useState } from "react";
 import { PlayerWithTeam } from "@/lib/definitons";
 import { useToast } from "@/hooks/use-toast";
@@ -43,59 +43,173 @@ export const MatchProvider = ({ match_id, children }: MatchProviderProps) => {
   >([]);
   const { toast } = useToast();
 
+  // const fetchMatchDetails = async () => {
+  //   setLoading(true);
+  //   console.log("fetching match detilas from context");
+  //   const {
+  //     match,
+  //     battingTeamPlayers: battingTeam,
+  //     bowlingTeamPlayers: bowlingTeam,
+  //   } = await fetchMatchById(match_id);
+
+  //   const battingTeamId = match.innings.team_id;
+  //   const inningsId = match.innings.inning_id;
+  //   const bowlingTeamId =
+  //     match.team1.team_id !== match.innings.team_id
+  //       ? match.team1.team_id
+  //       : match.team2.team_id;
+  //   const { batsmen, bowlers } = await fetchInningsBatsmenAndBowlers(
+  //     battingTeamId,
+  //     inningsId,
+  //     bowlingTeamId
+  //   );
+
+  //   setBattingTeamPlayers(battingTeam);
+  //   setBowlingTeamPlayers(bowlingTeam);
+
+  //   const currentBowler = bowlers.find(
+  //     (bowler) => bowler.player_id === match.over.bowler_id
+  //   )!;
+  //   const nextBowlerId =
+  //     bowlers.find(
+  //       (bowler) => bowler.bowling_order > currentBowler!.bowling_order
+  //     )?.player_id || bowlers[0].player_id;
+
+  //   // Get last ball details
+  //   const lastBall = match.over.balls[match.over.balls.length - 1];
+  //   const isNewOver = lastBall?.ball_number === 6;
+
+  //   // Handle dismissal from last ball
+  //   let updatedBatsmen = [...batsmen];
+  //   let newStrikerId = batsmen[0].player_id;
+
+  //   if (lastBall?.is_wicket && lastBall.dismissal?.dismissed_batsman_id) {
+  //     const dismissedId = lastBall.dismissal.dismissed_batsman_id;
+  //     const maxBattingOrder = Math.max(...batsmen.map((b) => b.batting_order));
+  //     const nextBatsman = battingTeam.find(
+  //       (p) => p.batting_order! > maxBattingOrder
+  //     );
+
+  //     if (nextBatsman) {
+  //       updatedBatsmen = batsmen.map((b) =>
+  //         b.player_id === dismissedId
+  //           ? {
+  //               player_id: nextBatsman.player_id,
+  //               name: nextBatsman.first_name + " " + nextBatsman.last_name,
+  //               batting_order: nextBatsman.batting_order!,
+  //               batting_style: nextBatsman.batting_style,
+  //               runs_scored: 0,
+  //               balls_faced: 0,
+  //               fours: 0,
+  //               sixes: 0,
+  //               strike_rate: 0,
+  //             }
+  //           : b
+  //       );
+  //     }
+
+  //     // Determine striker after wicket
+  //     const wasStrikerDismissed = lastBall.batsman_id === dismissedId;
+  //     if (wasStrikerDismissed) {
+  //       newStrikerId =
+  //         nextBatsman?.player_id ||
+  //         batsmen.find((b) => b.player_id !== dismissedId)?.player_id!;
+  //     } else {
+  //       newStrikerId = lastBall.batsman_id;
+  //     }
+  //   } else if (lastBall) {
+  //     // No wicket - determine striker based on runs and over
+  //     const lastBallStriker = lastBall.batsman_id;
+  //     const nonStriker = batsmen.find(
+  //       (b) => b.player_id !== lastBall.batsman_id
+  //     )?.player_id!;
+
+  //     if (isNewOver) {
+  //       newStrikerId = nonStriker;
+  //     } else if (lastBall.runs_scored % 2 === 1) {
+  //       newStrikerId = nonStriker;
+  //     } else {
+  //       newStrikerId = lastBallStriker;
+  //     }
+  //   }
+
+  //   setMatchState({
+  //     ...match,
+  //     batsmen: [...batsmen],
+  //     striker_player_id: newStrikerId,
+  //     bowlers: [...bowlers],
+  //     innings: {
+  //       ...match.innings,
+  //       total_overs: match.innings.total_overs + (isNewOver ? 1 : 0),
+  //     },
+  //     over: {
+  //       ...match.over,
+  //       bowler_id: !isNewOver ? match.over.bowler_id : nextBowlerId,
+  //       over_number: match.over.over_number + (isNewOver ? 1 : 0),
+  //       balls: !isNewOver ? match.over.balls : [],
+  //       total_runs: !isNewOver ? match.over.total_runs : 0,
+  //       total_wickets: !isNewOver ? match.over.total_wickets : 0,
+  //     },
+  //   });
+
+  //   setLoading(false);
+  // };
+
   const fetchMatchDetails = async () => {
     setLoading(true);
-    console.log("fetching match detilas from context");
-    const {
-      match,
-      battingTeamPlayers: battingTeam,
-      bowlingTeamPlayers: bowlingTeam,
-    } = await fetchMatchById(match_id);
+    console.log("Fetching match details from context");
+  
+    const matchResponse = await fetchMatchById(match_id);
+
+    const { match } = matchResponse;
 
     const battingTeamId = match.innings.team_id;
     const inningsId = match.innings.inning_id;
     const bowlingTeamId =
-      match.team1.team_id !== match.innings.team_id
+      match.team1.team_id !== battingTeamId
         ? match.team1.team_id
         : match.team2.team_id;
-    const { batsmen, bowlers } = await fetchInningsBatsmenAndBowlers(
+
+    const inningsResponse = await fetchInningsBatsmenAndBowlers(
       battingTeamId,
       inningsId,
       bowlingTeamId
     );
+    
+    processAndSetMatchState(matchResponse, inningsResponse);
+  
+    setLoading(false);
+  };
 
-    setBattingTeamPlayers(battingTeam);
-    setBowlingTeamPlayers(bowlingTeam);
-
-    const currentBowler = bowlers.find(
-      (bowler) => bowler.player_id === match.over.bowler_id
-    )!;
+  const processAndSetMatchState = (
+    { match, battingTeamPlayers: battingTeam, bowlingTeamPlayers: bowlingTeam  }: MatchResponse,
+    { batsmen, bowlers }: InningsResponse
+  ) => {
+    // Determine current bowler and next bowler
+    const currentBowler = bowlers.find((b) => b.player_id === match.over.bowler_id)!;
     const nextBowlerId =
-      bowlers.find(
-        (bowler) => bowler.bowling_order > currentBowler!.bowling_order
-      )?.player_id || bowlers[0].player_id;
-
-    // Get last ball details
-    const lastBall = match.over.balls[match.over.balls.length - 1];
+      bowlers.find((b) => b.bowling_order > currentBowler?.bowling_order)?.player_id ||
+      bowlers[0].player_id;
+  
+    // Determine last ball, striker, and batsman updates
+    const lastBall = match.over.balls.at(-1);
     const isNewOver = lastBall?.ball_number === 6;
-
-    // Handle dismissal from last ball
+  
     let updatedBatsmen = [...batsmen];
     let newStrikerId = batsmen[0].player_id;
-
+  
     if (lastBall?.is_wicket && lastBall.dismissal?.dismissed_batsman_id) {
       const dismissedId = lastBall.dismissal.dismissed_batsman_id;
-      const maxBattingOrder = Math.max(...batsmen.map((b) => b.batting_order));
       const nextBatsman = battingTeam.find(
-        (p) => p.batting_order! > maxBattingOrder
+        (p) => p.batting_order! > Math.max(...batsmen.map((b) => b.batting_order))
       );
-
+  
       if (nextBatsman) {
         updatedBatsmen = batsmen.map((b) =>
           b.player_id === dismissedId
             ? {
                 player_id: nextBatsman.player_id,
-                name: nextBatsman.first_name + " " + nextBatsman.last_name,
+                name: `${nextBatsman.first_name} ${nextBatsman.last_name}`,
                 batting_order: nextBatsman.batting_order!,
                 batting_style: nextBatsman.batting_style,
                 runs_scored: 0,
@@ -107,53 +221,48 @@ export const MatchProvider = ({ match_id, children }: MatchProviderProps) => {
             : b
         );
       }
-
-      // Determine striker after wicket
+  
       const wasStrikerDismissed = lastBall.batsman_id === dismissedId;
-      if (wasStrikerDismissed) {
-        newStrikerId =
-          nextBatsman?.player_id ||
-          batsmen.find((b) => b.player_id !== dismissedId)?.player_id!;
-      } else {
-        newStrikerId = lastBall.batsman_id;
-      }
+      newStrikerId =
+        wasStrikerDismissed
+          ? nextBatsman?.player_id ||
+            batsmen.find((b) => b.player_id !== dismissedId)!.player_id
+          : lastBall.batsman_id;
     } else if (lastBall) {
-      // No wicket - determine striker based on runs and over
-      const lastBallStriker = lastBall.batsman_id;
-      const nonStriker = batsmen.find(
-        (b) => b.player_id !== lastBall.batsman_id
-      )?.player_id!;
-
-      if (isNewOver) {
-        newStrikerId = nonStriker;
-      } else if (lastBall.runs_scored % 2 === 1) {
-        newStrikerId = nonStriker;
-      } else {
-        newStrikerId = lastBallStriker;
-      }
+      const nonStriker = batsmen.find((b) => b.player_id !== lastBall.batsman_id)!.player_id;
+      newStrikerId = isNewOver
+        ? nonStriker
+        : lastBall.runs_scored % 2 === 1
+        ? nonStriker
+        : lastBall.batsman_id;
     }
-
-    setMatchState({
+  
+    // Update match state
+    setMatchState((prevState) => ({
+      ...prevState,
       ...match,
-      batsmen: [...batsmen],
+      batsmen: updatedBatsmen,
       striker_player_id: newStrikerId,
-      bowlers: [...bowlers],
+      bowlers,
       innings: {
         ...match.innings,
         total_overs: match.innings.total_overs + (isNewOver ? 1 : 0),
       },
       over: {
         ...match.over,
-        bowler_id: !isNewOver ? match.over.bowler_id : nextBowlerId,
+        bowler_id: isNewOver ? nextBowlerId : match.over.bowler_id,
         over_number: match.over.over_number + (isNewOver ? 1 : 0),
-        balls: !isNewOver ? match.over.balls : [],
-        total_runs: !isNewOver ? match.over.total_runs : 0,
-        total_wickets: !isNewOver ? match.over.total_wickets : 0,
+        balls: isNewOver ? [] : match.over.balls,
+        total_runs: isNewOver ? 0 : match.over.total_runs,
+        total_wickets: isNewOver ? 0 : match.over.total_wickets,
       },
-    });
-
-    setLoading(false);
+    }));
+  
+    // Update teams separately
+    setBattingTeamPlayers(battingTeam);
+    setBowlingTeamPlayers(bowlingTeam);
   };
+  
 
   const submitBall = async (ball: CurrentBall) => {
     try {
