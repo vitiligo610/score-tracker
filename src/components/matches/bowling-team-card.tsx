@@ -1,10 +1,9 @@
 "use client";
 
+import BowlersStats from "@/components/matches/bowlers-stats";
 import { Card } from "@/components/ui/card";
 import { useMatch } from "@/contexts/match-context";
-import { CircleDot, Target } from "lucide-react";
-import { cn } from "@/lib/utils";
-import BowlersStats from "@/components/matches/bowlers-stats";
+import { Target } from "lucide-react";
 
 const BowlingTeamCard = () => {
   const { matchDetails: match } = useMatch();
@@ -12,6 +11,7 @@ const BowlingTeamCard = () => {
   const currentBowler = match.bowlers.find(
     (bowler) => bowler.player_id === match.over.bowler_id
   );
+  const nextBowler = match.bowlers.find(bowler => bowler.bowling_order > currentBowler!.bowling_order) ?? match.bowlers[0];
 
   return (
     <Card className="p-4">
@@ -81,14 +81,11 @@ const BowlingTeamCard = () => {
           </div> */}
 
           {/* Next Bowler */}
-          {/* {match?.next_bowler && (
-            <div className="text-sm text-muted-foreground border-t pt-3">
-              <div className="flex items-center gap-2">
-                <CircleDot className="w-4 h-4" />
-                <span>Next: {match.next_bowler.name}</span>
-              </div>
+          <div className="text-sm text-muted-foreground border-t pt-3">
+            <div className="flex items-center justify-end gap-2">
+              <span>Next Bowler: {nextBowler.name}</span>
             </div>
-          )} */}
+          </div>
         </div>
       )}
     </Card>

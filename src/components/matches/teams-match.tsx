@@ -6,12 +6,13 @@ import BowlingTeamCard from "@/components/matches/bowling-team-card";
 import ScoreCard from "@/components/matches/score-card";
 import MatchInputCard from "@/components/matches/match-input-card";
 import { useMatch } from "@/contexts/match-context";
+import TeamsMatchSkeleton from "@/components/ui/skeletons/teams-match-skeleton";
 
 const TeamsMatch = () => {
   const { loading } = useMatch();
 
   return loading ? (
-    <div>Loading...</div>
+    <TeamsMatchSkeleton />
   ) : (
     <div className="flex flex-col">
       <MatchHeader />
