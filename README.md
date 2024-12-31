@@ -1,36 +1,65 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# DNS Resolver
 
 ## Getting Started
 
-First, run the development server:
+Follow these instructions to set up and run the project.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
+### Prerequisites
+
+- Node.js
+- pnpm package manager
+
+### Setting Up Environment Variables
+
+1. Copy the `.env.example` file to `.env`:
+   ```sh
+   cp .env.example .env
+   ```
+2. Update the `.env` file with the appropriate values.
+
+### Database Setup
+
+1. Ensure the database listed in the `.env` file is created.
+2. Update the database configuration in the `.env` file if necessary.
+
+### Installing Dependencies
+
+Install the project dependencies using pnpm:
+```sh
+pnpm install
+```
+
+### Seed Database
+
+Run the following command to create database tables and seed initial values:
+```sh
+pnpm db:seed
+```
+
+### Running the Project
+
+Run the development server:
+```sh
 pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Building for Production
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+To build the project for production, run:
+```sh
+pnpm build
+```
 
-## Learn More
+To start the production server, run:
+```sh
+pnpm start
+```
+
+### Learn More
 
 To learn more about Next.js, take a look at the following resources:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [Next.js Documentation](https://nextjs.org/docs)
+- [Learn Next.js](https://nextjs.org/learn)
