@@ -662,6 +662,8 @@ const seedBalls = async () => {
       bowler_id INT,
       fielder_id INT,
       dismissal_type ENUM('Bowled', 'Caught', 'LBW', 'Run Out', 'Stumped', 'Hit Wicket', 'Others'),
+      runs_scored INT DEFAULT 0,
+      wicket_number INT DEFAULT 1,
       FOREIGN KEY (inning_id) REFERENCES innings (inning_id) ON DELETE CASCADE,
       FOREIGN KEY (ball_id) REFERENCES balls (ball_id) ON DELETE CASCADE,
       FOREIGN KEY (batsman_id) REFERENCES players (player_id) ON DELETE SET NULL,

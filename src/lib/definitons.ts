@@ -82,6 +82,8 @@ export interface TeamPlayer {
 export type MatchStatus = (typeof MATCH_STATUS)[number];
 
 export type Match = {
+  tournament_name?: any;
+  series_name?: any;
   match_id: number | string;
   match_date?: Date;
   team1_id?: number;
@@ -94,6 +96,7 @@ export type Match = {
   toss_decision?: "batting" | "bowling";
   team1: Team | null;
   team2: Team | null;
+  competition?: Competition;
 };
 
 export interface OngoingMatch extends Match {
@@ -203,6 +206,10 @@ export interface ExtrasCount {
   total_count: number;
 }
 
+export interface InningsExtras extends ExtrasCount {
+  inning_id: number;
+}
+
 export interface Dismissal {
   type: DismissalType | null;
   dismissed_batsman_id: number | null;
@@ -232,4 +239,83 @@ export interface MatchResponse {
 export interface InningsResponse {
   batsmen: MatchBatsman[];
   bowlers: BowlingTeamPlayer[];
+}
+
+export interface BatsmanStats {
+  player_id: number;
+  player_name: string;
+  runs_scored: number;
+  balls_faced: number;
+  fours: number;
+  sixes: number;
+  strike_rate: number;
+  dismissed: boolean;
+  dismissal_type: DismissalType;
+  dismissed_by: string;
+  fielder_name: string;
+  batting_order: number;
+}
+
+export interface InningsBattingStats {
+  match_id: number;
+  inning_id: number;
+  number: number;
+  total_runs: number;
+  total_wickets: number;
+  total_overs: number;
+  target_score: number;
+  team_id: number;
+  team_name: string;
+  players: BatsmanStats[];
+  onCrease: number[];
+  extras: InningsExtras;
+}
+
+export interface InningsBattingSummary {
+  [inning_number: number | string]: InningsBattingStats;
+}
+
+export interface BowlerStats {
+  player_id: number;
+  player_name: string;
+  overs_bowled: number;
+  maiden_overs: number; 
+  runs_conceded: number;
+  wickets_taken: number;
+  economy_rate: number;
+}
+
+export interface InningsBowlingStats {
+  match_id: number;
+  inning_id: number;
+  number: number;
+  team_id: number;
+  team_name: string;
+  players: BowlerStats[];
+}
+
+export interface InningsBowlingSummary {
+  [inning_number: number | string]: InningsBowlingStats;
+}
+
+export interface DismissedPlayerStats {
+  player_id: number;
+  player_name: string;
+  runs_scored: number;
+  wicket_number: number;
+  over_number: number;
+  ball_number: number
+}
+
+export interface InningsDismissalsStats {
+  match_id: number;
+  inning_id: number;
+  number: number;
+  team_id: number;
+  team_name: string;
+  players: DismissedPlayerStats[];
+}
+
+export interface InningsDismissalsSummary {
+  [inning_number: number | string]: InningsDismissalsStats;
 }

@@ -50,18 +50,18 @@ export const getTransformedMatch = (match: any) => {
       ? {
           team_id: match.team1_team_id,
           name: match.team1_name,
-          logo_url: match.team1_logo_url,
-          founded_year: match.team1_founded_year,
-          description: match.team1_description,
+          logo_url: match.team1_logo_url || "",
+          founded_year: match.team1_founded_year || 0,
+          description: match.team1_description || "",
         }
       : null,
     team2: match.team2_team_id
       ? {
           team_id: match.team2_team_id,
           name: match.team2_name,
-          logo_url: match.team2_logo_url,
-          founded_year: match.team2_founded_year,
-          description: match.team2_description,
+          logo_url: match.team2_logo_url || "",
+          founded_year: match.team2_founded_year || 0,
+          description: match.team2_description || "",
         }
       : null,
   };
@@ -142,6 +142,11 @@ export const getCurrentRunRate = (runs: number, balls: number) => {
   if (balls === 0) return (0).toFixed(2);
   return ((runs * 6) / balls).toFixed(2);
 };
+
+export const getRunRateByOver = (runs: number, overs: number) => {
+  if (overs === 0) return (0).toFixed(1);
+  return (runs / overs).toFixed(1);
+}
 
 export const getRequiredRunRate = (runsNeeded: number, oversLeft: number) => {
   if (oversLeft === 0) return (0).toFixed(2);

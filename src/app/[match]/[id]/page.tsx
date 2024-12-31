@@ -1,8 +1,8 @@
-import MatchSummary from "@/components/matches/match-summary";
+import MatchSummary from "@/components/match-summary/match-summary";
 import MatchToss from "@/components/matches/match-toss";
 import TeamsMatch from "@/components/matches/teams-match";
 import { MatchProvider } from "@/contexts/match-context";
-import { fetchMatchById } from "@/lib/actions";
+import { fetchMatch } from "@/lib/actions";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -18,7 +18,7 @@ interface Props {
 const MatchPage = async ({ params }: Props) => {
   const p = await params;
   const match_id = p.id;
-  const { match } = await fetchMatchById(match_id);
+  const { match } = await fetchMatch(match_id);
   // console.log("match is ", match);
 
   return (
@@ -29,7 +29,7 @@ const MatchPage = async ({ params }: Props) => {
           <TeamsMatch />
         </MatchProvider>
       )}
-      {match.status === "completed" && <MatchSummary />}
+      {match.status === "completed" && <MatchSummary match={match} />}
     </div>
   )
 }

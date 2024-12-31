@@ -6,9 +6,11 @@ import {
   BattingTeamPlayer,
   BowlingTeamPlayer,
   ExtrasCount,
+  InningsBattingSummary,
+  InningsBowlingSummary,
+  InningsDismissalsSummary,
+  InningsExtras,
   Match,
-  MatchBatsman,
-  MatchBowler,
   OngoingInnings,
   OngoingMatch,
   Player,
@@ -1001,7 +1003,7 @@ export const fetchMatchBowlingTeam = async (
   }
 };
 
-export const getExtrasCountByMatchId = async (match_id: number) => {
+export const getExtrasCountForInnings = async (inning_id: number) => {
   const [data]: any = await pool.query(
     `SELECT
         COUNT(CASE WHEN type = 'No Ball' THEN 1 END) AS nb_count,
@@ -1012,14 +1014,9 @@ export const getExtrasCountByMatchId = async (match_id: number) => {
         COUNT(*) AS total_count
     FROM balls
     LEFT JOIN extras USING (ball_id)
-    WHERE inning_id = (
-        SELECT inning_id FROM innings
-        WHERE match_id = ?
-        ORDER BY number DESC
-        LIMIT 1
-    )
+    WHERE inning_id = ?
     AND is_legal IS FALSE`,
-    [match_id]
+    [inning_id]
   );
 
   return { extras_count: data[0] as ExtrasCount };
@@ -1053,6 +1050,50 @@ const getBowlingTeamId = (match: OngoingMatch) => {
     : match.team2.team_id;
 };
 
+export const fetchMatch = async (match_id: number) => {
+  try {
+    const [data]: any = await pool.query(
+      `SELECT 
+          m.match_id AS match_id,
+          m.tournament_id AS tournament_id,
+          m.team1_id AS team1_id,
+          m.team2_id AS team2_id,
+          m.winner_team_id AS winner_team_id,
+          m.match_date AS match_date,
+          m.location AS location,
+          m.round AS round,
+          m.status AS status,
+          m.toss_winner_id AS toss_winner_id,
+          m.toss_decision AS toss_decision,
+          t1.team_id AS team1_team_id,
+          t1.name AS team1_name,
+          t2.team_id AS team2_team_id,
+          t2.name AS team2_name,
+          t.name AS tournament_name,
+          t.format AS tournament_format,
+          t.total_rounds AS tournament_rounds,
+          s.name AS series_name,
+          s.format AS series_format,
+          s.total_rounds AS series_rounds,
+          s.type AS series_type
+      FROM matches m
+      LEFT JOIN tournaments t ON m.tournament_id = t.tournament_id
+      LEFT JOIN series s ON m.series_id = s.series_id
+      LEFT JOIN teams t1 ON m.team1_id = t1.team_id
+      LEFT JOIN teams t2 ON m.team2_id = t2.team_id
+      WHERE m.match_id = ?`,
+      [match_id]
+    );
+
+    const match = getTransformedMatch(data[0]);
+
+    return { match: match as Match };
+  } catch (error) {
+    console.log("Error fetching match by id: ", error);
+    throw new Error("Failed to fetch match!");
+  }
+};
+
 export const fetchMatchById = async (match_id: number) => {
   // console.log("fetching match with id ", match_id);
   try {
@@ -1071,14 +1112,8 @@ export const fetchMatchById = async (match_id: number) => {
           m.toss_decision AS toss_decision,
           t1.team_id AS team1_team_id,
           t1.name AS team1_name,
-          t1.logo_url AS team1_logo_url,
-          t1.founded_year AS team1_founded_year,
-          t1.description AS team1_description,
           t2.team_id AS team2_team_id,
           t2.name AS team2_name,
-          t2.logo_url AS team2_logo_url,
-          t2.founded_year AS team2_founded_year,
-          t2.description AS team2_description,
           t.name AS tournament_name,
           t.format AS tournament_format,
           t.total_rounds AS tournament_rounds,
@@ -1110,7 +1145,7 @@ export const fetchMatchById = async (match_id: number) => {
     );
 
     // console.log("Data is ", data[0]);
-    const { extras_count } = await getExtrasCountByMatchId(match_id);
+    const { extras_count } = await getExtrasCountForInnings(data[0].inning_id);
     const { balls } = await getOverBallsForMatch(
       data[0].inning_id,
       data[0].over_number
@@ -1150,7 +1185,7 @@ export const fetchMatchById = async (match_id: number) => {
   }
 };
 
-export const insertBallForInning = async (ball: Ball) => {
+export const insertBallForInning = async (ball: Ball, total_runs: number, total_wickets: number) => {
   // console.log("submitting ball data: ", ball);
   await pool.query(
     `INSERT INTO balls (inning_id, over_number, ball_number, batsman_id, non_striker_id, bowler_id, runs_scored, is_wicket, is_legal)
@@ -1171,8 +1206,8 @@ export const insertBallForInning = async (ball: Ball) => {
   if (ball.dismissal) {
     const ball_id = await getLastInsertedId();
     await pool.query(
-      `INSERT INTO dismissals (inning_id, ball_id, batsman_id, bowler_id, fielder_id, dismissal_type)
-      VALUES (?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO dismissals (inning_id, ball_id, batsman_id, bowler_id, fielder_id, dismissal_type, runs_scored, wicket_number)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         ball.inning_id,
         ball_id,
@@ -1180,6 +1215,8 @@ export const insertBallForInning = async (ball: Ball) => {
         ball.bowler_id,
         ball?.dismissal?.fielder_id,
         ball?.dismissal?.type,
+        total_runs,
+        total_wickets + 1,
       ]
     );
   }
@@ -1194,7 +1231,10 @@ export const insertBallForInning = async (ball: Ball) => {
   }
 };
 
-export const fetchInningsDetails = async (match_id: number | string, inningNumber: number) => {
+export const fetchInningsDetails = async (
+  match_id: number | string,
+  inningNumber: number
+) => {
   try {
     const [data]: any = await pool.query(
       `SELECT * FROM innings
@@ -1207,5 +1247,236 @@ export const fetchInningsDetails = async (match_id: number | string, inningNumbe
   } catch (error) {
     console.log("Error fetching inning details: ", error);
     throw new Error("Failed to fetch innings details!");
+  }
+};
+
+export const fetchMatchExtras = async (match_id: number | string) => {
+  const [data] = await pool.query(
+    `SELECT
+        inning_id,
+        COUNT(CASE WHEN type = 'No Ball' THEN 1 END) AS nb_count,
+        COUNT(CASE WHEN type = 'Wide' THEN 1 END) AS wd_count,
+        COUNT(CASE WHEN type = 'Bye' THEN 1 END) AS b_count,
+        COUNT(CASE WHEN type = 'Leg Bye' THEN 1 END) AS lb_count,
+        COUNT(CASE WHEN type = 'Penalty' THEN 1 END) AS p_count,
+        COUNT(*) AS total_count
+    FROM balls
+    LEFT JOIN extras USING (ball_id)
+    WHERE inning_id IN (
+        SELECT inning_id FROM innings
+        WHERE match_id = ?
+    )
+    AND is_legal IS FALSE
+    GROUP BY inning_id`,
+    [match_id]
+  );
+
+  return { extras: data as InningsExtras[] };
+}
+
+export const fetchMatchBattingSummary = async (match_id: number | string) => {
+  try {
+    const [data]: any = await pool.query(
+      `SELECT
+          i.match_id AS match_id,
+          i.inning_id AS inning_id,
+          i.team_id AS team_id,
+          i.number AS number,
+          i.total_runs AS total_runs,
+          i.total_wickets AS total_wickets,
+          i.total_overs AS total_overs,
+          i.target_score AS target_score,
+          t.team_id AS team_id,
+          t.name AS team_name,
+          p.player_id AS player_id,
+          CONCAT(p.first_name, ' ', p.last_name) AS player_name,
+          mbp.runs_scored AS runs_scored,
+          mbp.balls_faced AS balls_faced,
+          mbp.fours AS fours,
+          mbp.sixes AS sixes,
+          mbp.strike_rate AS strike_rate,
+          ISNULL(mbp.dismissal_id) AS dismissed,
+          CONCAT(bp.first_name, ' ', bp.last_name) AS dismissed_by,
+          CONCAT(fp.first_name, ' ', fp.last_name) AS fielder_name,
+          d.dismissal_type AS dismissal_type,
+          tp.batting_order AS batting_order
+      FROM innings i
+      LEFT JOIN match_batting_performance mbp ON mbp.inning_id = i.inning_id
+      LEFT JOIN teams t ON t.team_id = i.team_id
+      LEFT JOIN players p ON p.player_id = mbp.player_id
+      LEFT JOIN team_players tp ON tp.team_id = t.team_id AND tp.player_id = p.player_id
+      LEFT JOIN dismissals d ON d.batsman_id = p.player_id AND d.inning_id = i.inning_id
+      LEFT JOIN players bp ON bp.player_id = d.bowler_id
+      LEFT JOIN players fp ON fp.player_id = d.fielder_id
+      WHERE i.match_id = ?
+      ORDER BY i.number, tp.batting_order`,
+      [match_id]
+    );
+
+    const { extras } = await fetchMatchExtras(match_id);
+
+    const battingSummary = data.reduce((acc: any[], current: any) => {
+      const key = current.number;
+      if (!acc[key]) {
+        acc[key] = {
+          match_id: current.match_id,
+          inning_id: current.inning_id,
+          number: current.number,
+          total_runs: current.total_runs,
+          total_wickets: current.total_wickets,
+          total_overs: current.total_overs,
+          target_score: current.target_score,
+          team_id: current.team_id,
+          team_name: current.team_name,
+          players: [],
+          onCrease: [],
+          extras: extras.find(extra => extra.inning_id === current.inning_id),
+        };
+      }
+
+      if (current.player_id) {
+        acc[key].players.push({
+          player_id: current.player_id,
+          player_name: current.player_name,
+          runs_scored: current.runs_scored,
+          balls_faced: current.balls_faced,
+          fours: current.fours,
+          sixes: current.sixes,
+          strike_rate: current.strike_rate,
+          dismissed: !current.dismissed,
+          dismissal_type: current.dismissal_type,
+          dismissed_by: current.dismissed_by,
+          fielder_name: current.fielder_name,
+          batting_order: current.batting_order,
+        });
+      }
+
+      const notDismissedPlayers = acc[key].players.filter((player: any) => !player.dismissed);
+      const sortedPlayers = notDismissedPlayers.sort((a: any, b: any) => a.batting_order - b.batting_order);
+      acc[key].onCrease = sortedPlayers.slice(0, 2).map((player: any) => player.player_id);
+
+      return acc;
+    }, {});
+
+    return { battingSummary } as { battingSummary: InningsBattingSummary }
+  } catch (error) {
+    console.log("Error fetching match batting summary: ", error);
+    throw new Error("Failed to fetch match batting summary!");
+  }
+};
+
+export const fetchMatchBowlingSummary = async (match_id: number | string) => {
+  try {
+    const [data]: any = await pool.query(
+      `SELECT
+          i.match_id AS match_id,
+          i.inning_id AS inning_id,
+          i.number AS number,
+          t.team_id AS team_id,
+          t.name AS team_name,
+          p.player_id AS player_id,
+          CONCAT(p.first_name, ' ', p.last_name) AS player_name,
+          mbp.overs_bowled AS overs_bowled,
+          mbp.runs_conceded AS runs_conceded,
+          mbp.wickets_taken AS wickets_taken,
+          mbp.economy_rate AS economy_rate
+      FROM innings i
+      LEFT JOIN match_bowling_performance mbp ON mbp.inning_id = i.inning_id
+      LEFT JOIN players p ON p.player_id = mbp.player_id
+      JOIN team_players tp ON tp.player_id = p.player_id
+      JOIN teams t ON t.team_id = tp.team_id
+      WHERE i.match_id = ?
+      ORDER BY i.number, tp.bowling_order`,
+      [match_id]
+    );
+
+    const bowlingSummary = data.reduce((acc: any, current: any) => {
+      const key = current.number;
+      if (!acc[key]) {
+        acc[key] = {
+          match_id: current.match_id,
+          inning_id: current.inning_id,
+          number: current.number,
+          team_id: current.team_id,
+          team_name: current.team_name,
+          players: [],
+        };
+      }
+
+      if (current.player_id) {
+        acc[key].players.push({
+          player_id: current.player_id,
+          player_name: current.player_name,
+          overs_bowled: Number(current.overs_bowled),
+          maiden_overs: current.maiden_overs || 0,
+          runs_conceded: current.runs_conceded,
+          wickets_taken: current.wickets_taken,
+          economy_rate: Number(current.economy_rate),
+        });
+      }
+
+      return acc;
+    }, {});
+
+    return { bowlingSummary } as { bowlingSummary: InningsBowlingSummary }
+  } catch (error) {
+    console.log("Error fetching match bowling summary: ", error);
+    throw new Error("Failed to fetch match bowling summary!");
+  }
+}
+
+export const fetchMatchDismissalsSummary = async (match_id: number | string) => {
+  try {
+    const [data]: any = await pool.query(
+      `SELECT
+          i.match_id AS match_id,
+          i.inning_id AS inning_id,
+          i.number AS number,
+          t.team_id AS team_id,
+          t.name As team_name,
+          p.player_id AS player_id,
+          CONCAT(p.first_name, ' ', p.last_name) AS player_name,
+          b.over_number AS over_number,
+          b.ball_number AS ball_number,
+          d.runs_scored AS runs_scored,
+          d.wicket_number AS wicket_number
+      FROM dismissals d
+      JOIN innings i ON i.inning_id = d.inning_id
+      JOIN players p ON p.player_id = d.batsman_id
+      JOIN balls b ON b.ball_id = d.ball_id
+      JOIN teams t ON t.team_id = i.team_id`,
+      [match_id]
+    );
+
+    const dismissalsSummary = data.reduce((acc: any, current: any) => {
+      const key = current.number;
+      if (!acc[key]) {
+        acc[key] = {
+          match_id: current.match_id,
+          inning_id: current.inning_id,
+          team_id: current.team_id,
+          team_name: current.team_name,
+          players: [],
+        };
+      }
+
+      if (current.player_id) {
+        acc[key].players.push({
+          player_id: current.player_id,
+          player_name: current.player_name,
+          runs_scored: current.runs_scored,
+          wicket_number: current.wicket_number,
+          over_number: current.over_number,
+          ball_number: current.ball_number,
+        });
+      }
+
+      return acc;
+    }, {})
+
+    return { dismissalsSummary } as { dismissalsSummary: InningsDismissalsSummary };
+  } catch (error) {
+    console.log("Error fetching match dismissals summary: ", error);
+    throw new Error("Failed to fetch match dismissals summary!");
   }
 }

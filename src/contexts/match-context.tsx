@@ -209,13 +209,18 @@ export const MatchProvider = ({ match_id, children }: MatchProviderProps) => {
           ball.dismissal.type !== null ? { ...ball.dismissal } : undefined,
       };
 
+      const totalRuns = ballData.runs_scored + (ballData?.extra?.runs || 0);
       // Submit to server
-      await insertBallForInning(ballData);
+      await insertBallForInning(
+        ballData,
+        matchState.innings.total_runs + totalRuns,
+        matchState.innings.total_wickets
+      );
 
       // Update local state
       setMatchState((prev) => {
         if (!prev) return prev;
-        
+
         const newOver = ballData.ball_number === 6;
         const currentBowler = prev.bowlers.find(
           (bowler) => bowler.player_id === prev.over.bowler_id
