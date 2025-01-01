@@ -284,7 +284,7 @@ const CreateSeriesDialog = () => {
                         defaultMonth={field.value?.from}
                         selected={field.value}
                         onSelect={field.onChange}
-                        numberOfMonths={2}
+                        numberOfMonths={1}
                       />
                     </PopoverContent>
                   </Popover>
