@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import DeletePlayerButton from "./delete-player-button";
 import PlayerFormDialog from "./player-form-dialog";
+import Link from "next/link";
 
 interface PlayerInfoProps {
   player: Player;
@@ -43,11 +44,13 @@ export function PlayerInfo({ player }: PlayerInfoProps) {
             <User2 className="w-6 h-6 text-primary" />
           </div>
           <div>
-            <div className="flex items-center">
-              <h2 className="text-2xl font-bold">{`${player.first_name} ${player.last_name}`}</h2>
-              {getPlayerRoleIcon(player.player_role)}
-            </div>
-            <p className="text-muted-foreground">#{player.jersey_number}</p>
+            <Link href={`/players/${player.player_id}`}>
+              <div className="flex items-center hover:text-primary transition-colors">
+                <h2 className="text-2xl font-bold">{`${player.first_name} ${player.last_name}`}</h2>
+                {getPlayerRoleIcon(player.player_role)}
+              </div>
+              <p className="text-muted-foreground">#{player.jersey_number}</p>
+            </Link>
           </div>
         </div>
         <div className="flex gap-3">

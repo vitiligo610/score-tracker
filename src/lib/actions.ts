@@ -6,6 +6,7 @@ import {
   Ball,
   BattingTeamPlayer,
   BowlingTeamPlayer,
+  CareerStats,
   ExtrasCount,
   InningsBattingSummary,
   InningsBowlingSummary,
@@ -952,7 +953,7 @@ export const fetchSeriesScore = async (series_id: number) => {
     console.log("Error fetching series scores: ", error);
     throw new Error("Failed to fetch series scores!");
   }
-}
+};
 
 export const fetchSeriesPoints = async (series_id: number) => {
   try {
@@ -979,7 +980,7 @@ export const fetchSeriesPoints = async (series_id: number) => {
     console.log("Error fetching series points: ", error);
     throw new Error("Failed to fetch series points!");
   }
-}
+};
 
 export const updateMatchToss = async (
   match_id: number | string,
@@ -1657,7 +1658,7 @@ export const fetchMatchOversSummary = async (match_id: number | string) => {
           inning_id: current.inning_id,
           team_id: current.team_id,
           team_name: current.team_name,
-          overs: []
+          overs: [],
         };
       }
 
@@ -1677,4 +1678,141 @@ export const fetchMatchOversSummary = async (match_id: number | string) => {
     console.log("Error fetching match overs summary: ", error);
     throw new Error("Failed to fetch match overs summary!");
   }
-}
+};
+
+export const fetchPlayerCareerStats = async (player_id: number) => {
+  const battingDefaults = {
+    matches: 0,
+    innings: 0,
+    runs: 0,
+    balls_faced: 0,
+    average: 0,
+    strike_rate: 0,
+    fifties: 0,
+    hundreds: 0,
+    highest_score: 0,
+    fours: 0,
+    sixes: 0,
+    not_outs: 0,
+  };
+
+  const bowlingDefaults = {
+    matches: 0,
+    innings: 0,
+    overs: 0,
+    maidens: 0,
+    runs: 0,
+    wickets: 0,
+    average: 0,
+    economy: 0,
+    strike_rate: 0,
+    best_figures: "0/0",
+    five_wickets: 0,
+  };
+
+  try {
+    const [playerResults]: any = await pool.query(
+      `SELECT * FROM players
+      WHERE player_id = ?`,
+      [player_id]
+    );
+
+    const battingQuery = `
+      SELECT 
+        COUNT(DISTINCT match_id) AS matches,
+        COUNT(*) AS innings,
+        SUM(runs_scored) AS runs,
+        SUM(balls_faced) AS balls_faced,
+        SUM(fours) AS fours,
+        SUM(sixes) AS sixes,
+        SUM(CASE WHEN runs_scored >= 50 AND runs_scored < 100 THEN 1 ELSE 0 END) AS fifties,
+        SUM(CASE WHEN runs_scored >= 100 THEN 1 ELSE 0 END) AS hundreds,
+        MAX(runs_scored) AS highest_score,
+        SUM(CASE WHEN dismissal_id IS NULL THEN 1 ELSE 0 END) AS not_outs
+      FROM match_batting_performance
+      WHERE player_id = ?`;
+
+    const [battingResults]: any = await pool.query(battingQuery, [player_id]);
+    const batting = battingResults[0] || battingDefaults;
+
+    // Calculate batting average and strike rate
+    batting.average =
+      batting.innings > 0
+        ? batting.runs / (batting.innings - batting.not_outs)
+        : 0;
+    batting.strike_rate =
+      batting.balls_faced > 0 ? (batting.runs / batting.balls_faced) * 100 : 0;
+
+    const bowlingQuery = `
+      SELECT 
+        COUNT(DISTINCT match_id) AS matches,
+        COUNT(*) AS innings,
+        SUM(overs_bowled) AS overs,
+        SUM(maiden_overs) AS maidens,
+        SUM(runs_conceded) AS runs,
+        SUM(wickets_taken) AS wickets,
+        MIN(CONCAT(wickets_taken, '/', runs_conceded)) AS best_figures,
+        SUM(CASE WHEN wickets_taken >= 5 THEN 1 ELSE 0 END) AS five_wickets
+      FROM match_bowling_performance
+      WHERE player_id = ?`;
+
+    const [bowlingResults]: any = await pool.query(bowlingQuery, [player_id]);
+    const bowling = bowlingResults[0] || bowlingDefaults;
+
+    // Calculate bowling average, economy, and strike rate
+    const totalOvers = parseFloat(bowling.overs || 0);
+    bowling.average = bowling.wickets > 0 ? bowling.runs / bowling.wickets : 0;
+    bowling.economy = totalOvers > 0 ? bowling.runs / totalOvers : 0;
+    bowling.strike_rate =
+      bowling.wickets > 0 ? (totalOvers * 6) / bowling.wickets : 0;
+
+    return { player: playerResults[0], stats: { batting, bowling } } as {
+      player: Player;
+      stats: CareerStats;
+    };
+  } catch (error) {
+    console.error("Error fetching career stats:", error);
+    throw error;
+  }
+};
+
+export const fetchPlayerPerformances = async (player_id: number) => {
+  try {
+    const battingQuery = `
+      SELECT 
+        match_id,
+        inning_id,
+        runs_scored,
+        balls_faced,
+        fours,
+        sixes,
+        strike_rate
+      FROM match_batting_performance
+      WHERE player_id = ?;`;
+
+    const [battingPerformances] = await pool.query(battingQuery, [player_id]);
+
+    const bowlingQuery = `
+      SELECT 
+        match_id,
+        inning_id,
+        overs_bowled,
+        maiden_overs,
+        dots,
+        runs_conceded,
+        wickets_taken,
+        economy_rate
+      FROM match_bowling_performance
+      WHERE player_id = ?;`;
+
+    const [bowlingPerformances] = await pool.query(bowlingQuery, [player_id]);
+
+    return {
+      battingPerformances,
+      bowlingPerformances,
+    };
+  } catch (error) {
+    console.error("Error fetching performance charts:", error);
+    throw error;
+  }
+};

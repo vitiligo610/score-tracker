@@ -363,3 +363,54 @@ export interface ExtrasBreakdownData {
   type: string;
   runs: number;
 }
+
+export interface CareerStats {
+  batting: {
+    matches: number;
+    innings: number;
+    runs: number;
+    balls_faced: number;
+    average: number;
+    strike_rate: number;
+    fifties: number;
+    hundreds: number;
+    highest_score: number;
+    fours: number;
+    sixes: number;
+    not_outs: number;
+  };
+  bowling: {
+    matches: number;
+    innings: number;
+    overs: number;
+    maidens: number;
+    runs: number;
+    wickets: number;
+    average: number;
+    economy: number;
+    strike_rate: number;
+    best_figures: string;
+    five_wickets: number;
+  };
+}
+
+export interface BattingPerformance {
+  match_id: number;
+  inning_id: number;
+  runs_scored: number;
+  balls_faced: number;
+  fours: number;
+  sixes: number;
+  strike_rate: number;
+}
+
+export interface BowlingPerformance {
+  match_id: number;
+  inning_id: number;
+  overs_bowled: number;
+  maiden_overs: number;
+  dots: number;
+  runs_conceded: number;
+  wickets_taken: number;
+  economy_rate: number;
+}
