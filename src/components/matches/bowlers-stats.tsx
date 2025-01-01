@@ -77,11 +77,11 @@ const BowlersStats = () => {
                   </div>
                   <div className="space-y-1">
                     <p className="text-muted-foreground">Dots</p>
-                    <p className="font-medium">{bowler.dot_balls || 0}</p>
+                    <p className="font-medium">{bowler.dots || 0}</p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-muted-foreground">Maidens</p>
-                    <p className="font-medium">{bowler.maidens || 0}</p>
+                    <p className="font-medium">{bowler.maiden_overs || 0}</p>
                   </div>
                 </div>
               </div>

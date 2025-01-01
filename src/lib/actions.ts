@@ -11,6 +11,7 @@ import {
   InningsBowlingSummary,
   InningsDismissalsSummary,
   InningsExtras,
+  InningsOversSummary,
   Match,
   OngoingInnings,
   OngoingMatch,
@@ -1515,7 +1516,9 @@ export const fetchMatchBowlingSummary = async (match_id: number | string) => {
           mbp.overs_bowled AS overs_bowled,
           mbp.runs_conceded AS runs_conceded,
           mbp.wickets_taken AS wickets_taken,
-          mbp.economy_rate AS economy_rate
+          mbp.economy_rate AS economy_rate,
+          mbp.maiden_overs AS maiden_overs,
+          mbp.dots AS dots
       FROM innings i
       LEFT JOIN match_bowling_performance mbp ON mbp.inning_id = i.inning_id
       LEFT JOIN players p ON p.player_id = mbp.player_id
@@ -1548,6 +1551,7 @@ export const fetchMatchBowlingSummary = async (match_id: number | string) => {
           runs_conceded: current.runs_conceded,
           wickets_taken: current.wickets_taken,
           economy_rate: Number(current.economy_rate),
+          dots: current.dots,
         });
       }
 
@@ -1577,7 +1581,8 @@ export const fetchMatchDismissalsSummary = async (
           b.over_number AS over_number,
           b.ball_number AS ball_number,
           d.runs_scored AS runs_scored,
-          d.wicket_number AS wicket_number
+          d.wicket_number AS wicket_number,
+          d.dismissal_type AS type
       FROM dismissals d
       JOIN innings i ON i.inning_id = d.inning_id
       JOIN players p ON p.player_id = d.batsman_id
@@ -1607,6 +1612,7 @@ export const fetchMatchDismissalsSummary = async (
           wicket_number: current.wicket_number,
           over_number: current.over_number,
           ball_number: current.ball_number,
+          type: current.type,
         });
       }
 
@@ -1621,3 +1627,54 @@ export const fetchMatchDismissalsSummary = async (
     throw new Error("Failed to fetch match dismissals summary!");
   }
 };
+
+export const fetchMatchOversSummary = async (match_id: number | string) => {
+  try {
+    const [data]: any = await pool.query(
+      `SELECT
+          i.match_id AS match_id,
+          i.inning_id AS inning_id, 
+          i.number AS number,
+          o.over_number AS over_number,
+          o.bowler_id AS bowler_id,
+          CONCAT(p.first_name, ' ', p.last_name) AS bowler_name,
+          o.total_runs AS total_runs,
+          o.total_wickets AS total_wickets
+      FROM overs o
+      JOIN innings i ON i.inning_id = o.inning_id
+      JOIN teams t ON t.team_id = i.team_id
+      JOIN players p ON p.player_id = o.bowler_id
+      WHERE i.match_id = ?
+      ORDER BY i.number, o.over_number`,
+      [match_id]
+    );
+
+    const oversSummary = data.reduce((acc: any, current: any) => {
+      const key = current.number;
+      if (!acc[key]) {
+        acc[key] = {
+          match_id: current.match_id,
+          inning_id: current.inning_id,
+          team_id: current.team_id,
+          team_name: current.team_name,
+          overs: []
+        };
+      }
+
+      acc[key].overs.push({
+        over_number: current.over_number,
+        bowler_id: current.bowler_id,
+        bowler_name: current.bowler_name,
+        total_runs: current.total_runs,
+        total_wickets: current.total_wickets,
+      });
+
+      return acc;
+    }, {});
+
+    return { oversSummary } as { oversSummary: InningsOversSummary };
+  } catch (error) {
+    console.log("Error fetching match overs summary: ", error);
+    throw new Error("Failed to fetch match overs summary!");
+  }
+}

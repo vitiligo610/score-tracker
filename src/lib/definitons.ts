@@ -70,6 +70,8 @@ export interface MatchBowler extends MatchPlayer {
   wickets_taken: number;
   overs_bowled: number;
   economy_rate: number;
+  maiden_overs: number;
+  dots: number;
 }
 
 export interface TeamPlayer {
@@ -180,6 +182,7 @@ export interface Over {
   inning_id: number;
   over_number: number;
   bowler_id: number;
+  bowler_name?: string;
   total_runs: number;
   total_wickets: number;
   balls: Ball[];
@@ -318,6 +321,7 @@ export interface DismissedPlayerStats {
   wicket_number: number;
   over_number: number;
   ball_number: number
+  type: string;
 }
 
 export interface InningsDismissalsStats {
@@ -331,4 +335,31 @@ export interface InningsDismissalsStats {
 
 export interface InningsDismissalsSummary {
   [inning_number: number | string]: InningsDismissalsStats;
+}
+
+export interface InningsOverStats {
+  match_id: number;
+  inning_id: number;
+  number: number;
+  overs: Over[];
+}
+
+export interface InningsOversSummary {
+  [inning_number: number | string]: InningsOverStats;
+}
+
+export interface RunsPerOverData {
+  over_number: number;
+  runs: number;
+  wickets: number;
+}
+
+export interface DismissalTypeData {
+  type: string;
+  count: number;
+}
+
+export interface ExtrasBreakdownData {
+  type: string;
+  runs: number;
 }

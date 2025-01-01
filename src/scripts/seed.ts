@@ -795,6 +795,7 @@ const seedPerformances = async () => {
       player_id INT,
       overs_bowled DECIMAL(5, 1) DEFAULT 0.0,
       maiden_overs INT DEFAULT 0,
+      dots INT DEFAULT 0,
       runs_conceded INT DEFAULT 0,
       wickets_taken INT DEFAULT 0,
       economy_rate DECIMAL(6, 2) DEFAULT 0.0,

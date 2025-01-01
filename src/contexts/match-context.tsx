@@ -249,6 +249,8 @@ export const MatchProvider = ({ match_id, children }: MatchProviderProps) => {
               bowler.runs_conceded + totalRuns,
               bowler.overs_bowled
             ),
+            dots: bowler.dots + (ballData.is_legal ? ballData.runs_scored === 0 ? 1 : 0 : 0),
+            maiden_overs: bowler.maiden_overs + (newOver ? prev.over.total_runs === 0 ? 1 : 0 : 0),
           };
 
           return updatedBowler;
