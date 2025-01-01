@@ -4,7 +4,9 @@ import { PLAYERS_PER_PAGE, TEAMS_PER_PAGE } from "@/lib/constants";
 import { pool } from "@/lib/db";
 import {
   Ball,
+  BattingPerformance,
   BattingTeamPlayer,
+  BowlingPerformance,
   BowlingTeamPlayer,
   CareerStats,
   ExtrasCount,
@@ -1810,6 +1812,9 @@ export const fetchPlayerPerformances = async (player_id: number) => {
     return {
       battingPerformances,
       bowlingPerformances,
+    } as {
+      battingPerformances: BattingPerformance[];
+      bowlingPerformances: BowlingPerformance[];
     };
   } catch (error) {
     console.error("Error fetching performance charts:", error);
