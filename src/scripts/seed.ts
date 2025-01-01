@@ -492,7 +492,8 @@ const seedSeries = async () => {
   );
 
   console.log("Creating series procedures...");
-  await createInitialSeriesScheduleProc();
+  await createSeriesScheduleProc();
+  await createSeriesPointsForTeamsTrigger();
 
   console.log("Seeding series...");
   for (const s of series) {
@@ -518,14 +519,14 @@ const seedSeries = async () => {
       );
     }
 
-    await pool.query("CALL CreateInitialSeriesSchedule(?)", [s.series_id]);
+    await pool.query("CALL CreateSeriesSchedule(?)", [s.series_id]);
   }
 };
 
-const createInitialSeriesScheduleProc = async () => {
-  await pool.query("DROP PROCEDURE IF EXISTS CreateInitialSeriesSchedule");
+const createSeriesScheduleProc = async () => {
+  await pool.query("DROP PROCEDURE IF EXISTS CreateSeriesSchedule");
   await pool.query(
-    `CREATE PROCEDURE CreateInitialSeriesSchedule (IN p_series_id INT)
+    `CREATE PROCEDURE CreateSeriesSchedule (IN p_series_id INT)
     BEGIN
         DECLARE series_type VARCHAR(30);
         DECLARE series_rounds INT;
@@ -561,72 +562,99 @@ const createInitialSeriesScheduleProc = async () => {
             WHERE id = 2;
 
             WHILE i <= series_rounds DO
-                SET location = (
-                    SELECT location_name
-                    FROM series_locations
-                    WHERE series_id = p_series_id
-                    ORDER BY RAND()
-                    LIMIT 1
-                );
-                INSERT INTO matches (series_id, team1_id, team2_id, round, status, match_date, location)
-                VALUES (p_series_id, team1_id, team2_id, i, 'scheduled', s_start_date, location);
+                    SET location = (
+                        SELECT location_name
+                        FROM series_locations
+                        WHERE series_id = p_series_id
+                        ORDER BY RAND()
+                        LIMIT 1
+                    );
+                    INSERT INTO matches (series_id, team1_id, team2_id, round, status, match_date, location, match_number)
+                    VALUES (p_series_id, team1_id, team2_id, 1, 'scheduled', s_start_date, location, i);
 
-                SET i = i + 1;
-            END WHILE;
+                    SET i = i + 1;
+                END WHILE;
         ELSE
-            SELECT team_id INTO team1_id FROM temp_teams
-            WHERE id = 1;
-            SELECT team_id INTO team2_id FROM temp_teams
-            WHERE id = 2;
+            SET i = 1;
+            WHILE i <= 2
+                DO
+                    SELECT team_id INTO team1_id FROM temp_teams
+                    WHERE id = 1;
+                    SELECT team_id INTO team2_id FROM temp_teams
+                    WHERE id = 2;
 
-            SET location = (
-                SELECT location_name
-                FROM series_locations
-                WHERE series_id = p_series_id
-                ORDER BY RAND()
-                LIMIT 1
-            );
+                    SET location = (
+                        SELECT location_name
+                        FROM series_locations
+                        WHERE series_id = p_series_id
+                        ORDER BY RAND()
+                        LIMIT 1
+                    );
 
-            INSERT INTO matches (series_id, team1_id, team2_id, round, status, match_date, location)
-            VALUES (p_series_id, team1_id, team2_id, 1, 'scheduled', s_start_date, location);
+                    INSERT INTO matches (series_id, team1_id, team2_id, round, status, match_date, location, match_number)
+                    VALUES (p_series_id, team1_id, team2_id, i, 'scheduled', s_start_date, location, 1);
 
-            SELECT team_id INTO team1_id FROM temp_teams
-            WHERE id = 2;
-            SELECT team_id INTO team2_id FROM temp_teams
-            WHERE id = 3;
+                    SELECT team_id INTO team1_id FROM temp_teams
+                    WHERE id = 2;
+                    SELECT team_id INTO team2_id FROM temp_teams
+                    WHERE id = 3;
 
-            SET location = (
-                SELECT location_name
-                FROM series_locations
-                WHERE series_id = p_series_id
-                ORDER BY RAND()
-                LIMIT 1
-            );
+                    SET location = (
+                        SELECT location_name
+                        FROM series_locations
+                        WHERE series_id = p_series_id
+                        ORDER BY RAND()
+                        LIMIT 1
+                    );
 
-            INSERT INTO matches (series_id, team1_id, team2_id, round, status, match_date, location)
-            VALUES (p_series_id, team1_id, team2_id, 1, 'scheduled', s_start_date, location);
+                    INSERT INTO matches (series_id, team1_id, team2_id, round, status, match_date, location, match_number)
+                    VALUES (p_series_id, team1_id, team2_id, i, 'scheduled', s_start_date, location, 2);
 
-            SELECT team_id INTO team1_id FROM temp_teams
-            WHERE id = 3;
-            SELECT team_id INTO team2_id FROM temp_teams
-            WHERE id = 1;
+                    SELECT team_id INTO team1_id FROM temp_teams
+                    WHERE id = 3;
+                    SELECT team_id INTO team2_id FROM temp_teams
+                    WHERE id = 1;
 
-            SET location = (
-                SELECT location_name
-                FROM series_locations
-                WHERE series_id = p_series_id
-                ORDER BY RAND()
-                LIMIT 1
-            );
+                    SET location = (
+                        SELECT location_name
+                        FROM series_locations
+                        WHERE series_id = p_series_id
+                        ORDER BY RAND()
+                        LIMIT 1
+                    );
 
-            INSERT INTO matches (series_id, team1_id, team2_id, round, status, match_date, location)
-            VALUES (p_series_id, team1_id, team2_id, 1, 'scheduled', s_start_date, location);
+                    INSERT INTO matches (series_id, team1_id, team2_id, round, status, match_date, location, match_number)
+                    VALUES (p_series_id, team1_id, team2_id, i, 'scheduled', s_start_date, location, 3);
+                    
+                    SET i = i + 1;
+                END WHILE;
         END IF;
 
         DROP TEMPORARY TABLE temp_teams;
     END`
   );
 };
+
+const createSeriesPointsForTeamsTrigger = async () => {
+  await pool.query("DROP TRIGGER IF EXISTS CreateSeriesPointsForTeam");
+  await pool.query(
+    `CREATE TRIGGER CreateSeriesPointsForTeam
+    AFTER INSERT ON series_teams
+    FOR EACH ROW
+    BEGIN
+        DECLARE is_trilateral BOOLEAN DEFAULT FALSE;
+
+        SELECT (type = 'trilateral') INTO is_trilateral
+        FROM series
+        WHERE series_id = NEW.series_id;
+
+        IF is_trilateral = TRUE THEN
+            INSERT INTO series_points (series_id, team_id)
+            VALUES (NEW.series_id, NEW.team_id);
+        END IF;
+    END`
+  );
+}
 
 const seedInnings = async () => {
   console.log("Creating innings table...");
@@ -898,7 +926,12 @@ const createUpdateMatchStatusTrigger = async () => {
             balls_faced = balls_faced + IF(NEW.is_legal, 1, 0),
             fours = fours + IF(NEW.runs_scored = 4, 1, 0),
             sixes = sixes + IF(NEW.runs_scored = 6, 1, 0),
-            strike_rate = (runs_scored + NEW.runs_scored) / (balls_faced + IF(NEW.is_legal, 1, 0)) * 100
+            strike_rate = CASE 
+                WHEN (balls_faced + IF(NEW.is_legal, 1, 0)) > 0 THEN 
+                    (runs_scored + NEW.runs_scored) / (balls_faced + IF(NEW.is_legal, 1, 0)) * 100 
+                ELSE 
+                    0
+              END
         WHERE player_id = NEW.batsman_id;
 
         -- Update innings stats
@@ -966,9 +999,148 @@ const createUpdateBatsmanDismissalTrigger = async () => {
   );
 };
 
+const createOnMatchCompleteTrigger = async () => {
+  console.log("Create trigger for on match complete...");
+  await pool.query("DROP TRIGGER IF EXISTS OnMatchComplete");
+  await pool.query(
+    `CREATE TRIGGER OnMatchComplete
+    AFTER UPDATE ON matches
+    FOR EACH ROW
+    BEGIN
+        DECLARE winning_team_id INT;
+        DECLARE losing_team_id INT;
+        DECLARE is_trilateral_series BOOLEAN DEFAULT FALSE;
+        DECLARE total_runs_team1 INT;
+        DECLARE total_overs_team1 INT;
+        DECLARE total_runs_team2 INT;
+        DECLARE total_overs_team2 INT;
+        DECLARE run_rate_team1 FLOAT DEFAULT 0;
+        DECLARE run_rate_team2 FLOAT DEFAULT 0;
+        DECLARE total_matches INT;
+        DECLARE completed_matches INT;
+
+        IF NEW.series_id IS NOT NULL THEN
+            SELECT (type = 'trilateral') INTO is_trilateral_series
+            FROM series
+            WHERE series_id = NEW.series_id;
+        END IF;
+
+        IF is_trilateral_series AND OLD.status <> 'completed' AND NEW.status = 'completed' THEN
+            SET winning_team_id = NEW.winner_team_id;
+
+            IF winning_team_id IS NOT NULL THEN
+                IF winning_team_id = NEW.team1_id THEN
+                    SET losing_team_id = NEW.team2_id;
+                ELSE
+                    SET losing_team_id = NEW.team1_id;
+                END IF;
+
+                UPDATE series_points
+                SET
+                    matches_played = matches_played + 1,
+                    wins = wins + 1,
+                    points = points + 2
+                WHERE
+                    series_id = NEW.series_id AND
+                    team_id = winning_team_id;
+
+                UPDATE series_points
+                SET
+                    matches_played = matches_played + 1,
+                    losses = losses + 1
+                WHERE
+                    series_id = NEW.series_id AND
+                    team_id = losing_team_id;
+
+            ELSE
+                UPDATE series_points
+                SET
+                    matches_played = matches_played + 1,
+                    ties = ties + 1,
+                    points = points + 1
+                WHERE
+                    series_id = NEW.series_id AND
+                    team_id IN (NEW.team1_id, NEW.team2_id);
+            END IF;
+
+            SELECT
+                total_runs, total_overs
+            INTO
+                total_runs_team1, total_overs_team1
+            FROM
+                innings
+            WHERE
+                match_id = NEW.match_id AND
+                team_id = NEW.team1_id;
+
+            SELECT
+                total_runs, total_overs
+            INTO
+                total_runs_team2, total_overs_team2
+            FROM
+                innings
+            WHERE
+                match_id = NEW.match_id AND
+                team_id = NEW.team2_id;
+
+            IF total_overs_team1 > 0 THEN
+                SET run_rate_team1 = total_runs_team1 / total_overs_team1;
+            END IF;
+
+            IF total_overs_team2 > 0 THEN
+                SET run_rate_team2 = total_runs_team2 / total_overs_team2;
+            END IF;
+
+            UPDATE series_points
+            SET
+                net_run_rate = run_rate_team1
+            WHERE
+                series_id = NEW.series_id AND
+                team_id = NEW.team1_id;
+
+            UPDATE series_points
+            SET
+                net_run_rate = run_rate_team2
+            WHERE
+                series_id = NEW.series_id AND
+                team_id = NEW.team2_id;
+        END IF;
+        
+        IF NEW.tournament_id IS NOT NULL THEN
+            SELECT COUNT(*) INTO total_matches FROM matches
+            WHERE tournament_id = NEW.tournament_id;
+            
+            SELECT COUNT(*) INTO completed_matches FROM matches
+            WHERE tournament_id = NEW.tournament_id
+            AND status = 'completed';
+            
+            IF total_matches = completed_matches THEN
+                UPDATE tournaments
+                SET status = 'completed'
+                WHERE tournament_id = NEW.tournament_id;
+            END IF;
+        ELSE
+            SELECT COUNT(*) INTO total_matches FROM matches
+            WHERE series_id = NEW.series_id;
+
+            SELECT COUNT(*) INTO completed_matches FROM matches
+            WHERE series_id = NEW.series_id
+            AND status = 'completed';
+
+            IF total_matches = completed_matches THEN
+                UPDATE series
+                SET status = 'completed'
+                WHERE series_id = NEW.series_id;
+            END IF;
+        END IF;
+    END`
+  );
+}
+
 const seedRemainingTriggers = async () => {
   await createUpdateMatchStatusTrigger();
   await createUpdateBatsmanDismissalTrigger();
+  await createOnMatchCompleteTrigger();
 };
 
 const main = async () => {

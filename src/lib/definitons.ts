@@ -146,6 +146,19 @@ export type SeriesWithoutId = Omit<Series, "series_id">;
 export interface SeriesMatch extends Match {
   [x: string]: any;
   series_id: number;
+  match_number: number;
+}
+
+export interface SeriesPoints {
+  series_id: number;
+  team_id: number;
+  team_name: string;
+  matches_played: number;
+  wins: number;
+  losses: number;
+  ties: number;
+  points: number;
+  net_run_rate: number;
 }
 
 export interface Innings {

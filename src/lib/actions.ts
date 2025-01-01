@@ -19,6 +19,7 @@ import {
   PlayerWithTeam,
   Series,
   SeriesMatch,
+  SeriesPoints,
   SeriesWithoutId,
   Team,
   TeamPlayer,
@@ -828,7 +829,7 @@ export const insertSeries = async (series: SeriesWithoutId) => {
       )
     );
 
-    await pool.query("CALL CreateInitialSeriesSchedule(?)", [series_id]);
+    await pool.query("CALL CreateSeriesSchedule(?)", [series_id]);
   } catch (error) {
     console.log("Error inserting new series: ", error);
     throw new Error("Failed to create series!");
@@ -904,6 +905,7 @@ export const fetchSeriesMatches = async (series_id: number) => {
           m.match_date AS match_date,
           m.location AS location,
           m.round AS round,
+          m.match_number AS match_number,
           m.status AS status,
           t1.team_id AS team1_team_id,
           t1.name AS team1_name,
@@ -930,6 +932,53 @@ export const fetchSeriesMatches = async (series_id: number) => {
     throw new Error("Failed to fetch series matches!");
   }
 };
+
+export const fetchSeriesScore = async (series_id: number) => {
+  try {
+    const [data] = await pool.query(
+      `SELECT t.name AS team_name, COALESCE(COUNT(m.winner_team_id), 0) AS total_wins
+      FROM series_teams st
+      JOIN teams t ON t.team_id = st.team_id
+      LEFT JOIN matches m ON m.winner_team_id = t.team_id
+      WHERE st.series_id = ?
+      GROUP BY t.team_id, t.name
+      ORDER BY total_wins DESC`,
+      [series_id]
+    );
+
+    return data as { team_name: string; total_wins: number }[];
+  } catch (error) {
+    console.log("Error fetching series scores: ", error);
+    throw new Error("Failed to fetch series scores!");
+  }
+}
+
+export const fetchSeriesPoints = async (series_id: number) => {
+  try {
+    const [data] = await pool.query(
+      `SELECT sp.series_id AS series_id,
+            sp.team_id AS team_id,
+            t.name AS team_name,
+            sp.matches_played AS matches_played,
+            sp.wins AS wins,
+            sp.losses AS losses,
+            sp.ties AS ties,
+            sp.points AS points,
+            sp.net_run_rate AS net_run_rate
+      FROM series_points sp
+      JOIN series s ON s.series_id = sp.series_id
+      JOIN teams t ON t.team_id = sp.team_id
+      WHERE s.series_id = ?
+      ORDER BY points DESC`,
+      [series_id]
+    );
+
+    return { seriesPoints: data as SeriesPoints[] };
+  } catch (error) {
+    console.log("Error fetching series points: ", error);
+    throw new Error("Failed to fetch series points!");
+  }
+}
 
 export const updateMatchToss = async (
   match_id: number | string,
@@ -1533,7 +1582,8 @@ export const fetchMatchDismissalsSummary = async (
       JOIN innings i ON i.inning_id = d.inning_id
       JOIN players p ON p.player_id = d.batsman_id
       JOIN balls b ON b.ball_id = d.ball_id
-      JOIN teams t ON t.team_id = i.team_id`,
+      JOIN teams t ON t.team_id = i.team_id
+      WHERE i.match_id = ?`,
       [match_id]
     );
 

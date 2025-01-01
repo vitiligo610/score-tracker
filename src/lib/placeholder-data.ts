@@ -632,7 +632,7 @@ export const series: Series[] = [
     end_date: new Date("2024-12-20"),
     format: "ODI",
     locations: ["Dubai International Stadium", "Sharjah Cricket Stadium", "Abu Dhabi Cricket Stadium"],
-    team_ids: [3, 4, 5],
+    team_ids: [2, 3, 4],
     total_rounds: 2,
     type: "trilateral"
   }

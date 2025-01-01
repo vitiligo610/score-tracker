@@ -15,7 +15,7 @@ const BilateralSeriesSchedule = ({
       {matches.map((match) => (
         <div className="space-y-3" key={match.match_id}>
           <h2 className="text-2xl font-bold text-primary">
-            Match {match.round}
+            Match {match.match_number}
           </h2>
           <MatchCard
             key={match.match_id}
