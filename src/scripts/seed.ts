@@ -862,6 +862,24 @@ const createUpdateMatchStatusTrigger = async () => {
 
     END`
   );
+
+  await pool.query("DROP TRIGGER IF EXISTS UpdateMatchStatsOnExtraBall");
+  await pool.query(
+    `CREATE TRIGGER UpdateMatchStatsOnExtraBall
+    AFTER INSERT on extras
+    FOR EACH ROW
+    BEGIN
+        UPDATE innings i
+        JOIN balls b ON b.ball_id = NEW.ball_id
+        SET i.total_runs = i.total_runs + NEW.runs
+        WHERE i.inning_id = b.inning_id;
+
+        UPDATE match_bowling_performance mbp
+        JOIN balls b ON b.ball_id = NEW.ball_id
+        SET mbp.runs_conceded = mbp.runs_conceded + NEW.runs
+        WHERE mbp.player_id = b.bowler_id;
+    END`
+  );
 }
 
 const createUpdateBatsmanDismissalTrigger = async () => {
