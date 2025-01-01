@@ -1,6 +1,7 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { PLAYERS_PER_PAGE, TEAMS_PER_PAGE } from "@/lib/constants";
+import { pool } from "@/lib/db";
 import {
   Ball,
   BattingTeamPlayer,
@@ -26,9 +27,8 @@ import {
   TournamentMatch,
   TournamentWithoutId,
 } from "@/lib/definitons";
-import { pool } from "@/lib/db";
-import { PLAYERS_PER_PAGE, TEAMS_PER_PAGE } from "@/lib/constants";
 import { getMatchDetails, getTransformedMatch } from "@/lib/utils";
+import { revalidatePath } from "next/cache";
 
 export const fetchPlayers = async (
   query: string,
@@ -546,18 +546,85 @@ export const insertTournament = async (tournament: TournamentWithoutId) => {
       tournament.team_ids.map((team_id) =>
         pool.query(
           `INSERT INTO tournament_teams (tournament_id, team_id)
-          VALUES (?, ?)`
-          , [tournament_id, team_id])
+          VALUES (?, ?)`,
+          [tournament_id, team_id]
+        )
       )
     );
 
     await pool.query("CALL SetTournamentDetails(?)", [tournament_id]);
-    await pool.query("CALL CreateInitialTournamentSchedule(?)", [
-      tournament_id,
-    ]);
+    await pool.query("CALL CreateTournamentSchedule(?)", [tournament_id]);
+    await updateTournamentNextMatchIds(tournament_id);
   } catch (error) {
     console.log("Error adding new tournament: ", error);
     throw new Error("Failed creating new tournament!");
+  }
+};
+
+export const updateTournamentNextMatchIds = async (tournamentId: number) => {
+  try {
+    const [round1Matches] = (await pool.query(
+      "SELECT match_id FROM matches WHERE tournament_id = ? AND round = 1 ORDER BY match_id",
+      [tournamentId]
+    )) as [Array<{ match_id: number }>, any];
+
+    const [round2Matches] = (await pool.query(
+      "SELECT match_id FROM matches WHERE tournament_id = ? AND round = 2 AND team2_id IS NULL ORDER BY match_id",
+      [tournamentId]
+    )) as [Array<{ match_id: number }>, any];
+
+    let currentRound = 1;
+    if (round1Matches.length === round2Matches.length) {
+      for (let i = 0; i < round1Matches.length; i++) {
+        if (i < round2Matches.length) {
+          const round1MatchId = round1Matches[i].match_id;
+          const round2MatchId = round2Matches[i].match_id;
+
+          await pool.query(
+            "UPDATE matches SET next_match_id = ? WHERE match_id = ?",
+            [round2MatchId, round1MatchId]
+          );
+        }
+      }
+      currentRound = 2;
+    }
+
+    while (true) {
+      const [currentRoundMatches] = (await pool.query(
+        "SELECT match_id, match_number FROM matches WHERE tournament_id = ? AND round = ? ORDER BY match_id",
+        [tournamentId, currentRound]
+      )) as [Array<{ match_id: number; match_number: number }>, any];
+
+      if (currentRoundMatches.length === 0) break;
+
+      const [nextRoundMatches] = (await pool.query(
+        "SELECT match_id, match_number FROM matches WHERE tournament_id = ? AND round = ? ORDER BY match_id",
+        [tournamentId, currentRound + 1]
+      )) as [Array<{ match_id: number; match_number: number }>, any];
+
+      if (nextRoundMatches.length === 0) break;
+
+      for (const match of currentRoundMatches) {
+        const nextMatch = nextRoundMatches.find(
+          (nextMatch) =>
+            nextMatch.match_number === Math.ceil(match.match_number / 2)
+        );
+
+        if (nextMatch) {
+          await pool.query(
+            "UPDATE matches SET next_match_id = ? WHERE match_id = ?",
+            [nextMatch.match_id, match.match_id]
+          );
+        }
+      }
+
+      currentRound++;
+    }
+
+    console.log("Next match IDs updated successfully.");
+  } catch (error) {
+    console.error("Error updating next match IDs:", error);
+    throw error;
   }
 };
 
@@ -920,7 +987,8 @@ export const insertInningsForMatch = async (
 
 export const setMatchToComplete = async (
   match_id: number | string,
-  winner_team_id: number | null
+  winner_team_id: number | null,
+  is_tournament?: boolean
 ) => {
   try {
     await pool.query(
@@ -930,6 +998,12 @@ export const setMatchToComplete = async (
       WHERE match_id = ?`,
       [winner_team_id, "completed", match_id]
     );
+    if (is_tournament) {
+      await pool.query(`CALL UpdateNextMatchWinner(?, ?)`, [
+        match_id,
+        winner_team_id,
+      ]);
+    }
   } catch (error) {
     console.log("Error updating match status: ", error);
     throw new Error("Failed to update match status!");
@@ -1188,7 +1262,11 @@ export const fetchMatchById = async (match_id: number) => {
   }
 };
 
-export const insertBallForInning = async (ball: Ball, total_runs: number, total_wickets: number) => {
+export const insertBallForInning = async (
+  ball: Ball,
+  total_runs: number,
+  total_wickets: number
+) => {
   // console.log("submitting ball data: ", ball);
   await pool.query(
     `INSERT INTO balls (inning_id, over_number, ball_number, batsman_id, non_striker_id, bowler_id, runs_scored, is_wicket, is_legal)
@@ -1275,7 +1353,7 @@ export const fetchMatchExtras = async (match_id: number | string) => {
   );
 
   return { extras: data as InningsExtras[] };
-}
+};
 
 export const fetchMatchBattingSummary = async (match_id: number | string) => {
   try {
@@ -1333,7 +1411,7 @@ export const fetchMatchBattingSummary = async (match_id: number | string) => {
           team_name: current.team_name,
           players: [],
           onCrease: [],
-          extras: extras.find(extra => extra.inning_id === current.inning_id),
+          extras: extras.find((extra) => extra.inning_id === current.inning_id),
         };
       }
 
@@ -1354,14 +1432,20 @@ export const fetchMatchBattingSummary = async (match_id: number | string) => {
         });
       }
 
-      const notDismissedPlayers = acc[key].players.filter((player: any) => !player.dismissed);
-      const sortedPlayers = notDismissedPlayers.sort((a: any, b: any) => a.batting_order - b.batting_order);
-      acc[key].onCrease = sortedPlayers.slice(0, 2).map((player: any) => player.player_id);
+      const notDismissedPlayers = acc[key].players.filter(
+        (player: any) => !player.dismissed
+      );
+      const sortedPlayers = notDismissedPlayers.sort(
+        (a: any, b: any) => a.batting_order - b.batting_order
+      );
+      acc[key].onCrease = sortedPlayers
+        .slice(0, 2)
+        .map((player: any) => player.player_id);
 
       return acc;
     }, {});
 
-    return { battingSummary } as { battingSummary: InningsBattingSummary }
+    return { battingSummary } as { battingSummary: InningsBattingSummary };
   } catch (error) {
     console.log("Error fetching match batting summary: ", error);
     throw new Error("Failed to fetch match batting summary!");
@@ -1421,14 +1505,16 @@ export const fetchMatchBowlingSummary = async (match_id: number | string) => {
       return acc;
     }, {});
 
-    return { bowlingSummary } as { bowlingSummary: InningsBowlingSummary }
+    return { bowlingSummary } as { bowlingSummary: InningsBowlingSummary };
   } catch (error) {
     console.log("Error fetching match bowling summary: ", error);
     throw new Error("Failed to fetch match bowling summary!");
   }
-}
+};
 
-export const fetchMatchDismissalsSummary = async (match_id: number | string) => {
+export const fetchMatchDismissalsSummary = async (
+  match_id: number | string
+) => {
   try {
     const [data]: any = await pool.query(
       `SELECT
@@ -1475,11 +1561,13 @@ export const fetchMatchDismissalsSummary = async (match_id: number | string) => 
       }
 
       return acc;
-    }, {})
+    }, {});
 
-    return { dismissalsSummary } as { dismissalsSummary: InningsDismissalsSummary };
+    return { dismissalsSummary } as {
+      dismissalsSummary: InningsDismissalsSummary;
+    };
   } catch (error) {
     console.log("Error fetching match dismissals summary: ", error);
     throw new Error("Failed to fetch match dismissals summary!");
   }
-}
+};

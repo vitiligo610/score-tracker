@@ -1,3 +1,4 @@
+import { updateTournamentNextMatchIds } from "@/lib/actions";
 import { pool } from "@/lib/db";
 import {
   players,
@@ -120,7 +121,7 @@ const createSetBattingOrderTrigger = async () => {
         );
     END`
   );
-}
+};
 
 const seedMatches = async () => {
   console.log("Creating matches table...");
@@ -138,8 +139,11 @@ const seedMatches = async () => {
       status ENUM('started', 'scheduled', 'completed', 'tbd'),
       toss_winner_id INT,
       toss_decision ENUM('batting', 'bowling'),
+      match_number INT DEFAULT 0,
+      next_match_id INT,
       FOREIGN KEY (team1_id) REFERENCES teams (team_id) ON DELETE CASCADE,
       FOREIGN KEY (team2_id) REFERENCES teams (team_id) ON DELETE CASCADE,
+      FOREIGN KEY (next_match_id) REFERENCES matches (match_id) ON DELETE SET NULL,
       FOREIGN KEY (toss_winner_id) REFERENCES teams (team_id),
       FOREIGN KEY (winner_team_id) REFERENCES teams (team_id)
     )
@@ -189,7 +193,8 @@ const seedTournaments = async () => {
 
   console.log("Creating tournament procedures...");
   await createSetTournamentDetailsProc();
-  await createInitialTournamentScheduleProc();
+  await createTournamentScheduleProc();
+  await createUpdateNextMatchWinnerProc();
 
   console.log("Seeding tournaments...");
 
@@ -216,18 +221,18 @@ const seedTournaments = async () => {
     for (const team_id of tournament.team_ids) {
       await pool.query(
         `INSERT INTO tournament_teams (tournament_id, team_id)
-        VALUES (tournament_id, team_id)`, [
-        tournament.tournament_id,
-        team_id,
-      ]);
+        VALUES (?, ?)`,
+        [tournament.tournament_id, team_id]
+      );
     }
 
     await pool.query("CALL SetTournamentDetails(?)", [
       tournament.tournament_id,
     ]);
-    await pool.query("CALL CreateInitialTournamentSchedule(?)", [
+    await pool.query("CALL CreateTournamentSchedule(?)", [
       tournament.tournament_id,
     ]);
+    await updateTournamentNextMatchIds(tournament.tournament_id);
   }
 };
 
@@ -253,15 +258,19 @@ const createSetTournamentDetailsProc = async () => {
   );
 };
 
-const createInitialTournamentScheduleProc = async () => {
-  await pool.query("DROP PROCEDURE IF EXISTS CreateInitialTournamentSchedule");
+const createTournamentScheduleProc = async () => {
+  await pool.query("DROP PROCEDURE IF EXISTS CreateTournamentSchedule");
   await pool.query(
-    `CREATE PROCEDURE CreateInitialTournamentSchedule(IN p_tournament_id INT)
+    `CREATE PROCEDURE CreateTournamentSchedule(IN p_tournament_id INT)
     BEGIN
         DECLARE total_teams INT;
         DECLARE next_power_of_2 INT;
         DECLARE byes_count INT;
+        DECLARE current_round INT;
+        DECLARE total_rounds INT;
+        DECLARE matches_count INT;
         DECLARE i INT;
+        DECLARE match_no INT;
         DECLARE team1_id INT;
         DECLARE team2_id INT;
         DECLARE t_start_date DATE;
@@ -279,7 +288,7 @@ const createInitialTournamentScheduleProc = async () => {
         SELECT team_id
         FROM tournament_teams
         WHERE tournament_id = p_tournament_id;
-        
+
         SELECT start_date INTO t_start_date
         FROM tournaments
         WHERE tournament_id = p_tournament_id;
@@ -290,11 +299,15 @@ const createInitialTournamentScheduleProc = async () => {
         -- Calculate the nearest power of 2
         SET next_power_of_2 = POW(2, CEIL(LOG2(total_teams)));
 
+        SET total_rounds = LOG2(next_power_of_2);
+
         -- Calculate the number of byes
         SET byes_count = next_power_of_2 - total_teams;
 
         -- Insert first-round matches for teams without byes
         SET i = 1;
+        SET match_no = 1;
+        SET current_round = 1;
         WHILE i <= (total_teams - byes_count)
             DO
                 -- Fetch two teams for the match
@@ -310,16 +323,19 @@ const createInitialTournamentScheduleProc = async () => {
                 );
 
                 -- Insert match into matches table
-                INSERT INTO matches (tournament_id, team1_id, team2_id, round, status, match_date, location)
-                VALUES (p_tournament_id, team1_id, team2_id, 1, 'scheduled', t_start_date, location);
+                INSERT INTO matches (tournament_id, team1_id, team2_id, round, status, match_date, location, match_number)
+                VALUES (p_tournament_id, team1_id, team2_id, 1, 'scheduled', t_start_date, location, match_no);
 
                 -- Move to the next pair of teams
                 SET i = i + 2;
+                SET match_no = match_no + 1;
             END WHILE;
 
         -- Handle byes: Add matches for round 2
         IF byes_count > 0 THEN
+            SET current_round = 2;
             SET i = (total_teams - byes_count) + 1; -- Start after non-bye teams
+            SET match_no = 1;
             WHILE i <= total_teams - (total_teams - byes_count) / 2
                 DO
                     -- Fetch team with a bye
@@ -337,10 +353,11 @@ const createInitialTournamentScheduleProc = async () => {
                     );
 
                     -- Insert match into round 2
-                    INSERT INTO matches (tournament_id, team1_id, team2_id, round, status, match_date, location)
-                    VALUES (p_tournament_id, team1_id, team2_id, 2, 'scheduled', t_start_date, location);
+                    INSERT INTO matches (tournament_id, team1_id, team2_id, round, status, match_date, location, match_number)
+                    VALUES (p_tournament_id, team1_id, team2_id, 2, 'scheduled', t_start_date, location, match_no);
 
                     SET i = i + 2;
+                    SET match_no = match_no + 1;
                 END WHILE;
 
             WHILE i <= total_teams
@@ -355,14 +372,62 @@ const createInitialTournamentScheduleProc = async () => {
                         LIMIT 1
                     );
 
-                    INSERT INTO matches (tournament_id, team1_id, round, status, match_date, location)
-                    VALUES (p_tournament_id, team1_id, 2, 'tbd', t_start_date, location);
+                    INSERT INTO matches (tournament_id, team1_id, round, status, match_date, location, match_number)
+                    VALUES (p_tournament_id, team1_id, 2, 'tbd', t_start_date, location, match_no);
 
                     SET i = i + 1;
+                    SET match_no = match_no + 1;
                 END WHILE;
         END IF;
 
+        SET current_round = current_round + 1;
+        WHILE current_round <= total_rounds
+            DO
+                SET matches_count = next_power_of_2 / POW(2, current_round);
+                SET i = 1;
+                WHILE i <= matches_count
+                    DO
+                        INSERT INTO matches (tournament_id, round, status, match_number)
+                        VALUES (p_tournament_id, current_round, 'tbd', i);
+
+                        SET i = i + 1;
+                    END WHILE;
+
+                SET current_round = current_round + 1;
+            END WHILE;
+
         DROP TEMPORARY TABLE temp_teams;
+    END`
+  );
+};
+
+const createUpdateNextMatchWinnerProc = async () => {
+  await pool.query("DROP PROCEDURE IF EXISTS UpdateNextMatchWinner");
+  await pool.query(
+    `CREATE PROCEDURE UpdateNextMatchWinner(
+        IN p_match_id INT,
+        IN p_winner_team_id INT
+    )
+    BEGIN
+        DECLARE next_match INT;
+        DECLARE slot_filled INT;
+
+        SELECT next_match_id INTO next_match FROM matches WHERE match_id = p_match_id;
+
+        IF next_match IS NOT NULL THEN
+            SELECT COUNT(*) INTO slot_filled FROM matches WHERE match_id = next_match AND team1_id IS NULL;
+
+            IF slot_filled = 1 THEN
+                UPDATE matches
+                SET team1_id = p_winner_team_id
+                WHERE match_id = next_match;
+            ELSE
+                UPDATE matches
+                SET team2_id = p_winner_team_id,
+                    status = 'scheduled'
+                WHERE match_id = next_match;
+            END IF;
+        END IF;
     END`
   );
 };
@@ -604,7 +669,7 @@ const seedInnings = async () => {
         VALUES (p_inning_id, 1, p_bowler_id);
     END`
   );
-}
+};
 
 const seedOvers = async () => {
   console.log("Creating overs table...");
@@ -619,7 +684,7 @@ const seedOvers = async () => {
       PRIMARY KEY (inning_id, over_number)
     )`
   );
-}
+};
 
 const seedBalls = async () => {
   console.log("Creating balls table...");
@@ -672,7 +737,7 @@ const seedBalls = async () => {
       FOREIGN KEY (ball_id) REFERENCES balls (ball_id) ON DELETE CASCADE
     )`
   );
-}
+};
 
 const seedPerformances = async () => {
   console.log("Creating match_batting_performance table...");
@@ -713,7 +778,7 @@ const seedPerformances = async () => {
 
   console.log("Creating trigger for inserting match performances...");
   await createInsertMatchPerformanceEntriesTrigger();
-}
+};
 
 const createInsertMatchPerformanceEntriesTrigger = async () => {
   await pool.query("DROP TRIGGER IF EXISTS InsertMatchPerformanceEntries");
@@ -776,7 +841,7 @@ const createInsertMatchPerformanceEntriesTrigger = async () => {
 
     END`
   );
-}
+};
 
 const createUpdateMatchStatusTrigger = async () => {
   console.log("Create trigger for updating match status...");
@@ -880,7 +945,7 @@ const createUpdateMatchStatusTrigger = async () => {
         WHERE mbp.player_id = b.bowler_id;
     END`
   );
-}
+};
 
 const createUpdateBatsmanDismissalTrigger = async () => {
   console.log("Create trigger for updating batsman dismissal...");
@@ -898,13 +963,13 @@ const createUpdateBatsmanDismissalTrigger = async () => {
           AND mbp.dismissal_id IS NULL;
     END;
 `
-  )
-}
+  );
+};
 
 const seedRemainingTriggers = async () => {
   await createUpdateMatchStatusTrigger();
   await createUpdateBatsmanDismissalTrigger();
-}
+};
 
 const main = async () => {
   console.log("🌱 Starting database seed...");
