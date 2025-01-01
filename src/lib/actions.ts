@@ -229,7 +229,7 @@ export const fetchAllTeams = async () => {
         t.description
     `);
 
-    console.log("all teams is ", teams);
+    // console.log("all teams is ", teams);
 
     return { allTeams: teams as Team[] };
   } catch (error) {
@@ -544,7 +544,10 @@ export const insertTournament = async (tournament: TournamentWithoutId) => {
 
     await Promise.all(
       tournament.team_ids.map((team_id) =>
-        pool.query(`CALL AddTeamToTournament(?, ?)`, [tournament_id, team_id])
+        pool.query(
+          `INSERT INTO tournament_teams (tournament_id, team_id)
+          VALUES (?, ?)`
+          , [tournament_id, team_id])
       )
     );
 

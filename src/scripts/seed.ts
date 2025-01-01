@@ -130,7 +130,7 @@ const seedMatches = async () => {
       tournament_id INT,
       series_id INT,
       match_date DATE,
-      team1_id INT NOT NULL,
+      team1_id INT,
       team2_id INT,
       winner_team_id INT,
       location VARCHAR (100),
@@ -188,7 +188,6 @@ const seedTournaments = async () => {
   );
 
   console.log("Creating tournament procedures...");
-  await createAddTeamToTournamentProc();
   await createSetTournamentDetailsProc();
   await createInitialTournamentScheduleProc();
 
@@ -215,7 +214,9 @@ const seedTournaments = async () => {
     }
 
     for (const team_id of tournament.team_ids) {
-      await pool.query(`CALL AddTeamToTournament(?, ?)`, [
+      await pool.query(
+        `INSERT INTO tournament_teams (tournament_id, team_id)
+        VALUES (tournament_id, team_id)`, [
         tournament.tournament_id,
         team_id,
       ]);
@@ -228,17 +229,6 @@ const seedTournaments = async () => {
       tournament.tournament_id,
     ]);
   }
-};
-
-const createAddTeamToTournamentProc = async () => {
-  await pool.query("DROP PROCEDURE IF EXISTS AddTeamToTournament");
-  await pool.query(
-    `CREATE PROCEDURE AddTeamToTournament(IN tournament_id INT, IN team_id INT)
-    BEGIN
-        INSERT INTO tournament_teams (tournament_id, team_id)
-        VALUES (tournament_id, team_id);
-    END`
-  );
 };
 
 const createSetTournamentDetailsProc = async () => {
