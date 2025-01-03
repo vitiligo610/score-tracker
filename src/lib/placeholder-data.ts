@@ -558,7 +558,112 @@ export const players: Player[] = [
     bowling_style: "Right-arm Spin",
     player_role: "All-rounder",
     jersey_number: 91,
+    bowling_order: 1,
   },
+  {
+    player_id: 51,
+    first_name: "Kane",
+    last_name: "Richardson",
+    date_of_birth: new Date('1991-02-12'),
+    batting_style: "Right-hand",
+    bowling_style: "Right-arm Fast",
+    player_role: "Bowler", 
+    jersey_number: 55,
+    bowling_order: 2,
+  },
+  {
+    player_id: 52,
+    first_name: "Marcus",
+    last_name: "Stoinis",
+    date_of_birth: new Date('1989-08-16'),
+    batting_style: "Right-hand",
+    bowling_style: "Right-arm Medium",
+    player_role: "All-rounder",
+    jersey_number: 17,
+    bowling_order: 3,
+  },
+  {
+    player_id: 53,
+    first_name: "Glenn", 
+    last_name: "Maxwell",
+    date_of_birth: new Date('1988-10-14'),
+    batting_style: "Right-hand",
+    bowling_style: "Right-arm Fast",
+    player_role: "All-rounder",
+    jersey_number: 32,
+    bowling_order: 4,
+  },
+  {
+    player_id: 54,
+    first_name: "Alex",
+    last_name: "Carey",
+    date_of_birth: new Date('1991-08-27'),
+    batting_style: "Left-hand",
+    bowling_style: "None",
+    player_role: "Wicket-keeper",
+    jersey_number: 4,
+    bowling_order: 5,
+  },
+  {
+    player_id: 55,
+    first_name: "Josh",
+    last_name: "Hazlewood",
+    date_of_birth: new Date('1991-01-08'),
+    batting_style: "Left-hand",
+    bowling_style: "Right-arm Fast",
+    player_role: "Bowler",
+    jersey_number: 38
+  },
+  {
+    player_id: 56,
+    first_name: "Mitchell",
+    last_name: "Starc",
+    date_of_birth: new Date('1990-01-30'),
+    batting_style: "Left-hand",
+    bowling_style: "Left-arm Fast",
+    player_role: "Bowler",
+    jersey_number: 56
+  },
+  {
+    player_id: 57,
+    first_name: "Pat",
+    last_name: "Cummins",
+    date_of_birth: new Date('1993-05-08'),
+    batting_style: "Right-hand",
+    bowling_style: "Right-arm Fast",
+    player_role: "Bowler",
+    jersey_number: 30
+  },
+  {
+    player_id: 58,
+    first_name: "Steve",
+    last_name: "Smith",
+    date_of_birth: new Date('1989-06-02'),
+    batting_style: "Right-hand",
+    bowling_style: "Right-arm Fast",
+    player_role: "Batsman",
+    jersey_number: 49
+  },
+  {
+    player_id: 59,
+    first_name: "David",
+    last_name: "Warner",
+    date_of_birth: new Date('1986-10-27'),
+    batting_style: "Left-hand",
+    bowling_style: "Right-arm Spin",
+    player_role: "Batsman",
+    jersey_number: 31
+  },
+  {
+    player_id: 60,
+    first_name: "Marnus",
+    last_name: "Labuschagne",
+    date_of_birth: new Date('1994-06-22'),
+    batting_style: "Right-hand",
+    bowling_style: "Right-arm Spin",
+    player_role: "Batsman",
+    jersey_number: 33
+  }
 ];
 
 export const team_players: TeamPlayer[] = [
@@ -586,6 +691,12 @@ export const team_players: TeamPlayer[] = [
     batting_order: index % 12 + 1,
     bowling_order: player.bowling_order ?? undefined,
   }))),
+  ...(players.slice(49, 60).map((player, index) => ({
+    team_id: 5,
+    player_id: player.player_id,
+    batting_order: index % 12 + 1,
+    bowling_order: player.bowling_order ?? undefined,
+  })))
 ];
 
 export const tournaments: Tournament[] = [
