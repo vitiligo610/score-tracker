@@ -1,4 +1,10 @@
-import { Player, Series, Team, TeamPlayer, Tournament } from "@/lib/definitons";
+import {
+  Player,
+  Series,
+  Team,
+  TeamPlayer,
+  Tournament,
+} from "@/lib/definitions";
 
 export const teams: Team[] = [
   {
@@ -462,7 +468,7 @@ export const players: Player[] = [
     player_id: 41,
     first_name: "Tom",
     last_name: "Latham",
-    date_of_birth: new Date('1992-04-02'),
+    date_of_birth: new Date("1992-04-02"),
     batting_style: "Left-hand",
     bowling_style: "None",
     player_role: "Wicket-keeper",
@@ -473,7 +479,7 @@ export const players: Player[] = [
     player_id: 42,
     first_name: "Devon",
     last_name: "Conway",
-    date_of_birth: new Date('1991-07-08'),
+    date_of_birth: new Date("1991-07-08"),
     batting_style: "Left-hand",
     bowling_style: "Right-arm Medium",
     player_role: "Batsman",
@@ -483,7 +489,7 @@ export const players: Player[] = [
     player_id: 43,
     first_name: "Kyle",
     last_name: "Jamieson",
-    date_of_birth: new Date('1994-12-30'),
+    date_of_birth: new Date("1994-12-30"),
     batting_style: "Right-hand",
     bowling_style: "Right-arm Fast",
     player_role: "Bowler",
@@ -493,7 +499,7 @@ export const players: Player[] = [
     player_id: 44,
     first_name: "Mitchell",
     last_name: "Santner",
-    date_of_birth: new Date('1992-02-05'),
+    date_of_birth: new Date("1992-02-05"),
     batting_style: "Left-hand",
     bowling_style: "Left-arm Spin",
     player_role: "All-rounder",
@@ -503,7 +509,7 @@ export const players: Player[] = [
     player_id: 45,
     first_name: "Glenn",
     last_name: "Phillips",
-    date_of_birth: new Date('1996-12-06'),
+    date_of_birth: new Date("1996-12-06"),
     batting_style: "Right-hand",
     bowling_style: "Right-arm Spin",
     player_role: "Batsman",
@@ -513,7 +519,7 @@ export const players: Player[] = [
     player_id: 46,
     first_name: "Tim",
     last_name: "Southee",
-    date_of_birth: new Date('1988-12-11'),
+    date_of_birth: new Date("1988-12-11"),
     batting_style: "Right-hand",
     bowling_style: "Right-arm Fast",
     player_role: "Bowler",
@@ -523,7 +529,7 @@ export const players: Player[] = [
     player_id: 47,
     first_name: "Daryl",
     last_name: "Mitchell",
-    date_of_birth: new Date('1991-05-20'),
+    date_of_birth: new Date("1991-05-20"),
     batting_style: "Right-hand",
     bowling_style: "Right-arm Medium",
     player_role: "All-rounder",
@@ -533,7 +539,7 @@ export const players: Player[] = [
     player_id: 48,
     first_name: "Lockie",
     last_name: "Ferguson",
-    date_of_birth: new Date('1991-06-13'),
+    date_of_birth: new Date("1991-06-13"),
     batting_style: "Right-hand",
     bowling_style: "Right-arm Fast",
     player_role: "Bowler",
@@ -543,7 +549,7 @@ export const players: Player[] = [
     player_id: 49,
     first_name: "Henry",
     last_name: "Nicholls",
-    date_of_birth: new Date('1991-11-15'),
+    date_of_birth: new Date("1991-11-15"),
     batting_style: "Left-hand",
     bowling_style: "Right-arm Medium",
     player_role: "Batsman",
@@ -553,7 +559,7 @@ export const players: Player[] = [
     player_id: 50,
     first_name: "Michael",
     last_name: "Bracewell",
-    date_of_birth: new Date('1991-02-14'),
+    date_of_birth: new Date("1991-02-14"),
     batting_style: "Left-hand",
     bowling_style: "Right-arm Spin",
     player_role: "All-rounder",
@@ -564,10 +570,10 @@ export const players: Player[] = [
     player_id: 51,
     first_name: "Kane",
     last_name: "Richardson",
-    date_of_birth: new Date('1991-02-12'),
+    date_of_birth: new Date("1991-02-12"),
     batting_style: "Right-hand",
     bowling_style: "Right-arm Fast",
-    player_role: "Bowler", 
+    player_role: "Bowler",
     jersey_number: 55,
     bowling_order: 2,
   },
@@ -575,7 +581,7 @@ export const players: Player[] = [
     player_id: 52,
     first_name: "Marcus",
     last_name: "Stoinis",
-    date_of_birth: new Date('1989-08-16'),
+    date_of_birth: new Date("1989-08-16"),
     batting_style: "Right-hand",
     bowling_style: "Right-arm Medium",
     player_role: "All-rounder",
@@ -584,9 +590,9 @@ export const players: Player[] = [
   },
   {
     player_id: 53,
-    first_name: "Glenn", 
+    first_name: "Glenn",
     last_name: "Maxwell",
-    date_of_birth: new Date('1988-10-14'),
+    date_of_birth: new Date("1988-10-14"),
     batting_style: "Right-hand",
     bowling_style: "Right-arm Fast",
     player_role: "All-rounder",
@@ -597,7 +603,7 @@ export const players: Player[] = [
     player_id: 54,
     first_name: "Alex",
     last_name: "Carey",
-    date_of_birth: new Date('1991-08-27'),
+    date_of_birth: new Date("1991-08-27"),
     batting_style: "Left-hand",
     bowling_style: "None",
     player_role: "Wicket-keeper",
@@ -608,95 +614,95 @@ export const players: Player[] = [
     player_id: 55,
     first_name: "Josh",
     last_name: "Hazlewood",
-    date_of_birth: new Date('1991-01-08'),
+    date_of_birth: new Date("1991-01-08"),
     batting_style: "Left-hand",
     bowling_style: "Right-arm Fast",
     player_role: "Bowler",
-    jersey_number: 38
+    jersey_number: 38,
   },
   {
     player_id: 56,
     first_name: "Mitchell",
     last_name: "Starc",
-    date_of_birth: new Date('1990-01-30'),
+    date_of_birth: new Date("1990-01-30"),
     batting_style: "Left-hand",
     bowling_style: "Left-arm Fast",
     player_role: "Bowler",
-    jersey_number: 56
+    jersey_number: 56,
   },
   {
     player_id: 57,
     first_name: "Pat",
     last_name: "Cummins",
-    date_of_birth: new Date('1993-05-08'),
+    date_of_birth: new Date("1993-05-08"),
     batting_style: "Right-hand",
     bowling_style: "Right-arm Fast",
     player_role: "Bowler",
-    jersey_number: 30
+    jersey_number: 30,
   },
   {
     player_id: 58,
     first_name: "Steve",
     last_name: "Smith",
-    date_of_birth: new Date('1989-06-02'),
+    date_of_birth: new Date("1989-06-02"),
     batting_style: "Right-hand",
     bowling_style: "Right-arm Fast",
     player_role: "Batsman",
-    jersey_number: 49
+    jersey_number: 49,
   },
   {
     player_id: 59,
     first_name: "David",
     last_name: "Warner",
-    date_of_birth: new Date('1986-10-27'),
+    date_of_birth: new Date("1986-10-27"),
     batting_style: "Left-hand",
     bowling_style: "Right-arm Spin",
     player_role: "Batsman",
-    jersey_number: 31
+    jersey_number: 31,
   },
   {
     player_id: 60,
     first_name: "Marnus",
     last_name: "Labuschagne",
-    date_of_birth: new Date('1994-06-22'),
+    date_of_birth: new Date("1994-06-22"),
     batting_style: "Right-hand",
     bowling_style: "Right-arm Spin",
     player_role: "Batsman",
-    jersey_number: 33
-  }
+    jersey_number: 33,
+  },
 ];
 
 export const team_players: TeamPlayer[] = [
-  ...(players.slice(0, 12).map((player, index) => ({ 
-    team_id: 1, 
+  ...players.slice(0, 12).map((player, index) => ({
+    team_id: 1,
     player_id: player.player_id,
-    batting_order: index % 12 + 1,
+    batting_order: (index % 12) + 1,
     bowling_order: player.bowling_order ?? undefined,
-  }))),
-  ...(players.slice(12, 24).map((player, index) => ({ 
-    team_id: 2, 
+  })),
+  ...players.slice(12, 24).map((player, index) => ({
+    team_id: 2,
     player_id: player.player_id,
-    batting_order: index % 12 + 1,
+    batting_order: (index % 12) + 1,
     bowling_order: player.bowling_order ?? undefined,
-  }))),
-  ...(players.slice(24, 36).map((player, index) => ({ 
-    team_id: 3, 
+  })),
+  ...players.slice(24, 36).map((player, index) => ({
+    team_id: 3,
     player_id: player.player_id,
-    batting_order: index % 12 + 1,
+    batting_order: (index % 12) + 1,
     bowling_order: player.bowling_order ?? undefined,
-  }))),
-  ...(players.slice(36, 48).map((player, index) => ({ 
-    team_id: 4, 
+  })),
+  ...players.slice(36, 48).map((player, index) => ({
+    team_id: 4,
     player_id: player.player_id,
-    batting_order: index % 12 + 1,
+    batting_order: (index % 12) + 1,
     bowling_order: player.bowling_order ?? undefined,
-  }))),
-  ...(players.slice(49, 60).map((player, index) => ({
+  })),
+  ...players.slice(49, 60).map((player, index) => ({
     team_id: 5,
     player_id: player.player_id,
-    batting_order: index % 12 + 1,
+    batting_order: (index % 12) + 1,
     bowling_order: player.bowling_order ?? undefined,
-  })))
+  })),
 ];
 
 export const tournaments: Tournament[] = [
@@ -734,7 +740,7 @@ export const series: Series[] = [
     locations: ["Melbourne Cricket Ground", "Sydney Cricket Ground"],
     team_ids: [1, 2],
     total_rounds: 3,
-    type: "bilateral"
+    type: "bilateral",
   },
   {
     series_id: 2,
@@ -742,9 +748,13 @@ export const series: Series[] = [
     start_date: new Date("2024-11-01"),
     end_date: new Date("2024-12-20"),
     format: "ODI",
-    locations: ["Dubai International Stadium", "Sharjah Cricket Stadium", "Abu Dhabi Cricket Stadium"],
+    locations: [
+      "Dubai International Stadium",
+      "Sharjah Cricket Stadium",
+      "Abu Dhabi Cricket Stadium",
+    ],
     team_ids: [2, 3, 4],
     total_rounds: 2,
-    type: "trilateral"
-  }
+    type: "trilateral",
+  },
 ];

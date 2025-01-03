@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 const Series = async ({
   searchParams,
 }: {
-  searchParams: { filter?: string };
+  searchParams: Promise<{ filter?: string }>;
 }) => {
   const params = await searchParams;
 

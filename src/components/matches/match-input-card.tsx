@@ -12,7 +12,12 @@ import {
   OVERS_FOR_FORMAT,
   TOTAL_WICKETS,
 } from "@/lib/constants";
-import { Ball, CurrentBall, DismissalType, ExtrasType } from "@/lib/definitons";
+import {
+  Ball,
+  CurrentBall,
+  DismissalType,
+  ExtrasType,
+} from "@/lib/definitions";
 import { cn, getBattingTeamId, getBowlingTeamId } from "@/lib/utils";
 import { Check, Loader } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -378,7 +383,11 @@ const MatchInputCard = () => {
               ? getBattingTeamId(match.innings, match.team1, match.team2)
               : getBowlingTeamId(match.innings, match.team1, match.team2);
 
-          await setMatchToComplete(match.match_id, winningTeamId, Boolean(match.tournament_name));
+          await setMatchToComplete(
+            match.match_id,
+            winningTeamId,
+            Boolean(match.tournament_name)
+          );
         } else {
           await insertInningsForMatch(
             match.match_id,
@@ -413,7 +422,11 @@ const MatchInputCard = () => {
               ? getBowlingTeamId(match.innings, match.team1, match.team2)
               : getBattingTeamId(match.innings, match.team1, match.team2);
 
-          await setMatchToComplete(match.match_id, winningTeamId, Boolean(match.tournament_name));
+          await setMatchToComplete(
+            match.match_id,
+            winningTeamId,
+            Boolean(match.tournament_name)
+          );
         }
       }
 

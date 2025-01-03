@@ -1,4 +1,4 @@
-import { Match, Tournament } from "@/lib/definitons";
+import { Match, Tournament } from "@/lib/definitions";
 import {
   getExpectedMatchesForRound,
   generatePlaceholderMatches,

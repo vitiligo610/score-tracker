@@ -1,4 +1,4 @@
-import { InningsDismissalsStats, Over } from "@/lib/definitons";
+import { InningsDismissalsStats, Over } from "@/lib/definitions";
 import { RunsProgressionChart } from "./runs-progression-chart";
 import { RunsPerOverChart } from "./runs-per-over-chart";
 import { DismissalTypesChart } from "./dismissal-types-chart";
@@ -15,18 +15,18 @@ const InningsCharts = ({ overs, dismissals }: InningsChartsProps) => {
     wickets: over.total_wickets,
   }));
 
-  console.log("overs and dismissals are: ", overs, dismissals);
-
   const dismissalTypes = dismissals?.players?.reduce((acc, dismissal) => {
     const type = dismissal.type;
     acc[type] = (acc[type] || 0) + 1;
     return acc;
   }, {} as Record<string, number>);
 
-  const dismissalTypesData = dismissals ? Object.entries(dismissalTypes).map(([type, count]) => ({
-    type,
-    count,
-  })) : null;
+  const dismissalTypesData = dismissals
+    ? Object.entries(dismissalTypes).map(([type, count]) => ({
+        type,
+        count,
+      }))
+    : null;
 
   return (
     <div className="space-y-8 mt-8">
@@ -36,10 +36,12 @@ const InningsCharts = ({ overs, dismissals }: InningsChartsProps) => {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
         <RunsProgressionChart data={runsPerOverData} />
         <RunsPerOverChart data={runsPerOverData} />
-        {dismissals && dismissalTypesData && <DismissalTypesChart data={dismissalTypesData} />}
+        {dismissals && dismissalTypesData && (
+          <DismissalTypesChart data={dismissalTypesData} />
+        )}
       </div>
     </div>
-  )
-}
+  );
+};
 
 export default InningsCharts;

@@ -1,8 +1,15 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { DismissalTypeData } from "@/lib/definitons";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+import { DismissalTypeData } from "@/lib/definitions";
 
 interface DismissalTypesChartProps {
   data: DismissalTypeData[];

@@ -1,4 +1,4 @@
-import { Ball, OngoingMatch } from "@/lib/definitons";
+import { Ball, OngoingMatch } from "@/lib/definitions";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -83,8 +83,8 @@ const InningsEndDialog = ({
                     <Separator className="my-2 mb-4" />
                     {innings.total_runs >= target! ? (
                       <p className="text-primary">
-                        <span className="font-semibold">{battingTeamName}</span> won by {10 - innings.total_wickets}{" "}
-                        wickets
+                        <span className="font-semibold">{battingTeamName}</span>{" "}
+                        won by {10 - innings.total_wickets} wickets
                       </p>
                     ) : (
                       <p className="text-primary">

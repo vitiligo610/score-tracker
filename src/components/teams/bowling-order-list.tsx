@@ -17,7 +17,7 @@ import {
 } from "@dnd-kit/sortable";
 import { useState } from "react";
 import SortablePlayerCard from "@/components/teams/sortable-player-card";
-import { PlayerWithTeam } from "@/lib/definitons";
+import { PlayerWithTeam } from "@/lib/definitions";
 import { updateTeamBowlingOrder } from "@/lib/actions";
 import { useToast } from "@/hooks/use-toast";
 import { SelectBowlersDialog } from "./select-bowlers-dialog";

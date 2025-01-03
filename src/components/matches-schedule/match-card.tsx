@@ -1,6 +1,6 @@
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Match } from "@/lib/definitons";
+import { Match } from "@/lib/definitions";
 import EditMatchDialog from "@/components/matches-schedule/edit-match-dialog";
 import MatchStatusBadge from "@/components/matches-schedule/match-status-badge";
 import { Activity, CalendarDays, MapPin, PlayIcon } from "lucide-react";
@@ -24,9 +24,7 @@ const MatchCard = ({
 }: MatchCardProps) => {
   const isTBD = !match.team1?.team_id && !match.team2?.team_id;
   const canStart =
-    match.status !== "tbd" &&
-    match.team1?.team_id &&
-    match.team2?.team_id;
+    match.status !== "tbd" && match.team1?.team_id && match.team2?.team_id;
 
   const getButtonLabel = (status: string) => {
     switch (status) {
@@ -38,7 +36,7 @@ const MatchCard = ({
       default:
         return "Show Match Summary";
     }
-  }
+  };
 
   return (
     <Card className="relative hover:shadow-lg transition-all">

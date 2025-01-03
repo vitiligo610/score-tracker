@@ -1,4 +1,4 @@
-import { Match } from "@/lib/definitons";
+import { Match } from "@/lib/definitions";
 import SummaryHeader from "./summary-header";
 import InningsTab from "./innings-tab";
 
@@ -7,7 +7,6 @@ interface MatchSummaryProps {
 }
 
 const MatchSummary = ({ match }: MatchSummaryProps) => {
-
   return (
     <div className="space-y-6">
       <SummaryHeader

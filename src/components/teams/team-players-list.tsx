@@ -6,7 +6,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { PlayerWithTeam } from "@/lib/definitons";
+import { PlayerWithTeam } from "@/lib/definitions";
 import TeamCaptainDialog from "@/components/teams/team-captain-dialog";
 
 interface TeamPlayersListProps {
@@ -52,7 +52,9 @@ const TeamPlayersList = ({
             <CarouselNext />
           </Carousel>
         ) : (
-          <h1 className="text-center text-muted-foreground mt-12">No players added yet!</h1>
+          <h1 className="text-center text-muted-foreground mt-12">
+            No players added yet!
+          </h1>
         )}
       </div>
     </div>

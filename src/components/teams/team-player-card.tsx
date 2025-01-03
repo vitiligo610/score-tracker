@@ -1,7 +1,13 @@
-import { PlayerWithTeam } from "@/lib/definitons";
+import { PlayerWithTeam } from "@/lib/definitions";
 import RemovePlayerButton from "@/components/teams/remove-player-button";
 
-const TeamPlayerCard = ({ player, isCaptain }: { player: PlayerWithTeam; isCaptain?: boolean }) => {
+const TeamPlayerCard = ({
+  player,
+  isCaptain,
+}: {
+  player: PlayerWithTeam;
+  isCaptain?: boolean;
+}) => {
   return (
     <div
       key={player.player_id}

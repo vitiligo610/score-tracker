@@ -1,13 +1,8 @@
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Series } from "@/lib/definitons";
+import { Series } from "@/lib/definitions";
 import { format } from "date-fns";
-import {
-  CalendarIcon,
-  Crosshair,
-  MapPinIcon,
-  UsersIcon
-} from "lucide-react";
+import { CalendarIcon, Crosshair, MapPinIcon, UsersIcon } from "lucide-react";
 import Link from "next/link";
 
 interface SeriesCardProps {

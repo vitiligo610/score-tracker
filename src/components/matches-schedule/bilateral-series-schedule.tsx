@@ -1,4 +1,4 @@
-import { Series, SeriesMatch } from "@/lib/definitons";
+import { Series, SeriesMatch } from "@/lib/definitions";
 import MatchCard from "@/components/matches-schedule/match-card";
 
 interface BilateralSeriesScheduleProps {

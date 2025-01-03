@@ -17,7 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { PlayerWithTeam } from "@/lib/definitons";
+import { PlayerWithTeam } from "@/lib/definitions";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { updateTeamCaptain } from "@/lib/actions";

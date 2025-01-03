@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CalendarIcon, MapPinIcon, UsersIcon } from "lucide-react";
 import { format } from "date-fns";
-import { Tournament } from "@/lib/definitons";
+import { Tournament } from "@/lib/definitions";
 import Link from "next/link";
 
 interface TournamentCardProps {

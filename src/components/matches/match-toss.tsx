@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Match } from "@/lib/definitons";
+import { Match } from "@/lib/definitions";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";

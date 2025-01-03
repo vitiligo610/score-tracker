@@ -1,7 +1,12 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { Team } from "@/lib/definitons";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@/components/ui/card";
+import { Team } from "@/lib/definitions";
 import { Building2, CalendarRange, EditIcon, TrashIcon } from "lucide-react";
 import TeamFormDialog from "./team-form-dialog";
 import DeleteTeamButton from "./delete-team-button";
@@ -16,7 +21,10 @@ const TeamInfo = ({ team }: TeamInfoProps) => {
     <Card className="group overflow-hidden transition-all duration-300 hover:shadow-lg">
       <CardHeader className="border-b">
         <div className="">
-          <Link href={`/teams/${team.team_id}`} className="text-primary transition-all hover:text-primary/90">
+          <Link
+            href={`/teams/${team.team_id}`}
+            className="text-primary transition-all hover:text-primary/90"
+          >
             <h3 className="text-3xl font-bold mb-2">{team.name}</h3>
           </Link>
           <div className="flex items-center space-x-2">
@@ -27,13 +35,11 @@ const TeamInfo = ({ team }: TeamInfoProps) => {
           </div>
         </div>
       </CardHeader>
-      
+
       <CardContent className="pt-6 min-h-24">
         <div className="flex items-start space-x-4">
           <Building2 className="w-5 h-5 text-primary mt-1" />
-          <p className="text-sm">
-            {team.description}
-          </p>
+          <p className="text-sm">{team.description}</p>
         </div>
       </CardContent>
 
@@ -47,6 +53,6 @@ const TeamInfo = ({ team }: TeamInfoProps) => {
       </CardFooter>
     </Card>
   );
-}
+};
 
 export default TeamInfo;

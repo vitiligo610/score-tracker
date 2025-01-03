@@ -11,13 +11,13 @@ import BackLink from "@/components/ui/back-link";
 const Players = async ({
   searchParams
 }: {
-  searchParams?: {
+  searchParams?: Promise<{
     query?: string;
     page?: number;
     role?: string[];
     batting?: string[];
     bowling?: string[];
-  }
+  }>
 }) => {
   const params = await searchParams;
   const searchQuery = params?.query || "";

@@ -9,6 +9,12 @@ import {
   EXTRAS_TYPES,
 } from "@/lib/constants";
 
+export interface PageIdProps {
+  params: Promise<{
+    id: number;
+  }>
+};
+
 export type Team = {
   team_id: number;
   name: string;

@@ -1,8 +1,17 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import { RunsPerOverData } from "@/lib/definitons";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+import { RunsPerOverData } from "@/lib/definitions";
 
 interface RunsProgressionChartProps {
   data: RunsPerOverData[];
@@ -28,7 +37,7 @@ export function RunsProgressionChart({ data }: RunsProgressionChartProps) {
       </CardHeader>
       <CardContent className="h-[400px]">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={progressionData} >
+          <LineChart data={progressionData}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
             <XAxis
               dataKey="over"

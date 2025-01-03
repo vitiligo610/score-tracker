@@ -1,6 +1,15 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { Tournament, Series, Match, Extras, ExtrasCount, Ball, OngoingInnings, Team } from "@/lib/definitons";
+import {
+  Tournament,
+  Series,
+  Match,
+  Extras,
+  ExtrasCount,
+  Ball,
+  OngoingInnings,
+  Team,
+} from "@/lib/definitions";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -33,14 +42,12 @@ export const toOrdinal = (number: number) => {
     default:
       return `${number}th`;
   }
-}
+};
 
 export const getTransformedMatch = (match: any) => {
   const cleanedMatch = Object.fromEntries(
     Object.entries(match).filter(
-      ([key]) =>
-        !key.startsWith("team1_") &&
-        !key.startsWith("team2_")
+      ([key]) => !key.startsWith("team1_") && !key.startsWith("team2_")
     )
   );
 
@@ -67,7 +74,11 @@ export const getTransformedMatch = (match: any) => {
   };
 };
 
-export const getMatchDetails = (match: any, extrasCount?: ExtrasCount, balls?: Ball[]): any => {
+export const getMatchDetails = (
+  match: any,
+  extrasCount?: ExtrasCount,
+  balls?: Ball[]
+): any => {
   const transformedMatch = getTransformedMatch(match);
   return {
     ...transformedMatch,
@@ -94,9 +105,9 @@ export const getMatchDetails = (match: any, extrasCount?: ExtrasCount, balls?: B
       total_runs: match.over_total_runs,
       total_wickets: match.over_total_wickets,
       balls: balls ? balls : [],
-    }
-  }
-}
+    },
+  };
+};
 
 // Calculate the number of matches expected for a specific round
 export const getExpectedMatchesForRound = (
@@ -146,7 +157,7 @@ export const getCurrentRunRate = (runs: number, balls: number) => {
 export const getRunRateByOver = (runs: number, overs: number) => {
   if (overs === 0) return (0).toFixed(1);
   return (runs / overs).toFixed(1);
-}
+};
 
 export const getRequiredRunRate = (runsNeeded: number, oversLeft: number) => {
   if (oversLeft === 0) return (0).toFixed(2);
@@ -155,13 +166,13 @@ export const getRequiredRunRate = (runsNeeded: number, oversLeft: number) => {
 
 export const getStrikeRate = (runsScored: number, ballsFaced: number) => {
   if (ballsFaced == 0) return 0;
-  return (runsScored / ballsFaced * 100);
-}
+  return (runsScored / ballsFaced) * 100;
+};
 
 export const getEconomyRate = (runsConceded: number, oversBowled: number) => {
   if (oversBowled == 0) return 0;
   return runsConceded / oversBowled;
-}
+};
 
 export const getTotalOversOfFormat = (format?: string) => {
   switch (format) {
@@ -172,9 +183,12 @@ export const getTotalOversOfFormat = (format?: string) => {
     default:
       return 0;
   }
-}
+};
 
-export const updateBowlerOvers = (oversBowled: number, incrementByOne: boolean) => {
+export const updateBowlerOvers = (
+  oversBowled: number,
+  incrementByOne: boolean
+) => {
   let newOvers = oversBowled;
 
   if (incrementByOne) {
@@ -193,41 +207,48 @@ export const updateBowlerOvers = (oversBowled: number, incrementByOne: boolean) 
   return newOvers;
 };
 
-
 export const formatNumber = (number: any, fractionDigits: number = 1) => {
   return number ? Number(number).toFixed(1) : (0).toFixed(fractionDigits);
-}
+};
 
 export const getExtrasDetails = (extras: Extras[]) => {
-  const nb = extras.filter(extra => extra.type === "No Ball").length;
-  const wd = extras.filter(extra => extra.type === "Wide").length;
-  const b = extras.filter(extra => extra.type === "Bye").length;
-  const lb = extras.filter(extra => extra.type === "Leg Bye").length;
-  const p = extras.filter(extra => extra.type === "Penalty").length;
+  const nb = extras.filter((extra) => extra.type === "No Ball").length;
+  const wd = extras.filter((extra) => extra.type === "Wide").length;
+  const b = extras.filter((extra) => extra.type === "Bye").length;
+  const lb = extras.filter((extra) => extra.type === "Leg Bye").length;
+  const p = extras.filter((extra) => extra.type === "Penalty").length;
 
   return `${nb}nb ${wd}wd ${b}b ${lb}lb ${p}p`;
-}
-
-export const getBattingTeamName = (innings: OngoingInnings, team1: Team, team2: Team) => {
-  return innings.team_id === team1.team_id
-    ? team1.name
-    : team2.name;
 };
 
-export const getBowlingTeamName = (innings: OngoingInnings, team1: Team, team2: Team) => {
-  return innings.team_id !== team1.team_id
-    ? team1.name
-    : team2.name;
+export const getBattingTeamName = (
+  innings: OngoingInnings,
+  team1: Team,
+  team2: Team
+) => {
+  return innings.team_id === team1.team_id ? team1.name : team2.name;
 };
 
-export const getBattingTeamId = (innings: OngoingInnings, team1: Team, team2: Team) => {
-  return innings.team_id === team1.team_id
-  ? team1.team_id
-  : team2.team_id;
+export const getBowlingTeamName = (
+  innings: OngoingInnings,
+  team1: Team,
+  team2: Team
+) => {
+  return innings.team_id !== team1.team_id ? team1.name : team2.name;
 };
 
-export const getBowlingTeamId = (innings: OngoingInnings, team1: Team, team2: Team) => {
-  return innings.team_id !== team1.team_id
-    ? team1.team_id
-    : team2.team_id;
+export const getBattingTeamId = (
+  innings: OngoingInnings,
+  team1: Team,
+  team2: Team
+) => {
+  return innings.team_id === team1.team_id ? team1.team_id : team2.team_id;
+};
+
+export const getBowlingTeamId = (
+  innings: OngoingInnings,
+  team1: Team,
+  team2: Team
+) => {
+  return innings.team_id !== team1.team_id ? team1.team_id : team2.team_id;
 };

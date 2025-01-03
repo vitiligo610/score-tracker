@@ -15,10 +15,10 @@ export const metadata: Metadata = {
 const Teams = async ({
   searchParams
 }: {
-  searchParams?: {
+  searchParams?: Promise<{
     query?: string;
     page?: number;
-  }
+  }>
 }) => {
   const params = await searchParams;
   const searchQuery = params?.query || "";

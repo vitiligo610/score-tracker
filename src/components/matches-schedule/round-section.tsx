@@ -1,4 +1,4 @@
-import { Match } from "@/lib/definitons";
+import { Match } from "@/lib/definitions";
 import MatchCard from "@/components/matches-schedule/match-card";
 
 interface RoundSectionProps {

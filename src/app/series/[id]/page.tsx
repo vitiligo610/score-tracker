@@ -6,20 +6,14 @@ import CompetitionSkeleton from "@/components/ui/skeletons/competition-skeleton"
 import {
   fetchSeriesById,
   fetchSeriesMatches,
-  fetchSeriesNameById
+  fetchSeriesNameById,
 } from "@/lib/actions";
+import { PageIdProps } from "@/lib/definitions";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
-interface Props {
-  params: {
-    id: string;
-  };
-}
-
-export const generateMetadata = async ({ params }: Props) => {
-  const p = await params;
-  const series_id = Number(p.id);
+export const generateMetadata = async ({ params }: PageIdProps) => {
+  const series_id = (await params).id;
 
   const name = await fetchSeriesNameById(series_id);
 
@@ -28,9 +22,9 @@ export const generateMetadata = async ({ params }: Props) => {
   };
 };
 
-const SeriesPage = async ({ params }: Props) => {
-  const p = await params;
-  const series_id = Number(p.id);
+const SeriesPage = async ({ params }: PageIdProps) => {
+  const series_id = (await params).id;
+
   const { series } = await fetchSeriesById(series_id);
   const { matches } = await fetchSeriesMatches(series_id);
 
@@ -48,12 +42,16 @@ const SeriesPage = async ({ params }: Props) => {
             </span>
             <h1 className="text-4xl font-bold text-primary">{series.name}</h1>
           </div>
-          {series.type === "bilateral" ? <div>
-            <SeriesScore series_id={series_id} />
-          </div> : <SeriesPointsTable series_id={series_id} />}
+          {series.type === "bilateral" ? (
+            <div>
+              <SeriesScore series_id={series_id} />
+            </div>
+          ) : (
+            <SeriesPointsTable series_id={series_id} />
+          )}
         </div>
         {series.type === "bilateral" ? (
-            <BilateralSeriesSchedule series={series} matches={matches} />
+          <BilateralSeriesSchedule series={series} matches={matches} />
         ) : (
           <TrilateralSeriesSchedule series={series} matches={matches} />
         )}

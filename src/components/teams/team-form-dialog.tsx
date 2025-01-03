@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { insertTeam, updateTeam } from "@/lib/actions";
-import { Team } from "@/lib/definitons";
+import { Team } from "@/lib/definitions";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -155,7 +155,8 @@ const TeamFormDialog = ({ team, children }: TeamDialogProps) => {
             />
 
             <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting && <Loader className="animate-spin" />} {!team ? "Add" : "Update"} Team
+              {isSubmitting && <Loader className="animate-spin" />}{" "}
+              {!team ? "Add" : "Update"} Team
             </Button>
           </form>
         </Form>

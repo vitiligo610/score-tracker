@@ -4,7 +4,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Card } from "@/components/ui/card";
 import { GripVertical } from "lucide-react";
-import { PlayerWithTeam } from "@/lib/definitons";
+import { PlayerWithTeam } from "@/lib/definitions";
 import { cn } from "@/lib/utils";
 
 interface SortablePlayerCardProps {
@@ -14,7 +14,12 @@ interface SortablePlayerCardProps {
   context: "batting" | "bowling";
 }
 
-const SortablePlayerCard = ({ player, isCaptain, order, context }: SortablePlayerCardProps) => {
+const SortablePlayerCard = ({
+  player,
+  isCaptain,
+  order,
+  context,
+}: SortablePlayerCardProps) => {
   const {
     attributes,
     listeners,
@@ -51,7 +56,10 @@ const SortablePlayerCard = ({ player, isCaptain, order, context }: SortablePlaye
             {player.first_name} {player.last_name} {isCaptain && "(c)"}
           </div>
           <div className="text-sm text-muted-foreground">
-            {player.player_role} • {context === "batting" ? player.batting_style : player.bowling_style}
+            {player.player_role} •{" "}
+            {context === "batting"
+              ? player.batting_style
+              : player.bowling_style}
           </div>
         </div>
         <div className="text-sm text-muted-foreground">

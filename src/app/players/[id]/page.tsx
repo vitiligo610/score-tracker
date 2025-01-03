@@ -4,23 +4,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { fetchPlayerCareerStats, fetchPlayerPerformances } from "@/lib/actions";
 import { Metadata } from "next";
 import { PerformanceCharts } from "@/components/player-stats/performance-charts";
+import { PageIdProps } from "@/lib/definitions";
 
 export const metadata: Metadata = {
-  title: "Match",
+  title: "Player",
 };
 
-interface Props {
-  params: {
-    id: number;
-  }
-};
-
-const PlayerPage = async ({ params }: Props) => {
-  const p = await params;
-  const player_id = p.id;
+const PlayerPage = async ({ params }: PageIdProps) => {
+  const player_id = (await params).id;
   const { player, stats } = await fetchPlayerCareerStats(player_id);
-  const { battingPerformances, bowlingPerformances } = await fetchPlayerPerformances(player_id);
-
+  const { battingPerformances, bowlingPerformances } =
+    await fetchPlayerPerformances(player_id);
 
   return (
     <div className="container mx-auto py-10">
@@ -42,7 +36,7 @@ const PlayerPage = async ({ params }: Props) => {
         </TabsContent>
       </Tabs>
     </div>
-  )
-}
+  );
+};
 
 export default PlayerPage;

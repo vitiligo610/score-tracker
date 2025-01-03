@@ -1,4 +1,4 @@
-import { InningsBattingStats } from "@/lib/definitons";
+import { InningsBattingStats } from "@/lib/definitions";
 import {
   Table,
   TableBody,
@@ -53,7 +53,9 @@ const BatsmenTable = ({ stats }: BatsmenTableProps) => {
                     </p>
                   ) : (
                     stats.onCrease.includes(player.player_id) && (
-                      <p className="text-xs font-light text-muted-foreground">Not Out</p>
+                      <p className="text-xs font-light text-muted-foreground">
+                        Not Out
+                      </p>
                     )
                   )}
                 </div>
@@ -89,7 +91,14 @@ const BatsmenTable = ({ stats }: BatsmenTableProps) => {
         <TableFooter>
           <TableRow className="text-xs text-muted-foreground">
             <TableCell colSpan={5} className="p-4">
-              <span className="text-primary text-sm mr-4 font-semibold">Extras</span> {`${stats.extras?.nb_count || 0}nb ${stats.extras?.wd_count || 0}wd ${stats.extras?.b_count || 0}b ${stats.extras?.lb_count || 0}lb ${stats.extras?.p_count || 0}p`}
+              <span className="text-primary text-sm mr-4 font-semibold">
+                Extras
+              </span>{" "}
+              {`${stats.extras?.nb_count || 0}nb ${
+                stats.extras?.wd_count || 0
+              }wd ${stats.extras?.b_count || 0}b ${
+                stats.extras?.lb_count || 0
+              }lb ${stats.extras?.p_count || 0}p`}
             </TableCell>
             <TableCell className="text-right text-sm font-bold pr-4 text-primary">
               {stats.extras?.total_count || 0}

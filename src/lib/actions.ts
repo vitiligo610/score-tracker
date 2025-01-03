@@ -31,7 +31,7 @@ import {
   Tournament,
   TournamentMatch,
   TournamentWithoutId,
-} from "@/lib/definitons";
+} from "@/lib/definitions";
 import { getMatchDetails, getTransformedMatch } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 

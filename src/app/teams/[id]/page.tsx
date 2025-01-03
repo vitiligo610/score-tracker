@@ -7,17 +7,11 @@ import {
   fetchTeamNameById,
   fetchTeamPlayers,
 } from "@/lib/actions";
+import { PageIdProps } from "@/lib/definitions";
 import { notFound } from "next/navigation";
 
-interface Props {
-  params: {
-    id: string;
-  };
-}
-
-export const generateMetadata = async ({ params }: Props) => {
-  const p = await params;
-  const team_id = Number(p.id);
+export const generateMetadata = async ({ params }: PageIdProps) => {
+  const team_id = (await params).id;
 
   const name = await fetchTeamNameById(team_id);
 
@@ -26,13 +20,11 @@ export const generateMetadata = async ({ params }: Props) => {
   };
 };
 
-const TeamPage = async ({ params }: Props) => {
-  const p = await params;
-  const { id } = p;
-  const team_id = Number(id);
+const TeamPage = async ({ params }: PageIdProps) => {
+  const team_id = (await params).id;
   const { team } = await fetchTeamById(team_id);
   const { teamPlayers } = await fetchTeamPlayers(team_id);
-  const bowlers = teamPlayers.filter(player => player.bowling_order);
+  const bowlers = teamPlayers.filter((player) => player.bowling_order);
 
   if (!team) {
     notFound();
@@ -60,7 +52,9 @@ const TeamPage = async ({ params }: Props) => {
       {teamPlayers.length > 0 && (
         <div
           className="flex flex-col md:flex-row gap-8"
-          key={`${team_id}-${teamPlayers.length}-${bowlers.map(p => p.player_id).join("")}`}
+          key={`${team_id}-${teamPlayers.length}-${bowlers
+            .map((p) => p.player_id)
+            .join("")}`}
         >
           <BattingOrderList
             players={teamPlayers}

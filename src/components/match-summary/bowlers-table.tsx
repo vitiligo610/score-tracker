@@ -1,4 +1,4 @@
-import { InningsBowlingStats } from "@/lib/definitons";
+import { InningsBowlingStats } from "@/lib/definitions";
 import {
   Table,
   TableBody,
@@ -30,20 +30,32 @@ const BowlersTable = ({ stats }: BowlersTableProps) => {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {stats.players.map(player =>
+          {stats.players.map((player) => (
             <TableRow key={player.player_id}>
-              <TableCell className="font-semibold">{player.player_name}</TableCell>
-              <TableCell className="font-semibold">{player.overs_bowled}</TableCell>
-              <TableCell className="font-semibold">{player.maiden_overs}</TableCell>
-              <TableCell className="font-semibold">{player.runs_conceded}</TableCell>
-              <TableCell className="font-semibold">{player.wickets_taken}</TableCell>
-              <TableCell className="font-semibold">{player.economy_rate}</TableCell>
+              <TableCell className="font-semibold">
+                {player.player_name}
+              </TableCell>
+              <TableCell className="font-semibold">
+                {player.overs_bowled}
+              </TableCell>
+              <TableCell className="font-semibold">
+                {player.maiden_overs}
+              </TableCell>
+              <TableCell className="font-semibold">
+                {player.runs_conceded}
+              </TableCell>
+              <TableCell className="font-semibold">
+                {player.wickets_taken}
+              </TableCell>
+              <TableCell className="font-semibold">
+                {player.economy_rate}
+              </TableCell>
             </TableRow>
-          )}
+          ))}
         </TableBody>
       </Table>
     </div>
   );
-}
+};
 
 export default BowlersTable;

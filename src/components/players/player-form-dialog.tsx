@@ -27,7 +27,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { insertPlayer, updatePlayer } from "@/lib/actions";
 import { BATTING_STYLES, BOWLING_STYLES, PLAYER_ROLES } from "@/lib/constants";
-import { Player } from "@/lib/definitons";
+import { Player } from "@/lib/definitions";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { format } from "date-fns";
 import { Loader, UserRound } from "lucide-react";

@@ -17,7 +17,7 @@ import {
 } from "@dnd-kit/sortable";
 import { useState } from "react";
 import SortablePlayerCard from "@/components/teams/sortable-player-card";
-import { PlayerWithTeam } from "@/lib/definitons";
+import { PlayerWithTeam } from "@/lib/definitions";
 import { updateTeamBattingOrder } from "@/lib/actions";
 import { useToast } from "@/hooks/use-toast";
 
@@ -27,7 +27,11 @@ interface BattingOrderListProps {
   captainId?: number;
 }
 
-const BattingOrderList = ({ players, teamId, captainId }: BattingOrderListProps) => {
+const BattingOrderList = ({
+  players,
+  teamId,
+  captainId,
+}: BattingOrderListProps) => {
   const [sortedPlayers, setSortedPlayers] = useState(
     players.sort((a, b) => (a.batting_order || 0) - (b.batting_order || 0))
   );

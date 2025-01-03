@@ -21,7 +21,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Match } from "@/lib/definitons";
+import { Match } from "@/lib/definitions";
 import { useState } from "react";
 import { CalendarIcon, Loader } from "lucide-react";
 import { Label } from "@/components/ui/label";
@@ -104,9 +104,7 @@ const EditMatchDialog = ({
                   mode="single"
                   selected={date}
                   onSelect={setDate}
-                  disabled={(date) =>
-                    date < startDate || date > endDate
-                  }
+                  disabled={(date) => date < startDate || date > endDate}
                   fromDate={startDate}
                   toDate={endDate}
                   initialFocus
