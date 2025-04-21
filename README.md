@@ -1,4 +1,4 @@
-# DNS Resolver
+# CricScore - Cricket Score Tracker
 
 ## Getting Started
 
