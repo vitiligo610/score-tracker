@@ -19,7 +19,7 @@ const Tournaments = async ({
 
   return (
     <div className="container mx-auto pb-8 space-y-8">
-      <BackLink href="/" label="Home" />
+      <BackLink href="/home" label="Home" />
       <div className="w-full flex flex-col gap-4 md:flex-row justify-between items-start md:items-center">
         <h1 className="text-4xl lg:text-7xl text-primary font-bold">
           Tournaments

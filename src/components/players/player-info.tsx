@@ -44,7 +44,7 @@ export function PlayerInfo({ player }: PlayerInfoProps) {
             <User2 className="w-6 h-6 text-primary" />
           </div>
           <div>
-            <Link href={`/players/${player.player_id}`}>
+            <Link href={`/src/app/(protected)/players/${player.player_id}`}>
               <div className="flex items-center hover:text-primary transition-colors">
                 <h2 className="text-2xl font-bold">{`${player.first_name} ${player.last_name}`}</h2>
                 {getPlayerRoleIcon(player.player_role)}

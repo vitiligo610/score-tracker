@@ -1,15 +1,15 @@
-"use client";
-
 import { Trophy } from "lucide-react";
 import Link from "next/link";
 import { NavigationMenu, NavigationMenuItem, NavigationMenuLink, NavigationMenuList } from "@/components/ui/navigation-menu";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { withAuth, getSignInUrl, signOut } from "@workos-inc/authkit-nextjs";
+import { Button } from "@/components/ui/button";
 
 const navLinks = [
-  { href: "/", label: "Home" },
-  // { href: "/statistics", label: "Statistics" },
-  // { href: "", label: "About" },
+  { href: "/home", label: "Home" },
+  { href: "/series", label: "Series" },
+  { href: "/tournaments", label: "Tournaments" },
 ];
 
 const AboutDialog = () => (
@@ -25,7 +25,7 @@ const AboutDialog = () => (
     </DialogTrigger>
     <DialogContent>
       <DialogHeader>
-        <DialogTitle>CricScore - Database Systems Project</DialogTitle>
+        <DialogTitle>CricScore - Cloud Computing Project</DialogTitle>
       </DialogHeader>
       <div className="space-y-4">
         <p>
@@ -36,8 +36,8 @@ const AboutDialog = () => (
           <ul className="list-disc pl-4 space-y-1">
             <li>Ahmed Javed</li>
             <li>Abdul Rehman</li>
-            <li>Sabahat Ul Hasan</li>
-            <li>Capt. Awais</li>
+            <li>Mushaf Ali Meesum</li>
+            <li>Sibas Ayyub Khan</li>
           </ul>
         </div>
       </div>
@@ -45,7 +45,10 @@ const AboutDialog = () => (
   </Dialog>
 );
 
-export function Navbar() {
+export async function Navbar() {
+  const { user } = await withAuth();
+  const signInUrl = await getSignInUrl();
+
   return (
     <header className="px-16 border-b">
       <div className="container flex h-14 items-center">
@@ -57,7 +60,7 @@ export function Navbar() {
         </div>
         <NavigationMenu className="ml-auto">
           <NavigationMenuList>
-            {navLinks.map((link) => (
+            {(user ? navLinks : []).map((link) => (
               <NavigationMenuItem key={link.href}>
                 <Link href={link.href} legacyBehavior passHref>
                   <NavigationMenuLink
@@ -72,6 +75,20 @@ export function Navbar() {
             ))}
             <NavigationMenuItem>
               <AboutDialog />
+            </NavigationMenuItem>
+            <NavigationMenuItem>
+              {user ? (
+                <form action={async () => {
+                  "use server";
+                  await signOut({returnTo: "/"});
+                }}>
+                  <Button type="submit">Log out</Button>
+                </form>
+              ) : (
+                <Link href={signInUrl}>
+                  <Button>Login</Button>
+                </Link>
+              )}
             </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
