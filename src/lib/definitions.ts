@@ -11,18 +11,18 @@ import {
 
 export interface PageIdProps {
   params: Promise<{
-    id: number;
+    id: string;
   }>
 };
 
 export type Team = {
-  team_id: number;
+  team_id: string;
   name: string;
   logo_url?: string;
   founded_year: number;
   description: string;
   players_count?: number;
-  captain_id?: number;
+  captain_id?: string;
 };
 
 export type TeamWithoutId = Omit<Team, "team_id">;
@@ -32,7 +32,7 @@ type BowlingStyle = (typeof BOWLING_STYLES)[number];
 type PlayerRole = (typeof PLAYER_ROLES)[number];
 
 export type Player = {
-  player_id: number;
+  player_id: string;
   first_name: string;
   last_name: string;
   date_of_birth: Date;
@@ -48,11 +48,11 @@ export type Player = {
 export type PlayerWithoutId = Omit<Player, "player_id">;
 
 export interface PlayerWithTeam extends Player {
-  team_id: number;
+  team_id: string;
 }
 
 export interface MatchPlayer {
-  player_id: number;
+  player_id: string;
   name: string;
   first_name?: string;
   last_name?: string;
@@ -66,7 +66,7 @@ export interface MatchBatsman extends MatchPlayer {
   strike_rate: number;
   fours: number;
   sixes: number;
-  dismissal_id?: number | null;
+  dismissal_id?: string | null;
 }
 
 export interface MatchBowler extends MatchPlayer {
@@ -81,8 +81,8 @@ export interface MatchBowler extends MatchPlayer {
 }
 
 export interface TeamPlayer {
-  team_id: number;
-  player_id: number;
+  team_id: string;
+  player_id: string;
   batting_order?: number;
   bowling_order?: number;
 }
@@ -94,13 +94,13 @@ export type Match = {
   series_name?: any;
   match_id: number | string;
   match_date?: Date;
-  team1_id?: number;
-  team2_id?: number;
-  winner_team_id?: number;
+  team1_id?: string;
+  team2_id?: string;
+  winner_team_id?: string;
   location?: string;
   round: number;
   status: MatchStatus;
-  toss_winner_id?: number;
+  toss_winner_id?: string;
   toss_decision?: "batting" | "bowling";
   team1: Team | null;
   team2: Team | null;
@@ -112,7 +112,7 @@ export interface OngoingMatch extends Match {
   team2: Team;
   batsmen: MatchBatsman[];
   bowlers: BowlingTeamPlayer[];
-  striker_player_id: number;
+  striker_player_id: string;
   competition: Competition;
   innings: OngoingInnings;
   over: Over;
@@ -127,25 +127,25 @@ interface Competition {
   format: MatchFormat;
   total_rounds?: number;
   locations: string[] | [];
-  team_ids: number[] | [];
+  team_ids: string[] | [];
   finished?: boolean;
 }
 
 export interface Tournament extends Competition {
-  tournament_id: number;
+  tournament_id: string;
   total_teams?: number;
 }
 
 export type TournamentWithoutId = Omit<Tournament, "tournament_id">;
 
 export interface TournamentMatch extends Match {
-  tournament_id: number;
+  tournament_id: string;
 }
 
 type SeriesType = (typeof SERIES_TYPES)[number];
 
 export interface Series extends Competition {
-  series_id: number;
+  series_id: string;
   type: SeriesType;
 }
 
@@ -153,13 +153,13 @@ export type SeriesWithoutId = Omit<Series, "series_id">;
 
 export interface SeriesMatch extends Match {
   [x: string]: any;
-  series_id: number;
+  series_id: string;
   match_number: number;
 }
 
 export interface SeriesPoints {
-  series_id: number;
-  team_id: number;
+  series_id: string;
+  team_id: string;
   team_name: string;
   matches_played: number;
   wins: number;
@@ -170,9 +170,9 @@ export interface SeriesPoints {
 }
 
 export interface Innings {
-  inning_id: number;
-  match_id: number;
-  team_id: number;
+  inning_id: string;
+  match_id: string;
+  team_id: string;
   number: number;
   total_runs: number;
   total_wickets: number;
@@ -185,9 +185,9 @@ export interface OngoingInnings extends Innings {
 }
 
 export interface Over {
-  inning_id: number;
+  inning_id: string;
   over_number: number;
-  bowler_id: number;
+  bowler_id: string;
   bowler_name?: string;
   total_runs: number;
   total_wickets: number;
@@ -195,12 +195,12 @@ export interface Over {
 }
 
 export interface Ball {
-  inning_id: number;
+  inning_id: string;
   over_number: number;
   ball_number: number;
-  batsman_id: number;
-  non_striker_id: number;
-  bowler_id: number;
+  batsman_id: string;
+  non_striker_id: string;
+  bowler_id: string;
   runs_scored: number;
   is_wicket: boolean;
   is_legal: boolean;
@@ -213,8 +213,8 @@ export type ExtrasType = (typeof EXTRAS_TYPES)[number];
 export type DismissalType = (typeof DISMISSAL_TYPES)[number];
 
 export interface Extras {
-  extra_id?: number;
-  ball_id?: number;
+  extra_id?: string;
+  ball_id?: string;
   type: ExtrasType;
   runs: number;
 }
@@ -229,13 +229,13 @@ export interface ExtrasCount {
 }
 
 export interface InningsExtras extends ExtrasCount {
-  inning_id: number;
+  inning_id: string;
 }
 
 export interface Dismissal {
   type: DismissalType | null;
-  dismissed_batsman_id: number | null;
-  fielder_id: number | null;
+  dismissed_batsman_id: string | null;
+  fielder_id: string | null;
 }
 
 export interface CurrentBall {
@@ -264,7 +264,7 @@ export interface InningsResponse {
 }
 
 export interface BatsmanStats {
-  player_id: number;
+  player_id: string;
   player_name: string;
   runs_scored: number;
   balls_faced: number;
@@ -279,17 +279,17 @@ export interface BatsmanStats {
 }
 
 export interface InningsBattingStats {
-  match_id: number;
-  inning_id: number;
+  match_id: string;
+  inning_id: string;
   number: number;
   total_runs: number;
   total_wickets: number;
   total_overs: number;
   target_score: number;
-  team_id: number;
+  team_id: string;
   team_name: string;
   players: BatsmanStats[];
-  onCrease: number[];
+  onCrease: string[];
   extras: InningsExtras;
 }
 
@@ -298,7 +298,7 @@ export interface InningsBattingSummary {
 }
 
 export interface BowlerStats {
-  player_id: number;
+  player_id: string;
   player_name: string;
   overs_bowled: number;
   maiden_overs: number; 
@@ -308,10 +308,10 @@ export interface BowlerStats {
 }
 
 export interface InningsBowlingStats {
-  match_id: number;
-  inning_id: number;
+  match_id: string;
+  inning_id: string;
   number: number;
-  team_id: number;
+  team_id: string;
   team_name: string;
   players: BowlerStats[];
 }
@@ -321,7 +321,7 @@ export interface InningsBowlingSummary {
 }
 
 export interface DismissedPlayerStats {
-  player_id: number;
+  player_id: string;
   player_name: string;
   runs_scored: number;
   wicket_number: number;
@@ -331,10 +331,10 @@ export interface DismissedPlayerStats {
 }
 
 export interface InningsDismissalsStats {
-  match_id: number;
-  inning_id: number;
+  match_id: string;
+  inning_id: string;
   number: number;
-  team_id: number;
+  team_id: string;
   team_name: string;
   players: DismissedPlayerStats[];
 }
@@ -344,8 +344,8 @@ export interface InningsDismissalsSummary {
 }
 
 export interface InningsOverStats {
-  match_id: number;
-  inning_id: number;
+  match_id: string;
+  inning_id: string;
   number: number;
   overs: Over[];
 }
@@ -401,8 +401,8 @@ export interface CareerStats {
 }
 
 export interface BattingPerformance {
-  match_id: number;
-  inning_id: number;
+  match_id: string;
+  inning_id: string;
   runs_scored: number;
   balls_faced: number;
   fours: number;
@@ -411,8 +411,8 @@ export interface BattingPerformance {
 }
 
 export interface BowlingPerformance {
-  match_id: number;
-  inning_id: number;
+  match_id: string;
+  inning_id: string;
   overs_bowled: number;
   maiden_overs: number;
   dots: number;

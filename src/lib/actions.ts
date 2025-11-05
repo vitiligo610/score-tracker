@@ -34,6 +34,7 @@ import {
 } from "@/lib/definitions";
 import { getMatchDetails, getTransformedMatch } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
+import { v4 as uuidv4 } from "uuid"
 
 export const fetchPlayers = async (
   query: string,
@@ -114,9 +115,10 @@ export const fetchAllPlayers = async () => {
 export const insertPlayer = async (player: PlayerWithoutId) => {
   try {
     await pool.query(
-      `INSERT INTO players (first_name, last_name, date_of_birth, batting_style, bowling_style, player_role, jersey_number)
-      VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO players (player_id, first_name, last_name, date_of_birth, batting_style, bowling_style, player_role, jersey_number)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
+        uuidv4(),
         player.first_name,
         player.last_name,
         player.date_of_birth,
@@ -134,7 +136,7 @@ export const insertPlayer = async (player: PlayerWithoutId) => {
 
 export const updatePlayer = async (player: Player) => {
   try {
-    console.log("received player as ", player);
+    // console.log("received player as ", player);
     await pool.query(
       `UPDATE players
       SET first_name = ?,
@@ -163,7 +165,7 @@ export const updatePlayer = async (player: Player) => {
   }
 };
 
-export const deletePlayer = async (player_id: number) => {
+export const deletePlayer = async (player_id: string) => {
   try {
     await pool.query(`DELETE FROM players WHERE player_id = ?`, [player_id]);
     revalidatePath("/players");
@@ -243,7 +245,7 @@ export const fetchAllTeams = async () => {
   }
 };
 
-export const fetchTeamNameById = async (team_id: number) => {
+export const fetchTeamNameById = async (team_id: string) => {
   try {
     const [data]: any = await pool.query(
       `SELECT name FROM teams
@@ -258,7 +260,7 @@ export const fetchTeamNameById = async (team_id: number) => {
   }
 };
 
-export const fetchTeamById = async (team_id: number) => {
+export const fetchTeamById = async (team_id: string) => {
   try {
     const [data]: any = await pool.query(
       `SELECT * FROM teams
@@ -276,9 +278,9 @@ export const fetchTeamById = async (team_id: number) => {
 export const insertTeam = async (team: TeamWithoutId) => {
   try {
     await pool.query(
-      `INSERT INTO teams (name, founded_year, description)
-      VALUES (?, ?, ?)`,
-      [team.name, team.founded_year, team.description]
+      `INSERT INTO teams (team_id, name, founded_year, description)
+      VALUES (?, ?, ?, ?)`,
+      [uuidv4(), team.name, team.founded_year, team.description]
     );
     // revalidatePath("/teams");
   } catch (error) {
@@ -304,8 +306,8 @@ export const updateTeam = async (team: Team) => {
 };
 
 export const updateTeamCaptain = async (
-  team_id: number,
-  captain_id: number
+  team_id: string,
+  captain_id: string
 ) => {
   try {
     await pool.query(
@@ -321,8 +323,8 @@ export const updateTeamCaptain = async (
 };
 
 export const updateTeamBowlers = async (
-  team_id: number,
-  player_ids: number[]
+  team_id: string,
+  player_ids: string[]
 ) => {
   try {
     await Promise.all(
@@ -350,8 +352,8 @@ export const updateTeamBowlers = async (
 };
 
 export const updateTeamBattingOrder = async (
-  teamId: number,
-  updatedOrders: { player_id: number; batting_order: number }[]
+  teamId: string,
+  updatedOrders: { player_id: string; batting_order: number }[]
 ) => {
   try {
     console.log("here ", updatedOrders);
@@ -373,8 +375,8 @@ export const updateTeamBattingOrder = async (
 };
 
 export const updateTeamBowlingOrder = async (
-  teamId: number,
-  updatedOrders: { player_id: number; bowling_order: number }[]
+  teamId: string,
+  updatedOrders: { player_id: string; bowling_order: number }[]
 ) => {
   try {
     console.log("here ", updatedOrders);
@@ -395,7 +397,7 @@ export const updateTeamBowlingOrder = async (
   }
 };
 
-export const deleteTeam = async (team_id: number) => {
+export const deleteTeam = async (team_id: string) => {
   try {
     await pool.query(`DELETE FROM teams WHERE team_id = ?`, [team_id]);
     // revalidatePath("/teams");
@@ -404,7 +406,7 @@ export const deleteTeam = async (team_id: number) => {
   }
 };
 
-export const fetchTeamPlayers = async (team_id: number) => {
+export const fetchTeamPlayers = async (team_id: string) => {
   try {
     const [players] = await pool.query(
       `SELECT * FROM team_players
@@ -433,8 +435,8 @@ export const fetchAddedPlayers = async () => {
 };
 
 export const addPlayersToTeam = async (
-  team_id: number,
-  player_ids: number[]
+  team_id: string,
+  player_ids: string[]
 ) => {
   try {
     await Promise.all(
@@ -453,8 +455,8 @@ export const addPlayersToTeam = async (
 };
 
 export const removePlayerFromTeam = async (
-  team_id: number,
-  player_id: number
+  team_id: string,
+  player_id: string
 ) => {
   try {
     await pool.query(
@@ -524,18 +526,19 @@ const getLastInsertedId = async () => {
 
 export const insertTournament = async (tournament: TournamentWithoutId) => {
   try {
+    const tournament_id = uuidv4();
+    
     await pool.query(
-      `INSERT INTO tournaments (name, start_date, end_date, format)
+      `INSERT INTO tournaments (tournament_id, name, start_date, end_date, format)
       VALUES (?, ?, ?, ?)`,
       [
+        tournament_id,
         tournament.name,
         tournament.start_date,
         tournament.end_date,
         tournament.format,
       ]
     );
-
-    const tournament_id = await getLastInsertedId();
 
     await Promise.all(
       tournament.locations.map((location) =>
@@ -566,7 +569,7 @@ export const insertTournament = async (tournament: TournamentWithoutId) => {
   }
 };
 
-export const updateTournamentNextMatchIds = async (tournamentId: number) => {
+export const updateTournamentNextMatchIds = async (tournamentId: string) => {
   try {
     const [round1Matches] = (await pool.query(
       "SELECT match_id FROM matches WHERE tournament_id = ? AND round = 1 ORDER BY match_id",
@@ -633,7 +636,7 @@ export const updateTournamentNextMatchIds = async (tournamentId: number) => {
   }
 };
 
-export const fetchTournamentNameById = async (tournament_id: number) => {
+export const fetchTournamentNameById = async (tournament_id: string) => {
   try {
     const [data]: any = await pool.query(
       `SELECT name FROM tournaments
@@ -648,7 +651,7 @@ export const fetchTournamentNameById = async (tournament_id: number) => {
   }
 };
 
-export const fetchTournamentById = async (tournament_id: number) => {
+export const fetchTournamentById = async (tournament_id: string) => {
   try {
     const [data]: any = await pool.query(
       `SELECT * FROM tournaments
@@ -690,7 +693,7 @@ export const fetchTournamentById = async (tournament_id: number) => {
   }
 };
 
-export const fetchTournamentMatches = async (tournament_id: number) => {
+export const fetchTournamentMatches = async (tournament_id: string) => {
   try {
     const [matches]: any = await pool.query(
       `SELECT 
@@ -798,10 +801,13 @@ export const fetchSeries = async (filter: string) => {
 
 export const insertSeries = async (series: SeriesWithoutId) => {
   try {
+    const series_id = uuidv4();
+    
     await pool.query(
-      `INSERT INTO series (name, format, type, start_date, end_date, total_rounds)
-      VALUES (?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO series (series_id, name, format, type, start_date, end_date, total_rounds)
+      VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [
+        series_id,
         series.name,
         series.format,
         series.type,
@@ -810,8 +816,6 @@ export const insertSeries = async (series: SeriesWithoutId) => {
         series.type !== "trilateral" ? series.total_rounds : 2,
       ]
     );
-
-    const series_id = await getLastInsertedId();
 
     await Promise.all(
       series.team_ids.map((team_id) =>
@@ -840,7 +844,7 @@ export const insertSeries = async (series: SeriesWithoutId) => {
   }
 };
 
-export const fetchSeriesNameById = async (series_id: number) => {
+export const fetchSeriesNameById = async (series_id: string) => {
   try {
     const [data]: any = await pool.query(
       `SELECT name FROM series
@@ -855,7 +859,7 @@ export const fetchSeriesNameById = async (series_id: number) => {
   }
 };
 
-export const fetchSeriesById = async (series_id: number) => {
+export const fetchSeriesById = async (series_id: string) => {
   try {
     const [data]: any = await pool.query(
       `SELECT * FROM series
@@ -897,7 +901,7 @@ export const fetchSeriesById = async (series_id: number) => {
   }
 };
 
-export const fetchSeriesMatches = async (series_id: number) => {
+export const fetchSeriesMatches = async (series_id: string) => {
   try {
     const [matches]: any = await pool.query(
       `SELECT 
@@ -937,7 +941,7 @@ export const fetchSeriesMatches = async (series_id: number) => {
   }
 };
 
-export const fetchSeriesScore = async (series_id: number) => {
+export const fetchSeriesScore = async (series_id: string) => {
   try {
     const [data] = await pool.query(
       `SELECT t.name AS team_name, COALESCE(COUNT(m.winner_team_id), 0) AS total_wins
@@ -957,7 +961,7 @@ export const fetchSeriesScore = async (series_id: number) => {
   }
 };
 
-export const fetchSeriesPoints = async (series_id: number) => {
+export const fetchSeriesPoints = async (series_id: string) => {
   try {
     const [data] = await pool.query(
       `SELECT sp.series_id AS series_id,
@@ -986,9 +990,9 @@ export const fetchSeriesPoints = async (series_id: number) => {
 
 export const updateMatchToss = async (
   match_id: number | string,
-  toss_winner_id: number,
+  toss_winner_id: string,
   toss_decision: string,
-  other_team_id?: number
+  other_team_id?: string
 ) => {
   try {
     await pool.query(
@@ -1019,8 +1023,8 @@ export const updateMatchToss = async (
 
 export const insertInningsForMatch = async (
   match_id: number | string,
-  batting_team_id: number,
-  bowling_team_id: number,
+  batting_team_id: string,
+  bowling_team_id: string,
   inning_number: number,
   target_score: number
 ) => {
@@ -1040,7 +1044,7 @@ export const insertInningsForMatch = async (
 
 export const setMatchToComplete = async (
   match_id: number | string,
-  winner_team_id: number | null,
+  winner_team_id: string | null,
   is_tournament?: boolean
 ) => {
   try {
@@ -1063,7 +1067,7 @@ export const setMatchToComplete = async (
   }
 };
 
-export const fetchMatchPlayers = async (team_id: number, limit: number) => {
+export const fetchMatchPlayers = async (team_id: string, limit: number) => {
   try {
     const [players] = await pool.query(
       `SELECT * FROM team_players
@@ -1082,9 +1086,9 @@ export const fetchMatchPlayers = async (team_id: number, limit: number) => {
 };
 
 export const fetchMatchBattingTeam = async (
-  team_id: number,
+  team_id: string,
   match_id: number | string,
-  inning_id: number,
+  inning_id: string,
   limit: number
 ) => {
   try {
@@ -1108,9 +1112,9 @@ export const fetchMatchBattingTeam = async (
 };
 
 export const fetchMatchBowlingTeam = async (
-  team_id: number,
+  team_id: string,
   match_id: number | string,
-  inning_id: number,
+  inning_id: string,
   limit: number
 ) => {
   try {
@@ -1133,7 +1137,7 @@ export const fetchMatchBowlingTeam = async (
   }
 };
 
-export const getExtrasCountForInnings = async (inning_id: number) => {
+export const getExtrasCountForInnings = async (inning_id: string) => {
   const [data]: any = await pool.query(
     `SELECT
         COUNT(CASE WHEN type = 'No Ball' THEN 1 END) AS nb_count,
@@ -1153,7 +1157,7 @@ export const getExtrasCountForInnings = async (inning_id: number) => {
 };
 
 export const getOverBallsForMatch = async (
-  inning_id: number,
+  inning_id: string,
   over_number: number
 ) => {
   const [data] = await pool.query(
@@ -1180,7 +1184,7 @@ const getBowlingTeamId = (match: OngoingMatch) => {
     : match.team2.team_id;
 };
 
-export const fetchMatch = async (match_id: number) => {
+export const fetchMatch = async (match_id: string) => {
   try {
     const [data]: any = await pool.query(
       `SELECT 
@@ -1224,7 +1228,7 @@ export const fetchMatch = async (match_id: number) => {
   }
 };
 
-export const fetchMatchById = async (match_id: number) => {
+export const fetchMatchById = async (match_id: string) => {
   // console.log("fetching match with id ", match_id);
   try {
     const [data]: any = await pool.query(
@@ -1276,10 +1280,7 @@ export const fetchMatchById = async (match_id: number) => {
 
     // console.log("Data is ", data[0]);
     const { extras_count } = await getExtrasCountForInnings(data[0].inning_id);
-    const { balls } = await getOverBallsForMatch(
-      data[0].inning_id,
-      data[0].over_number
-    );
+    const { balls } = await getOverBallsForMatch(data[0].inning_id, data[0].over_number);
     // console.log("extras for match ", match_id, "is ", extras_count);
 
     const match = getMatchDetails(
@@ -1289,20 +1290,10 @@ export const fetchMatchById = async (match_id: number) => {
     ) as unknown as OngoingMatch;
 
     const battingTeamId = getBattingTeamId(match);
-    const { teamPlayers: battingTeamPlayers } = await fetchMatchBattingTeam(
-      battingTeamId,
-      match.match_id,
-      match.innings.inning_id,
-      11
-    );
+    const { teamPlayers: battingTeamPlayers } = await fetchMatchBattingTeam(battingTeamId, match.match_id, match.innings.inning_id, 11);
 
     const bowlingTeamId = getBowlingTeamId(match);
-    const { teamPlayers: bowlingTeamPlayers } = await fetchMatchBowlingTeam(
-      bowlingTeamId,
-      match.match_id,
-      match.innings.inning_id,
-      11
-    );
+    const { teamPlayers: bowlingTeamPlayers } = await fetchMatchBowlingTeam(bowlingTeamId, match.match_id, match.innings.inning_id, 11);
 
     return {
       match,
@@ -1321,10 +1312,13 @@ export const insertBallForInning = async (
   total_wickets: number
 ) => {
   // console.log("submitting ball data: ", ball);
+  const ball_id = uuidv4();
+  
   await pool.query(
-    `INSERT INTO balls (inning_id, over_number, ball_number, batsman_id, non_striker_id, bowler_id, runs_scored, is_wicket, is_legal)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO balls (ball_id, inning_id, over_number, ball_number, batsman_id, non_striker_id, bowler_id, runs_scored, is_wicket, is_legal)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     [
+      ball_id,
       ball.inning_id,
       ball.over_number,
       ball.ball_number,
@@ -1338,7 +1332,6 @@ export const insertBallForInning = async (
   );
 
   if (ball.dismissal) {
-    const ball_id = await getLastInsertedId();
     await pool.query(
       `INSERT INTO dismissals (inning_id, ball_id, batsman_id, bowler_id, fielder_id, dismissal_type, runs_scored, wicket_number)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -1356,7 +1349,6 @@ export const insertBallForInning = async (
   }
 
   if (ball.extra) {
-    const ball_id = await getLastInsertedId();
     await pool.query(
       `INSERT INTO extras (ball_id, type, runs)
       VALUES (?, ?, ?)`,
@@ -1682,7 +1674,7 @@ export const fetchMatchOversSummary = async (match_id: number | string) => {
   }
 };
 
-export const fetchPlayerCareerStats = async (player_id: number) => {
+export const fetchPlayerCareerStats = async (player_id: string) => {
   const battingDefaults = {
     matches: 0,
     innings: 0,
@@ -1778,7 +1770,7 @@ export const fetchPlayerCareerStats = async (player_id: number) => {
   }
 };
 
-export const fetchPlayerPerformances = async (player_id: number) => {
+export const fetchPlayerPerformances = async (player_id: string) => {
   try {
     const battingQuery = `
       SELECT 

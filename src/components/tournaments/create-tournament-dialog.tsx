@@ -51,7 +51,7 @@ const formSchema = z.object({
     from: z.date(),
     to: z.date(),
   }),
-  team_ids: z.array(z.number()).min(4, "At least 4 teams are required"),
+  team_ids: z.array(z.string()).min(4, "At least 4 teams are required"),
   locations: z.array(z.string()).min(1, "At least 1 location is required"),
 });
 
@@ -216,7 +216,7 @@ export default function CreateTournamentDialog() {
                     <TeamSelect
                       value={field.value}
                       onChange={(values: any) =>
-                        field.onChange(values.map(Number))
+                        field.onChange(values.map(String))
                       }
                     />
                   </FormControl>

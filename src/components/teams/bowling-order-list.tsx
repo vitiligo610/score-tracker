@@ -25,8 +25,8 @@ import { SelectBowlersDialog } from "./select-bowlers-dialog";
 interface BowlingOrderList {
   players: PlayerWithTeam[];
   bowlers: PlayerWithTeam[];
-  teamId: number;
-  captainId?: number;
+  teamId: string;
+  captainId?: string;
 }
 
 const BowlingOrderList = ({

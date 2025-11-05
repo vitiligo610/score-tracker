@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { deletePlayer } from "@/lib/actions";
 import { TrashIcon } from "lucide-react";
 
-const DeletePlayerButton = ({ player_id }: { player_id: number }) => {
+const DeletePlayerButton = ({ player_id }: { player_id: string }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
 

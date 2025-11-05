@@ -29,8 +29,8 @@ import { PLAYER_ROLES } from "@/lib/constants";
 import { useRouter } from "next/navigation";
 
 interface AddTeamPlayerProps {
-  teamId: number;
-  existingPlayerIds: number[];
+  teamId: string;
+  existingPlayerIds: string[];
 }
 
 export default function AddTeamPlayer({
@@ -39,7 +39,7 @@ export default function AddTeamPlayer({
 }: AddTeamPlayerProps) {
   const [open, setOpen] = useState(false);
   const [players, setPlayers] = useState<PlayerWithTeam[]>([]);
-  const [selectedPlayers, setSelectedPlayers] = useState<number[]>([]);
+  const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [adding, setAdding] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");

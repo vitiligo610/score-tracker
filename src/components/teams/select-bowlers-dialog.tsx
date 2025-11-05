@@ -19,8 +19,8 @@ import { useState } from "react";
 
 interface SelectBowlersDialogProps {
   players: PlayerWithTeam[];
-  bowlers: number[];
-  teamId: number;
+  bowlers: string[];
+  teamId: string;
 }
 
 export function SelectBowlersDialog({
@@ -28,7 +28,7 @@ export function SelectBowlersDialog({
   bowlers,
   teamId,
 }: SelectBowlersDialogProps) {
-  const [selectedBowlers, setSelectedBowlers] = useState<number[]>([
+  const [selectedBowlers, setSelectedBowlers] = useState<string[]>([
     ...bowlers,
   ]);
   const [isOpen, setIsOpen] = useState(false);
@@ -64,7 +64,7 @@ export function SelectBowlersDialog({
     setIsLoading(false);
   };
 
-  const toggleBowler = (playerId: number) => {
+  const toggleBowler = (playerId: string) => {
     setSelectedBowlers((current) => {
       if (current.includes(playerId)) {
         return current.filter((id) => id !== playerId);

@@ -11,8 +11,8 @@ import TeamCaptainDialog from "@/components/teams/team-captain-dialog";
 
 interface TeamPlayersListProps {
   players: PlayerWithTeam[];
-  teamId: number;
-  captainId?: number;
+  teamId: string;
+  captainId?: string;
 }
 
 const TeamPlayersList = ({

@@ -15,7 +15,7 @@ interface MatchTossProps {
 }
 
 const MatchToss = ({ match }: MatchTossProps) => {
-  const [selectedTeam, setSelectedTeam] = useState<number | null>(null);
+  const [selectedTeam, setSelectedTeam] = useState<string | null>(null);
   const [tossDecision, setTossDecision] = useState<
     "batting" | "bowling" | null
   >(null);
@@ -26,14 +26,9 @@ const MatchToss = ({ match }: MatchTossProps) => {
     if (!selectedTeam || !tossDecision) return;
 
     setIsUpdating(true);
-    await updateMatchToss(
-      match.match_id,
-      selectedTeam,
-      tossDecision,
-      match.team1?.team_id !== selectedTeam
-        ? match.team1?.team_id
-        : match.team2?.team_id
-    );
+    await updateMatchToss(match.match_id, selectedTeam, tossDecision, match.team1?.team_id !== selectedTeam
+      ? match.team1?.team_id
+      : match.team2?.team_id);
     setIsUpdating(false);
     router.refresh();
   };

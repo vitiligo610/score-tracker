@@ -29,7 +29,7 @@ type MatchContextType = {
 const MatchContext = createContext<MatchContextType | undefined>(undefined);
 
 interface MatchProviderProps {
-  match_id: number;
+  match_id: string;
   children: React.ReactNode;
 }
 
@@ -193,7 +193,7 @@ export const MatchProvider = ({ match_id, children }: MatchProviderProps) => {
         non_striker_id:
           batsmen.find(
             (batsman) => batsman.player_id !== matchState.striker_player_id
-          )?.player_id || 0,
+          )?.player_id || "",
         bowler_id: currentOver.bowler_id,
         runs_scored: ball.runs_scored,
         is_legal: ball.is_legal,

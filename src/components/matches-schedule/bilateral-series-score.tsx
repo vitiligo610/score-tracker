@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { fetchSeriesScore } from "@/lib/actions";
 
 interface SeriesScoreProps {
-  series_id: number;
+  series_id: string;
 }
 
 const SeriesScore = async ({

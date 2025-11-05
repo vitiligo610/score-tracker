@@ -26,8 +26,8 @@ import { Loader } from "lucide-react";
 
 interface TeamCaptainDialogProps {
   players: PlayerWithTeam[];
-  teamId: number;
-  captainId?: number;
+  teamId: string;
+  captainId?: string;
 }
 
 const TeamCaptainDialog = ({
@@ -74,7 +74,7 @@ const TeamCaptainDialog = ({
           <label className="text-sm font-medium">Team Captain:</label>
           <Select
             value={String(captain)}
-            onValueChange={(value) => setCaptain(Number(value))}
+            onValueChange={(value) => setCaptain(value)}
           >
             <SelectTrigger className="flex-1">
               <SelectValue placeholder="Select captain" />

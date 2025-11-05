@@ -23,8 +23,8 @@ import { Team } from "@/lib/definitions";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface TeamSelectProps {
-  value: number[];
-  onChange: (value: number[]) => void;
+  value: string[];
+  onChange: (value: string[]) => void;
   maxTeams?: number;
 }
 

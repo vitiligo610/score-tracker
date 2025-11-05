@@ -58,7 +58,7 @@ const formSchema = z
         required_error: "End date is required",
       }),
     }),
-    team_ids: z.array(z.number()),
+    team_ids: z.array(z.string()),
     locations: z.array(z.string()).min(1, "At least 1 location is required"),
   })
   .superRefine((data, ctx) => {

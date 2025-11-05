@@ -383,19 +383,9 @@ const MatchInputCard = () => {
               ? getBattingTeamId(match.innings, match.team1, match.team2)
               : getBowlingTeamId(match.innings, match.team1, match.team2);
 
-          await setMatchToComplete(
-            match.match_id,
-            winningTeamId,
-            Boolean(match.tournament_name)
-          );
+          await setMatchToComplete(match.match_id, winningTeamId, Boolean(match.tournament_name));
         } else {
-          await insertInningsForMatch(
-            match.match_id,
-            newBattingTeamId,
-            newBowlingTeamId,
-            inningsNumber + 1,
-            targetScore
-          );
+          await insertInningsForMatch(match.match_id, newBattingTeamId, newBowlingTeamId, inningsNumber + 1, targetScore);
           await fetchMatchDetails();
         }
       } else {
@@ -403,13 +393,7 @@ const MatchInputCard = () => {
         const isMatchEnd = inningsNumber === 2;
 
         if (!isMatchEnd) {
-          await insertInningsForMatch(
-            match.match_id,
-            newBattingTeamId,
-            newBowlingTeamId,
-            inningsNumber + 1,
-            targetScore
-          );
+          await insertInningsForMatch(match.match_id, newBattingTeamId, newBowlingTeamId, inningsNumber + 1, targetScore);
           await fetchMatchDetails();
         } else {
           const getBowlingTeamScore =
@@ -422,11 +406,7 @@ const MatchInputCard = () => {
               ? getBowlingTeamId(match.innings, match.team1, match.team2)
               : getBattingTeamId(match.innings, match.team1, match.team2);
 
-          await setMatchToComplete(
-            match.match_id,
-            winningTeamId,
-            Boolean(match.tournament_name)
-          );
+          await setMatchToComplete(match.match_id, winningTeamId, Boolean(match.tournament_name));
         }
       }
 

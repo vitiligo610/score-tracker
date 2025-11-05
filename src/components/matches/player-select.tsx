@@ -7,16 +7,16 @@ import {
 } from "@/components/ui/select";
 
 interface Player {
-  player_id: number;
+  player_id: string;
   name: string;
 }
 
 interface PlayerSelectProps {
   players: Player[];
-  onChange: (playerId: number) => void;
+  onChange: (playerId: string) => void;
   placeholder?: string;
   disabled?: boolean;
-  value: number | null;
+  value: string | null;
 }
 
 const PlayerSelect = ({
@@ -29,8 +29,8 @@ const PlayerSelect = ({
   return (
     <Select
       disabled={disabled}
-      value={value ? String(value) : undefined}
-      onValueChange={value => onChange(Number(value))}
+      value={value || undefined}
+      onValueChange={onChange}
     >
       <SelectTrigger className="w-full">
         <SelectValue placeholder={placeholder} />

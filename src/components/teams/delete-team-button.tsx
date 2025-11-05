@@ -17,7 +17,7 @@ import { deleteTeam } from "@/lib/actions";
 import { Loader, TrashIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-const DeleteTeamButton = ({ team_id }: { team_id: number }) => {
+const DeleteTeamButton = ({ team_id }: { team_id: string }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
   const router = useRouter();

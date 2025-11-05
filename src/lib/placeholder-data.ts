@@ -5,38 +5,47 @@ import {
   TeamPlayer,
   Tournament,
 } from "@/lib/definitions";
+import { v4 as uuidv4 } from "uuid";
+
+const teamIds = {
+  1: uuidv4(),
+  2: uuidv4(),
+  3: uuidv4(),
+  4: uuidv4(),
+  5: uuidv4()
+}
 
 export const teams: Team[] = [
   {
-    team_id: 1,
+    team_id: teamIds[1],
     name: "Lions United",
     logo_url: "https://example.com/logos/lions_united.png",
     founded_year: 1990,
     description: "A formidable team known for their aggressive play style.",
   },
   {
-    team_id: 2,
+    team_id: teamIds[2],
     name: "Eagle Eyes",
     logo_url: "https://example.com/logos/eagle_eyes.png",
     founded_year: 1985,
     description: "Renowned for their precise and strategic gameplay.",
   },
   {
-    team_id: 3,
+    team_id: teamIds[3],
     name: "Warrior Kings",
     logo_url: "https://example.com/logos/warrior_kings.png",
     founded_year: 2000,
     description: "A young team with a lot of potential and spirit.",
   },
   {
-    team_id: 4,
+    team_id: teamIds[4],
     name: "Thunderbolts",
     logo_url: "https://example.com/logos/thunderbolts.png",
     founded_year: 1975,
     description: "Veteran team with a history of championship titles.",
   },
   {
-    team_id: 5,
+    team_id: teamIds[5],
     name: "Dragon Slayers",
     logo_url: "https://example.com/logos/dragon_slayers.png",
     founded_year: 1995,
@@ -46,7 +55,7 @@ export const teams: Team[] = [
 
 export const players: Player[] = [
   {
-    player_id: 1,
+    player_id: uuidv4(),
     first_name: "John",
     last_name: "Doe",
     date_of_birth: new Date("1990-01-01"),
@@ -57,7 +66,7 @@ export const players: Player[] = [
     bowling_order: 1,
   },
   {
-    player_id: 2,
+    player_id: uuidv4(),
     first_name: "Don",
     last_name: "Smith",
     date_of_birth: new Date("1992-05-15"),
@@ -68,7 +77,7 @@ export const players: Player[] = [
     bowling_order: 2,
   },
   {
-    player_id: 3,
+    player_id: uuidv4(),
     first_name: "Michael",
     last_name: "Johnson",
     date_of_birth: new Date("1988-07-20"),
@@ -79,7 +88,7 @@ export const players: Player[] = [
     bowling_order: 3,
   },
   {
-    player_id: 4,
+    player_id: uuidv4(),
     first_name: "Chris",
     last_name: "Davis",
     date_of_birth: new Date("1995-03-30"),
@@ -90,7 +99,7 @@ export const players: Player[] = [
     bowling_order: 4,
   },
   {
-    player_id: 5,
+    player_id: uuidv4(),
     first_name: "Chris",
     last_name: "Brown",
     date_of_birth: new Date("1991-11-11"),
@@ -101,7 +110,7 @@ export const players: Player[] = [
     bowling_order: 5,
   },
   {
-    player_id: 6,
+    player_id: uuidv4(),
     first_name: "David",
     last_name: "Wilson",
     date_of_birth: new Date("1987-09-25"),
@@ -111,7 +120,7 @@ export const players: Player[] = [
     jersey_number: 33,
   },
   {
-    player_id: 7,
+    player_id: uuidv4(),
     first_name: "John",
     last_name: "Taylor",
     date_of_birth: new Date("1993-12-14"),
@@ -121,7 +130,7 @@ export const players: Player[] = [
     jersey_number: 12,
   },
   {
-    player_id: 8,
+    player_id: uuidv4(),
     first_name: "James",
     last_name: "Anderson",
     date_of_birth: new Date("1985-04-10"),
@@ -131,7 +140,7 @@ export const players: Player[] = [
     jersey_number: 21,
   },
   {
-    player_id: 9,
+    player_id: uuidv4(),
     first_name: "Mathew",
     last_name: "Martin",
     date_of_birth: new Date("1994-07-07"),
@@ -141,7 +150,7 @@ export const players: Player[] = [
     jersey_number: 8,
   },
   {
-    player_id: 10,
+    player_id: uuidv4(),
     first_name: "Robert",
     last_name: "Lee",
     date_of_birth: new Date("1990-02-20"),
@@ -151,7 +160,7 @@ export const players: Player[] = [
     jersey_number: 3,
   },
   {
-    player_id: 11,
+    player_id: uuidv4(),
     first_name: "James",
     last_name: "Anderson",
     date_of_birth: new Date("1992-03-15"),
@@ -161,7 +170,7 @@ export const players: Player[] = [
     jersey_number: 1,
   },
   {
-    player_id: 12,
+    player_id: uuidv4(),
     first_name: "David",
     last_name: "Warner",
     date_of_birth: new Date("1993-05-20"),
@@ -171,7 +180,7 @@ export const players: Player[] = [
     jersey_number: 2,
   },
   {
-    player_id: 13,
+    player_id: uuidv4(),
     first_name: "Kane",
     last_name: "Richardson",
     date_of_birth: new Date("1994-08-12"),
@@ -182,7 +191,7 @@ export const players: Player[] = [
     bowling_order: 1,
   },
   {
-    player_id: 14,
+    player_id: uuidv4(),
     first_name: "Ben",
     last_name: "Stokes",
     date_of_birth: new Date("1991-06-04"),
@@ -193,7 +202,7 @@ export const players: Player[] = [
     bowling_order: 2,
   },
   {
-    player_id: 15,
+    player_id: uuidv4(),
     first_name: "Jos",
     last_name: "Butler",
     date_of_birth: new Date("1990-09-08"),
@@ -204,7 +213,7 @@ export const players: Player[] = [
     bowling_order: 3,
   },
   {
-    player_id: 16,
+    player_id: uuidv4(),
     first_name: "Mitchell",
     last_name: "Starc",
     date_of_birth: new Date("1995-01-30"),
@@ -215,7 +224,7 @@ export const players: Player[] = [
     bowling_order: 4,
   },
   {
-    player_id: 17,
+    player_id: uuidv4(),
     first_name: "Steve",
     last_name: "Smith",
     date_of_birth: new Date("1989-06-02"),
@@ -226,7 +235,7 @@ export const players: Player[] = [
     bowling_order: 5,
   },
   {
-    player_id: 18,
+    player_id: uuidv4(),
     first_name: "Trent",
     last_name: "Boult",
     date_of_birth: new Date("1993-07-22"),
@@ -236,7 +245,7 @@ export const players: Player[] = [
     jersey_number: 10,
   },
   {
-    player_id: 19,
+    player_id: uuidv4(),
     first_name: "Ross",
     last_name: "Taylor",
     date_of_birth: new Date("1988-03-27"),
@@ -246,7 +255,7 @@ export const players: Player[] = [
     jersey_number: 11,
   },
   {
-    player_id: 20,
+    player_id: uuidv4(),
     first_name: "Rashid",
     last_name: "Khan",
     date_of_birth: new Date("1996-09-20"),
@@ -256,7 +265,7 @@ export const players: Player[] = [
     jersey_number: 12,
   },
   {
-    player_id: 21,
+    player_id: uuidv4(),
     first_name: "Virat",
     last_name: "Kohli",
     date_of_birth: new Date("1988-11-05"),
@@ -266,7 +275,7 @@ export const players: Player[] = [
     jersey_number: 18,
   },
   {
-    player_id: 22,
+    player_id: uuidv4(),
     first_name: "Jasprit",
     last_name: "Bumrah",
     date_of_birth: new Date("1993-12-06"),
@@ -276,7 +285,7 @@ export const players: Player[] = [
     jersey_number: 93,
   },
   {
-    player_id: 23,
+    player_id: uuidv4(),
     first_name: "Ravindra",
     last_name: "Jadeja",
     date_of_birth: new Date("1988-12-06"),
@@ -286,7 +295,7 @@ export const players: Player[] = [
     jersey_number: 8,
   },
   {
-    player_id: 24,
+    player_id: uuidv4(),
     first_name: "KL",
     last_name: "Rahul",
     date_of_birth: new Date("1992-04-18"),
@@ -296,7 +305,7 @@ export const players: Player[] = [
     jersey_number: 1,
   },
   {
-    player_id: 25,
+    player_id: uuidv4(),
     first_name: "Mohammed",
     last_name: "Shami",
     date_of_birth: new Date("1990-09-03"),
@@ -307,7 +316,7 @@ export const players: Player[] = [
     bowling_order: 1,
   },
   {
-    player_id: 26,
+    player_id: uuidv4(),
     first_name: "Shreyas",
     last_name: "Iyer",
     date_of_birth: new Date("1994-12-06"),
@@ -318,7 +327,7 @@ export const players: Player[] = [
     bowling_order: 2,
   },
   {
-    player_id: 27,
+    player_id: uuidv4(),
     first_name: "Washington",
     last_name: "Sundar",
     date_of_birth: new Date("1999-10-05"),
@@ -329,7 +338,7 @@ export const players: Player[] = [
     bowling_order: 3,
   },
   {
-    player_id: 28,
+    player_id: uuidv4(),
     first_name: "Yuzvendra",
     last_name: "Chahal",
     date_of_birth: new Date("1990-07-23"),
@@ -340,7 +349,7 @@ export const players: Player[] = [
     bowling_order: 4,
   },
   {
-    player_id: 29,
+    player_id: uuidv4(),
     first_name: "Shubman",
     last_name: "Gill",
     date_of_birth: new Date("1999-09-08"),
@@ -351,7 +360,7 @@ export const players: Player[] = [
     bowling_order: 5,
   },
   {
-    player_id: 30,
+    player_id: uuidv4(),
     first_name: "Axar",
     last_name: "Patel",
     date_of_birth: new Date("1994-01-20"),
@@ -361,7 +370,7 @@ export const players: Player[] = [
     jersey_number: 20,
   },
   {
-    player_id: 31,
+    player_id: uuidv4(),
     first_name: "Babar",
     last_name: "Azam",
     date_of_birth: new Date("1994-10-15"),
@@ -371,7 +380,7 @@ export const players: Player[] = [
     jersey_number: 56,
   },
   {
-    player_id: 32,
+    player_id: uuidv4(),
     first_name: "Shaheen",
     last_name: "Afridi",
     date_of_birth: new Date("2000-04-06"),
@@ -381,7 +390,7 @@ export const players: Player[] = [
     jersey_number: 10,
   },
   {
-    player_id: 33,
+    player_id: uuidv4(),
     first_name: "Mohammad",
     last_name: "Rizwan",
     date_of_birth: new Date("1992-06-01"),
@@ -391,7 +400,7 @@ export const players: Player[] = [
     jersey_number: 16,
   },
   {
-    player_id: 34,
+    player_id: uuidv4(),
     first_name: "Shadab",
     last_name: "Khan",
     date_of_birth: new Date("1998-10-04"),
@@ -401,7 +410,7 @@ export const players: Player[] = [
     jersey_number: 29,
   },
   {
-    player_id: 35,
+    player_id: uuidv4(),
     first_name: "Fakhar",
     last_name: "Zaman",
     date_of_birth: new Date("1990-04-10"),
@@ -411,7 +420,7 @@ export const players: Player[] = [
     jersey_number: 39,
   },
   {
-    player_id: 36,
+    player_id: uuidv4(),
     first_name: "Haris",
     last_name: "Rauf",
     date_of_birth: new Date("1993-11-07"),
@@ -421,7 +430,7 @@ export const players: Player[] = [
     jersey_number: 97,
   },
   {
-    player_id: 37,
+    player_id: uuidv4(),
     first_name: "Naseem",
     last_name: "Shah",
     date_of_birth: new Date("2003-02-15"),
@@ -432,7 +441,7 @@ export const players: Player[] = [
     bowling_order: 1,
   },
   {
-    player_id: 38,
+    player_id: uuidv4(),
     first_name: "Mohammad",
     last_name: "Nawaz",
     date_of_birth: new Date("1994-03-21"),
@@ -443,7 +452,7 @@ export const players: Player[] = [
     bowling_order: 2,
   },
   {
-    player_id: 39,
+    player_id: uuidv4(),
     first_name: "Shan",
     last_name: "Masood",
     date_of_birth: new Date("1989-10-14"),
@@ -454,7 +463,7 @@ export const players: Player[] = [
     bowling_order: 3,
   },
   {
-    player_id: 40,
+    player_id: uuidv4(),
     first_name: "Iftikhar",
     last_name: "Ahmed",
     date_of_birth: new Date("1990-09-03"),
@@ -465,7 +474,7 @@ export const players: Player[] = [
     bowling_order: 4,
   },
   {
-    player_id: 41,
+    player_id: uuidv4(),
     first_name: "Tom",
     last_name: "Latham",
     date_of_birth: new Date("1992-04-02"),
@@ -476,7 +485,7 @@ export const players: Player[] = [
     bowling_order: 5,
   },
   {
-    player_id: 42,
+    player_id: uuidv4(),
     first_name: "Devon",
     last_name: "Conway",
     date_of_birth: new Date("1991-07-08"),
@@ -486,7 +495,7 @@ export const players: Player[] = [
     jersey_number: 88,
   },
   {
-    player_id: 43,
+    player_id: uuidv4(),
     first_name: "Kyle",
     last_name: "Jamieson",
     date_of_birth: new Date("1994-12-30"),
@@ -496,7 +505,7 @@ export const players: Player[] = [
     jersey_number: 32,
   },
   {
-    player_id: 44,
+    player_id: uuidv4(),
     first_name: "Mitchell",
     last_name: "Santner",
     date_of_birth: new Date("1992-02-05"),
@@ -506,7 +515,7 @@ export const players: Player[] = [
     jersey_number: 74,
   },
   {
-    player_id: 45,
+    player_id: uuidv4(),
     first_name: "Glenn",
     last_name: "Phillips",
     date_of_birth: new Date("1996-12-06"),
@@ -516,7 +525,7 @@ export const players: Player[] = [
     jersey_number: 23,
   },
   {
-    player_id: 46,
+    player_id: uuidv4(),
     first_name: "Tim",
     last_name: "Southee",
     date_of_birth: new Date("1988-12-11"),
@@ -526,7 +535,7 @@ export const players: Player[] = [
     jersey_number: 38,
   },
   {
-    player_id: 47,
+    player_id: uuidv4(),
     first_name: "Daryl",
     last_name: "Mitchell",
     date_of_birth: new Date("1991-05-20"),
@@ -536,7 +545,7 @@ export const players: Player[] = [
     jersey_number: 82,
   },
   {
-    player_id: 48,
+    player_id: uuidv4(),
     first_name: "Lockie",
     last_name: "Ferguson",
     date_of_birth: new Date("1991-06-13"),
@@ -546,7 +555,7 @@ export const players: Player[] = [
     jersey_number: 87,
   },
   {
-    player_id: 49,
+    player_id: uuidv4(),
     first_name: "Henry",
     last_name: "Nicholls",
     date_of_birth: new Date("1991-11-15"),
@@ -556,7 +565,7 @@ export const players: Player[] = [
     jersey_number: 86,
   },
   {
-    player_id: 50,
+    player_id: uuidv4(),
     first_name: "Michael",
     last_name: "Bracewell",
     date_of_birth: new Date("1991-02-14"),
@@ -567,7 +576,7 @@ export const players: Player[] = [
     bowling_order: 1,
   },
   {
-    player_id: 51,
+    player_id: uuidv4(),
     first_name: "Kane",
     last_name: "Richardson",
     date_of_birth: new Date("1991-02-12"),
@@ -578,7 +587,7 @@ export const players: Player[] = [
     bowling_order: 2,
   },
   {
-    player_id: 52,
+    player_id: uuidv4(),
     first_name: "Marcus",
     last_name: "Stoinis",
     date_of_birth: new Date("1989-08-16"),
@@ -589,7 +598,7 @@ export const players: Player[] = [
     bowling_order: 3,
   },
   {
-    player_id: 53,
+    player_id: uuidv4(),
     first_name: "Glenn",
     last_name: "Maxwell",
     date_of_birth: new Date("1988-10-14"),
@@ -600,7 +609,7 @@ export const players: Player[] = [
     bowling_order: 4,
   },
   {
-    player_id: 54,
+    player_id: uuidv4(),
     first_name: "Alex",
     last_name: "Carey",
     date_of_birth: new Date("1991-08-27"),
@@ -611,7 +620,7 @@ export const players: Player[] = [
     bowling_order: 5,
   },
   {
-    player_id: 55,
+    player_id: uuidv4(),
     first_name: "Josh",
     last_name: "Hazlewood",
     date_of_birth: new Date("1991-01-08"),
@@ -621,7 +630,7 @@ export const players: Player[] = [
     jersey_number: 38,
   },
   {
-    player_id: 56,
+    player_id: uuidv4(),
     first_name: "Mitchell",
     last_name: "Starc",
     date_of_birth: new Date("1990-01-30"),
@@ -631,7 +640,7 @@ export const players: Player[] = [
     jersey_number: 56,
   },
   {
-    player_id: 57,
+    player_id: uuidv4(),
     first_name: "Pat",
     last_name: "Cummins",
     date_of_birth: new Date("1993-05-08"),
@@ -641,7 +650,7 @@ export const players: Player[] = [
     jersey_number: 30,
   },
   {
-    player_id: 58,
+    player_id: uuidv4(),
     first_name: "Steve",
     last_name: "Smith",
     date_of_birth: new Date("1989-06-02"),
@@ -651,7 +660,7 @@ export const players: Player[] = [
     jersey_number: 49,
   },
   {
-    player_id: 59,
+    player_id: uuidv4(),
     first_name: "David",
     last_name: "Warner",
     date_of_birth: new Date("1986-10-27"),
@@ -661,7 +670,7 @@ export const players: Player[] = [
     jersey_number: 31,
   },
   {
-    player_id: 60,
+    player_id: uuidv4(),
     first_name: "Marnus",
     last_name: "Labuschagne",
     date_of_birth: new Date("1994-06-22"),
@@ -674,31 +683,31 @@ export const players: Player[] = [
 
 export const team_players: TeamPlayer[] = [
   ...players.slice(0, 12).map((player, index) => ({
-    team_id: 1,
+    team_id: teamIds[1],
     player_id: player.player_id,
     batting_order: (index % 12) + 1,
     bowling_order: player.bowling_order ?? undefined,
   })),
   ...players.slice(12, 24).map((player, index) => ({
-    team_id: 2,
+    team_id: teamIds[2],
     player_id: player.player_id,
     batting_order: (index % 12) + 1,
     bowling_order: player.bowling_order ?? undefined,
   })),
   ...players.slice(24, 36).map((player, index) => ({
-    team_id: 3,
+    team_id: teamIds[3],
     player_id: player.player_id,
     batting_order: (index % 12) + 1,
     bowling_order: player.bowling_order ?? undefined,
   })),
   ...players.slice(36, 48).map((player, index) => ({
-    team_id: 4,
+    team_id: teamIds[4],
     player_id: player.player_id,
     batting_order: (index % 12) + 1,
     bowling_order: player.bowling_order ?? undefined,
   })),
   ...players.slice(49, 60).map((player, index) => ({
-    team_id: 5,
+    team_id: teamIds[5],
     player_id: player.player_id,
     batting_order: (index % 12) + 1,
     bowling_order: player.bowling_order ?? undefined,
@@ -707,24 +716,24 @@ export const team_players: TeamPlayer[] = [
 
 export const tournaments: Tournament[] = [
   {
-    tournament_id: 1,
+    tournament_id: uuidv4(),
     name: "Premier Cricket League 2024",
     start_date: new Date("2024-09-01"),
     end_date: new Date("2024-10-30"),
     format: "T20",
     locations: ["Oval Stadium", "Central Ground", "City Arena"],
-    team_ids: [1, 2, 3, 4, 5],
+    team_ids: [teamIds[1], teamIds[2], teamIds[3], teamIds[4], teamIds[5]],
     total_rounds: 3,
     total_teams: 5,
   },
   {
-    tournament_id: 2,
+    tournament_id: uuidv4(),
     name: "National Cup 2024",
     start_date: new Date("2024-09-15"),
     end_date: new Date("2024-10-15"),
     format: "ODI",
     locations: ["National Stadium", "Sports Complex"],
-    team_ids: [1, 2, 3, 4],
+    team_ids: [teamIds[1], teamIds[2], teamIds[3], teamIds[4]],
     total_rounds: 2,
     total_teams: 4,
   },
@@ -732,18 +741,18 @@ export const tournaments: Tournament[] = [
 
 export const series: Series[] = [
   {
-    series_id: 1,
+    series_id: uuidv4(),
     name: "Australia vs England Series",
     start_date: new Date("2024-11-01"),
     end_date: new Date("2024-12-15"),
     format: "T20",
     locations: ["Melbourne Cricket Ground", "Sydney Cricket Ground"],
-    team_ids: [1, 2],
+    team_ids: [teamIds[1], teamIds[2]],
     total_rounds: 3,
     type: "bilateral",
   },
   {
-    series_id: 2,
+    series_id: uuidv4(),
     name: "Asian Cricket Cup",
     start_date: new Date("2024-11-01"),
     end_date: new Date("2024-12-20"),
@@ -753,7 +762,7 @@ export const series: Series[] = [
       "Sharjah Cricket Stadium",
       "Abu Dhabi Cricket Stadium",
     ],
-    team_ids: [2, 3, 4],
+    team_ids: [teamIds[2], teamIds[3], teamIds[4]],
     total_rounds: 2,
     type: "trilateral",
   },

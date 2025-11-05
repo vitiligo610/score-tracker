@@ -4,8 +4,8 @@ interface SummaryHeaderProps {
   competitionName: string;
   team1: Team;
   team2: Team;
-  tossWinnerId: number;
-  matchWinnerId: number;
+  tossWinnerId: string;
+  matchWinnerId: string;
 }
 
 const SummaryHeader = ({
@@ -15,7 +15,7 @@ const SummaryHeader = ({
   tossWinnerId,
   matchWinnerId,
 }: SummaryHeaderProps) => {
-  const getTeamNameById = (id: number) => {
+  const getTeamNameById = (id: string) => {
     return id === team1.team_id ? team1.name : team2.name;
   };
 

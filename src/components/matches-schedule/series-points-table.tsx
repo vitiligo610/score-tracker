@@ -19,7 +19,7 @@ import {
 import { fetchSeriesPoints } from "@/lib/actions";
 
 interface Props {
-  series_id: number;
+  series_id: string;
 }
 
 const SeriesPointsTable = async ({ series_id }: Props) => {

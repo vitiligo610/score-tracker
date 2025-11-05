@@ -12,12 +12,12 @@ const seedTeams = async () => {
   console.log("Creating teams table...");
   await pool.query(`
     CREATE TABLE IF NOT EXISTS teams (
-      team_id INT PRIMARY KEY AUTO_INCREMENT,
+      team_id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
       name VARCHAR(100) NOT NULL,
       logo_url VARCHAR(255),
       founded_year INT,
       description TEXT,
-      captain_id INT
+      captain_id VARCHAR(36)
     )
   `);
 
@@ -25,9 +25,9 @@ const seedTeams = async () => {
   await Promise.all(
     teams.map((team) =>
       pool.query(
-        `INSERT INTO teams (name, logo_url, founded_year, description)
-          VALUES (?, ?, ?, ?)`,
-        [team.name, team.logo_url, team.founded_year, team.description]
+        `INSERT INTO teams (team_id, name, logo_url, founded_year, description)
+          VALUES (?, ?, ?, ?, ?)`,
+        [team.team_id, team.name, team.logo_url, team.founded_year, team.description]
       )
     )
   );
@@ -37,7 +37,7 @@ const seedPlayers = async () => {
   console.log("Creating players table...");
   await pool.query(`
     CREATE TABLE IF NOT EXISTS players (
-      player_id INT PRIMARY KEY AUTO_INCREMENT,
+      player_id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
       first_name VARCHAR(50) NOT NULL,
       last_name VARCHAR(50) NOT NULL,
       date_of_birth DATE,
@@ -57,9 +57,10 @@ const seedPlayers = async () => {
   await Promise.all(
     players.map((player) =>
       pool.query(
-        `INSERT INTO players (first_name, last_name, date_of_birth, batting_style, bowling_style, player_role, jersey_number)
-        VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO players (player_id, first_name, last_name, date_of_birth, batting_style, bowling_style, player_role, jersey_number)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
         [
+          player.player_id,
           player.first_name,
           player.last_name,
           player.date_of_birth,
@@ -77,8 +78,8 @@ const seedTeamPlayers = async () => {
   console.log("Creating team players table...");
   await pool.query(`
     CREATE TABLE IF NOT EXISTS team_players(
-      team_id INT,
-      player_id INT,
+      team_id VARCHAR(36),
+      player_id VARCHAR(36),
       batting_order INT,
       bowling_order INT,
       FOREIGN KEY (team_id) REFERENCES teams(team_id) ON DELETE CASCADE,
@@ -127,20 +128,20 @@ const seedMatches = async () => {
   console.log("Creating matches table...");
   await pool.query(`
     CREATE TABLE IF NOT EXISTS matches (
-      match_id INT PRIMARY KEY AUTO_INCREMENT,
-      tournament_id INT,
-      series_id INT,
+      match_id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
+      tournament_id VARCHAR(36),
+      series_id VARCHAR(36),
       match_date DATE,
-      team1_id INT,
-      team2_id INT,
-      winner_team_id INT,
+      team1_id VARCHAR(36),
+      team2_id VARCHAR(36),
+      winner_team_id VARCHAR(36),
       location VARCHAR (100),
       round VARCHAR (50),
       status ENUM('started', 'scheduled', 'completed', 'tbd'),
-      toss_winner_id INT,
+      toss_winner_id VARCHAR(36),
       toss_decision ENUM('batting', 'bowling'),
       match_number INT DEFAULT 0,
-      next_match_id INT,
+      next_match_id VARCHAR(36),
       FOREIGN KEY (team1_id) REFERENCES teams (team_id) ON DELETE CASCADE,
       FOREIGN KEY (team2_id) REFERENCES teams (team_id) ON DELETE CASCADE,
       FOREIGN KEY (next_match_id) REFERENCES matches (match_id) ON DELETE SET NULL,
@@ -154,7 +155,7 @@ const seedTournaments = async () => {
   console.log("Creating tournaments table...");
   await pool.query(`
     CREATE TABLE IF NOT EXISTS tournaments (
-      tournament_id INT PRIMARY KEY AUTO_INCREMENT,
+      tournament_id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
       name VARCHAR(100) NOT NULL,
       start_date DATE,
       end_date DATE,
@@ -168,7 +169,7 @@ const seedTournaments = async () => {
   console.log("Creating tournaments_locations table...");
   await pool.query(`
     CREATE TABLE IF NOT EXISTS tournament_locations (
-      tournament_id INT,
+      tournament_id VARCHAR(36),
       location_name VARCHAR(100),
       FOREIGN KEY (tournament_id) REFERENCES tournaments (tournament_id) ON DELETE CASCADE,
       PRIMARY KEY (tournament_id, location_name)
@@ -178,8 +179,8 @@ const seedTournaments = async () => {
   console.log("Creating tournament_teams table...");
   await pool.query(`
     CREATE TABLE IF NOT EXISTS tournament_teams (
-      tournament_id INT,
-      team_id INT,
+      tournament_id VARCHAR(36),
+      team_id VARCHAR(36),
       FOREIGN KEY (tournament_id) REFERENCES tournaments (tournament_id) ON DELETE CASCADE,
       FOREIGN KEY (team_id) REFERENCES teams (team_id) ON DELETE CASCADE,
       PRIMARY KEY (tournament_id, team_id)
@@ -200,9 +201,10 @@ const seedTournaments = async () => {
 
   for (const tournament of tournaments) {
     await pool.query(
-      `INSERT INTO tournaments (name, start_date, end_date, format)
-      VALUES (?, ?, ?, ?)`,
+      `INSERT INTO tournaments (tournament_id, name, start_date, end_date, format)
+      VALUES (?, ?, ?, ?, ?)`,
       [
+        tournament.tournament_id,
         tournament.name,
         tournament.start_date,
         tournament.end_date,
@@ -239,7 +241,7 @@ const seedTournaments = async () => {
 const createSetTournamentDetailsProc = async () => {
   await pool.query("DROP PROCEDURE IF EXISTS SetTournamentDetails");
   await pool.query(
-    `CREATE PROCEDURE SetTournamentDetails(IN p_tournament_id INT)
+    `CREATE PROCEDURE SetTournamentDetails(IN p_tournament_id VARCHAR(36))
     BEGIN
         DECLARE teams_count INT;
         DECLARE rounds INT;
@@ -261,7 +263,7 @@ const createSetTournamentDetailsProc = async () => {
 const createTournamentScheduleProc = async () => {
   await pool.query("DROP PROCEDURE IF EXISTS CreateTournamentSchedule");
   await pool.query(
-    `CREATE PROCEDURE CreateTournamentSchedule(IN p_tournament_id INT)
+    `CREATE PROCEDURE CreateTournamentSchedule(IN p_tournament_id VARCHAR(36))
     BEGIN
         DECLARE total_teams INT;
         DECLARE next_power_of_2 INT;
@@ -271,8 +273,8 @@ const createTournamentScheduleProc = async () => {
         DECLARE matches_count INT;
         DECLARE i INT;
         DECLARE match_no INT;
-        DECLARE team1_id INT;
-        DECLARE team2_id INT;
+        DECLARE team1_id VARCHAR(36);
+        DECLARE team2_id VARCHAR(36);
         DECLARE t_start_date DATE;
         DECLARE location VARCHAR(100);
 
@@ -280,7 +282,7 @@ const createTournamentScheduleProc = async () => {
         CREATE TEMPORARY TABLE temp_teams
         (
             id      INT AUTO_INCREMENT PRIMARY KEY,
-            team_id INT
+            team_id VARCHAR(36)
         );
 
         -- Fetch all teams for the given tournament
@@ -323,8 +325,8 @@ const createTournamentScheduleProc = async () => {
                 );
 
                 -- Insert match into matches table
-                INSERT INTO matches (tournament_id, team1_id, team2_id, round, status, match_date, location, match_number)
-                VALUES (p_tournament_id, team1_id, team2_id, 1, 'scheduled', t_start_date, location, match_no);
+                INSERT INTO matches (match_id, tournament_id, team1_id, team2_id, round, status, match_date, location, match_number)
+                VALUES (UUID(), p_tournament_id, team1_id, team2_id, 1, 'scheduled', t_start_date, location, match_no);
 
                 -- Move to the next pair of teams
                 SET i = i + 2;
@@ -342,7 +344,7 @@ const createTournamentScheduleProc = async () => {
                     SELECT team_id INTO team1_id FROM temp_teams WHERE id = i;
 
                     -- Fetch the next opponent from winners of round 1
-                    SELECT id INTO team2_id FROM temp_teams WHERE id = i + 1;
+                    SELECT team_id INTO team2_id FROM temp_teams WHERE id = i + 1;
 
                     SET location = (
                         SELECT location_name
@@ -353,8 +355,8 @@ const createTournamentScheduleProc = async () => {
                     );
 
                     -- Insert match into round 2
-                    INSERT INTO matches (tournament_id, team1_id, team2_id, round, status, match_date, location, match_number)
-                    VALUES (p_tournament_id, team1_id, team2_id, 2, 'scheduled', t_start_date, location, match_no);
+                    INSERT INTO matches (match_id, tournament_id, team1_id, team2_id, round, status, match_date, location, match_number)
+                    VALUES (UUID(), p_tournament_id, team1_id, team2_id, 2, 'scheduled', t_start_date, location, match_no);
 
                     SET i = i + 2;
                     SET match_no = match_no + 1;
@@ -372,8 +374,8 @@ const createTournamentScheduleProc = async () => {
                         LIMIT 1
                     );
 
-                    INSERT INTO matches (tournament_id, team1_id, round, status, match_date, location, match_number)
-                    VALUES (p_tournament_id, team1_id, 2, 'tbd', t_start_date, location, match_no);
+                    INSERT INTO matches (match_id, tournament_id, team1_id, round, status, match_date, location, match_number)
+                    VALUES (UUID(), p_tournament_id, team1_id, 2, 'tbd', t_start_date, location, match_no);
 
                     SET i = i + 1;
                     SET match_no = match_no + 1;
@@ -387,8 +389,8 @@ const createTournamentScheduleProc = async () => {
                 SET i = 1;
                 WHILE i <= matches_count
                     DO
-                        INSERT INTO matches (tournament_id, round, status, match_number)
-                        VALUES (p_tournament_id, current_round, 'tbd', i);
+                        INSERT INTO matches (match_id, tournament_id, round, status, match_number)
+                        VALUES (UUID(), p_tournament_id, current_round, 'tbd', i);
 
                         SET i = i + 1;
                     END WHILE;
@@ -405,11 +407,11 @@ const createUpdateNextMatchWinnerProc = async () => {
   await pool.query("DROP PROCEDURE IF EXISTS UpdateNextMatchWinner");
   await pool.query(
     `CREATE PROCEDURE UpdateNextMatchWinner(
-        IN p_match_id INT,
-        IN p_winner_team_id INT
+        IN p_match_id VARCHAR(36),
+        IN p_winner_team_id VARCHAR(36)
     )
     BEGIN
-        DECLARE next_match INT;
+        DECLARE next_match VARCHAR(36);
         DECLARE slot_filled INT;
 
         SELECT next_match_id INTO next_match FROM matches WHERE match_id = p_match_id;
@@ -436,14 +438,14 @@ const seedSeries = async () => {
   console.log("Creating series table...");
   await pool.query(
     `CREATE TABLE IF NOT EXISTS series (
-      series_id INT PRIMARY KEY AUTO_INCREMENT,
+      series_id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
       name VARCHAR (100) NOT NULL,
       format ENUM('T20', 'ODI', 'Test'),
       type ENUM ('bilateral', 'trilateral'),
       start_date DATE,
       end_date DATE,
       total_rounds INT DEFAULT 3,
-      winner_team_id INT,
+      winner_team_id VARCHAR(36),
       finished BOOLEAN DEFAULT FALSE
     )`
   );
@@ -451,7 +453,7 @@ const seedSeries = async () => {
   console.log("Creating series_locations table...");
   await pool.query(`
     CREATE TABLE IF NOT EXISTS series_locations (
-      series_id INT,
+      series_id VARCHAR(36),
       location_name VARCHAR(100),
       FOREIGN KEY (series_id) REFERENCES series (series_id) ON DELETE CASCADE,
       PRIMARY KEY (series_id, location_name)
@@ -461,8 +463,8 @@ const seedSeries = async () => {
   console.log("Creating series_teams table...");
   await pool.query(`
     CREATE TABLE IF NOT EXISTS series_teams (
-      series_id INT,
-      team_id INT,
+      series_id VARCHAR(36),
+      team_id VARCHAR(36),
       FOREIGN KEY (series_id) REFERENCES series (series_id) ON DELETE CASCADE,
       FOREIGN KEY (team_id) REFERENCES teams (team_id) ON DELETE CASCADE,
       PRIMARY KEY (series_id, team_id)
@@ -472,8 +474,8 @@ const seedSeries = async () => {
   console.log("Creating series_points table..."); // for trilateral series
   await pool.query(
     `CREATE TABLE IF NOT EXISTS series_points (
-      series_id INT NOT NULL,
-      team_id INT NOT NULL,
+      series_id VARCHAR(36) NOT NULL,
+      team_id VARCHAR(36) NOT NULL,
       matches_played INT DEFAULT 0,
       wins INT DEFAULT 0,
       losses INT DEFAULT 0,
@@ -498,9 +500,9 @@ const seedSeries = async () => {
   console.log("Seeding series...");
   for (const s of series) {
     await pool.query(
-      `INSERT INTO series (name, start_date, end_date, format, type, total_rounds)
-      VALUES (?, ?, ?, ?, ?, ?)`,
-      [s.name, s.start_date, s.end_date, s.format, s.type, s.total_rounds]
+      `INSERT INTO series (series_id, name, start_date, end_date, format, type, total_rounds)
+      VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [s.series_id, s.name, s.start_date, s.end_date, s.format, s.type, s.total_rounds]
     );
 
     for (const location of s.locations) {
@@ -526,13 +528,13 @@ const seedSeries = async () => {
 const createSeriesScheduleProc = async () => {
   await pool.query("DROP PROCEDURE IF EXISTS CreateSeriesSchedule");
   await pool.query(
-    `CREATE PROCEDURE CreateSeriesSchedule (IN p_series_id INT)
+    `CREATE PROCEDURE CreateSeriesSchedule (IN p_series_id VARCHAR(36))
     BEGIN
         DECLARE series_type VARCHAR(30);
         DECLARE series_rounds INT;
         DECLARE i INT;
-        DECLARE team1_id INT;
-        DECLARE team2_id INT;
+        DECLARE team1_id VARCHAR(36);
+        DECLARE team2_id VARCHAR(36);
         DECLARE s_start_date DATE;
         DECLARE location VARCHAR(100);
 
@@ -546,7 +548,7 @@ const createSeriesScheduleProc = async () => {
         FROM series
         WHERE series_id = p_series_id;
 
-        CREATE TEMPORARY TABLE temp_teams (id INT AUTO_INCREMENT PRIMARY KEY, team_id INT);
+        CREATE TEMPORARY TABLE temp_teams (id INT AUTO_INCREMENT PRIMARY KEY, team_id VARCHAR(36));
 
         INSERT INTO temp_teams (team_id)
         SELECT team_id FROM series_teams
@@ -569,8 +571,8 @@ const createSeriesScheduleProc = async () => {
                         ORDER BY RAND()
                         LIMIT 1
                     );
-                    INSERT INTO matches (series_id, team1_id, team2_id, round, status, match_date, location, match_number)
-                    VALUES (p_series_id, team1_id, team2_id, 1, 'scheduled', s_start_date, location, i);
+                    INSERT INTO matches (match_id, series_id, team1_id, team2_id, round, status, match_date, location, match_number)
+                    VALUES (UUID(), p_series_id, team1_id, team2_id, 1, 'scheduled', s_start_date, location, i);
 
                     SET i = i + 1;
                 END WHILE;
@@ -591,8 +593,8 @@ const createSeriesScheduleProc = async () => {
                         LIMIT 1
                     );
 
-                    INSERT INTO matches (series_id, team1_id, team2_id, round, status, match_date, location, match_number)
-                    VALUES (p_series_id, team1_id, team2_id, i, 'scheduled', s_start_date, location, 1);
+                    INSERT INTO matches (match_id, series_id, team1_id, team2_id, round, status, match_date, location, match_number)
+                    VALUES (UUID(), p_series_id, team1_id, team2_id, i, 'scheduled', s_start_date, location, 1);
 
                     SELECT team_id INTO team1_id FROM temp_teams
                     WHERE id = 2;
@@ -607,8 +609,8 @@ const createSeriesScheduleProc = async () => {
                         LIMIT 1
                     );
 
-                    INSERT INTO matches (series_id, team1_id, team2_id, round, status, match_date, location, match_number)
-                    VALUES (p_series_id, team1_id, team2_id, i, 'scheduled', s_start_date, location, 2);
+                    INSERT INTO matches (match_id, series_id, team1_id, team2_id, round, status, match_date, location, match_number)
+                    VALUES (UUID(), p_series_id, team1_id, team2_id, i, 'scheduled', s_start_date, location, 2);
 
                     SELECT team_id INTO team1_id FROM temp_teams
                     WHERE id = 3;
@@ -623,8 +625,8 @@ const createSeriesScheduleProc = async () => {
                         LIMIT 1
                     );
 
-                    INSERT INTO matches (series_id, team1_id, team2_id, round, status, match_date, location, match_number)
-                    VALUES (p_series_id, team1_id, team2_id, i, 'scheduled', s_start_date, location, 3);
+                    INSERT INTO matches (match_id, series_id, team1_id, team2_id, round, status, match_date, location, match_number)
+                    VALUES (UUID(), p_series_id, team1_id, team2_id, i, 'scheduled', s_start_date, location, 3);
                     
                     SET i = i + 1;
                 END WHILE;
@@ -660,9 +662,9 @@ const seedInnings = async () => {
   console.log("Creating innings table...");
   await pool.query(
     `CREATE TABLE IF NOT EXISTS innings (
-      inning_id INT PRIMARY KEY AUTO_INCREMENT,
-      match_id INT NOT NULL,
-      team_id INT NOT NULL,
+      inning_id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
+      match_id VARCHAR(36) NOT NULL,
+      team_id VARCHAR(36) NOT NULL,
       number INT,
       total_runs INT DEFAULT 0,
       total_wickets INT DEFAULT 0,
@@ -676,15 +678,16 @@ const seedInnings = async () => {
   console.log("Creating procedure for initial innings...");
   await pool.query("DROP PROCEDURE IF EXISTS CreateInningsForMatch");
   await pool.query(
-    `CREATE PROCEDURE CreateInningsForMatch (IN p_match_id INT, IN batting_team_id INT, IN bowling_team_id INT, IN inning_number INT, IN p_target_score INT)
+    `CREATE PROCEDURE CreateInningsForMatch (IN p_match_id VARCHAR(36), IN batting_team_id VARCHAR(36), IN bowling_team_id VARCHAR(36), IN inning_number INT, IN p_target_score INT)
     BEGIN
-        DECLARE p_inning_id INT;
-        DECLARE p_bowler_id INT;
+        DECLARE p_inning_id VARCHAR(36);
+        DECLARE p_bowler_id VARCHAR(36);
 
-        INSERT INTO innings (match_id, team_id, number, target_score)
-        VALUES (p_match_id, batting_team_id, inning_number, p_target_score);
+        SELECT UUID() INTO p_inning_id;
+        
+        INSERT INTO innings (inning_id, match_id, team_id, number, target_score)
+        VALUES (p_inning_id, p_match_id, batting_team_id, inning_number, p_target_score);
 
-        SELECT LAST_INSERT_ID() INTO p_inning_id;
         SET p_bowler_id = (
             SELECT player_id FROM team_players
             WHERE team_id = bowling_team_id
@@ -703,9 +706,9 @@ const seedOvers = async () => {
   console.log("Creating overs table...");
   await pool.query(
     `CREATE TABLE IF NOT EXISTS overs (
-      inning_id INT NOT NULL,
+      inning_id VARCHAR(36) NOT NULL,
       over_number INT,
-      bowler_id INT NOT NULL,
+      bowler_id VARCHAR(36) NOT NULL,
       total_runs INT DEFAULT 0,
       total_wickets INT DEFAULT 0,
       FOREIGN KEY (inning_id) REFERENCES innings (inning_id) ON DELETE CASCADE,
@@ -718,13 +721,13 @@ const seedBalls = async () => {
   console.log("Creating balls table...");
   await pool.query(
     `CREATE TABLE IF NOT EXISTS balls (
-      ball_id INT PRIMARY KEY AUTO_INCREMENT,
-      inning_id INT NOT NULL,
+      ball_id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
+      inning_id VARCHAR(36) NOT NULL,
       over_number INT NOT NULL,
       ball_number INT,
-      batsman_id INT,
-      non_striker_id INT,
-      bowler_id INT,
+      batsman_id VARCHAR(36),
+      non_striker_id VARCHAR(36),
+      bowler_id VARCHAR(36),
       runs_scored INT DEFAULT 0,
       is_legal BOOLEAN DEFAULT TRUE,
       is_wicket BOOLEAN DEFAULT FALSE,
@@ -738,12 +741,12 @@ const seedBalls = async () => {
   console.log("Creating dismissals table...");
   await pool.query(
     `CREATE TABLE IF NOT EXISTS dismissals (
-      dismissal_id INT PRIMARY KEY AUTO_INCREMENT,
-      inning_id INT NOT NULL,
-      ball_id INT NOT NULL,
-      batsman_id INT,
-      bowler_id INT,
-      fielder_id INT,
+      dismissal_id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
+      inning_id VARCHAR(36) NOT NULL,
+      ball_id VARCHAR(36) NOT NULL,
+      batsman_id VARCHAR(36),
+      bowler_id VARCHAR(36),
+      fielder_id VARCHAR(36),
       dismissal_type ENUM('Bowled', 'Caught', 'LBW', 'Run Out', 'Stumped', 'Hit Wicket', 'Others'),
       runs_scored INT DEFAULT 0,
       wicket_number INT DEFAULT 1,
@@ -758,8 +761,8 @@ const seedBalls = async () => {
   console.log("Creating extras table...");
   await pool.query(
     `CREATE TABLE IF NOT EXISTS extras (
-      extra_id INT PRIMARY KEY AUTO_INCREMENT,
-      ball_id INT NOT NULL,
+      extra_id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
+      ball_id VARCHAR(36) NOT NULL,
       type ENUM('Wide', 'No Ball', 'Bye', 'Leg Bye', 'Penalty'),
       runs INT,
       FOREIGN KEY (ball_id) REFERENCES balls (ball_id) ON DELETE CASCADE
@@ -771,15 +774,15 @@ const seedPerformances = async () => {
   console.log("Creating match_batting_performance table...");
   await pool.query(
     `CREATE TABLE IF NOT EXISTS match_batting_performance (
-      match_id INT,
-      inning_id INT,
-      player_id INT,
+      match_id VARCHAR(36),
+      inning_id VARCHAR(36),
+      player_id VARCHAR(36),
       runs_scored INT DEFAULT 0,
       balls_faced INT DEFAULT 0,
       fours INT DEFAULT 0,
       sixes INT DEFAULT 0,
       strike_rate DECIMAL(6, 2) DEFAULT 0.00,
-      dismissal_id INT,
+      dismissal_id VARCHAR(36),
       FOREIGN KEY (match_id) REFERENCES matches (match_id) ON DELETE CASCADE,
       FOREIGN KEY (inning_id) REFERENCES innings (inning_id) ON DELETE CASCADE,
       FOREIGN KEY (dismissal_id) REFERENCES dismissals (dismissal_id) ON DELETE SET NULL,
@@ -790,9 +793,9 @@ const seedPerformances = async () => {
   console.log("Creating match_bowling_performance table...");
   await pool.query(
     `CREATE TABLE IF NOT EXISTS match_bowling_performance (
-      match_id INT,
-      inning_id INT,
-      player_id INT,
+      match_id VARCHAR(36),
+      inning_id VARCHAR(36),
+      player_id VARCHAR(36),
       overs_bowled DECIMAL(5, 1) DEFAULT 0.0,
       maiden_overs INT DEFAULT 0,
       dots INT DEFAULT 0,
@@ -816,9 +819,9 @@ const createInsertMatchPerformanceEntriesTrigger = async () => {
     AFTER INSERT ON innings
     FOR EACH ROW
     BEGIN
-        DECLARE batting_team_id INT;
-        DECLARE bowling_team_id INT;
-        DECLARE previous_batting_team_id INT;
+        DECLARE batting_team_id VARCHAR(36);
+        DECLARE bowling_team_id VARCHAR(36);
+        DECLARE previous_batting_team_id VARCHAR(36);
 
         -- Check if it's the first inning
         IF NEW.number = 1 THEN
@@ -1008,8 +1011,8 @@ const createOnMatchCompleteTrigger = async () => {
     AFTER UPDATE ON matches
     FOR EACH ROW
     BEGIN
-        DECLARE winning_team_id INT;
-        DECLARE losing_team_id INT;
+        DECLARE winning_team_id VARCHAR(36);
+        DECLARE losing_team_id VARCHAR(36);
         DECLARE is_trilateral_series BOOLEAN DEFAULT FALSE;
         DECLARE total_runs_team1 INT;
         DECLARE total_overs_team1 INT;

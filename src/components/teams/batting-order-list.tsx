@@ -23,8 +23,8 @@ import { useToast } from "@/hooks/use-toast";
 
 interface BattingOrderListProps {
   players: PlayerWithTeam[];
-  teamId: number;
-  captainId?: number;
+  teamId: string;
+  captainId?: string;
 }
 
 const BattingOrderList = ({

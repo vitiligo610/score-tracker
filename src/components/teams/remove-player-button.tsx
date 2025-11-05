@@ -25,8 +25,8 @@ import { useState } from "react";
 import { removePlayerFromTeam } from "@/lib/actions";
 
 interface Props {
-  player_id: number;
-  team_id: number;
+  player_id: string;
+  team_id: string;
 }
 
 const RemovePlayerButton = ({ player_id, team_id }: Props) => {
