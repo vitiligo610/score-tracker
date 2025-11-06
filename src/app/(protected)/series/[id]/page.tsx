@@ -11,7 +11,8 @@ import {
 import { PageIdProps } from "@/lib/definitions";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
-import { getWorkOsUser } from "@/lib/utils"
+
+import {getWorkOsUser} from "@/lib/auth";
 
 export const generateMetadata = async ({ params }: PageIdProps) => {
   const series_id = (await params).id;

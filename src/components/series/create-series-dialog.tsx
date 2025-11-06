@@ -303,8 +303,8 @@ const CreateSeriesDialog = ({ userId }: { userId: string }) => {
                     <TeamSelect
                       userId={userId}
                       value={field.value}
-                      onChange={(values: any) =>
-                        field.onChange(values.map(Number))
+                      onChange={(values) =>
+                        field.onChange(values)
                       }
                       maxTeams={form.getValues("type") === "bilateral" ? 2 : 3}
                     />

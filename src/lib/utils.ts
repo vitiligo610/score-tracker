@@ -1,22 +1,10 @@
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
-import {
-  Tournament,
-  Series,
-  Match,
-  Extras,
-  ExtrasCount,
-  Ball,
-  OngoingInnings,
-  Team,
-} from "@/lib/definitions";
-import { withAuth } from "@workos-inc/authkit-nextjs";
+import {type ClassValue, clsx} from "clsx";
+import {twMerge} from "tailwind-merge";
+import {Ball, Extras, ExtrasCount, Match, OngoingInnings, Series, Team, Tournament,} from "@/lib/definitions";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
-
-export const getWorkOsUser = async () => (await withAuth({ ensureSignedIn: true })).user;
 
 export const createPageUrl = (path: string, pageNum: number) => {
   const params = new URLSearchParams();

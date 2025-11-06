@@ -501,7 +501,7 @@ export const fetchTournaments = async (userId: string, filter: string) => {
     conditions.push("user_id = ?");
     params.push(userId);
 
-    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join("AND")}` : "";
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
     const [data]: any = await pool.query(
       `SELECT * FROM tournaments
@@ -796,7 +796,7 @@ export const fetchSeries = async (userId: string, filter: string) => {
     conditions.push("user_id = ?");
     params.push(userId);
 
-    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join("AND")}` : "";
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
 
     const [data]: any = await pool.query(
       `SELECT * FROM series

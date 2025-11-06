@@ -7,7 +7,8 @@ import { Suspense } from "react";
 import { PlusIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import BackLink from "@/components/ui/back-link";
-import {getWorkOsUser} from "@/lib/utils";
+
+import {getWorkOsUser} from "@/lib/auth";
 
 const Players = async ({
   searchParams

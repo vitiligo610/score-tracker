@@ -72,7 +72,7 @@ const TeamFormDialog = ({ userId, team, children }: TeamDialogProps) => {
     try {
       !team
         ? await insertTeam(userId, values)
-        : await updateTeam({ team_id: team?.team_id, ...values });
+        : await updateTeam({ user_id: userId, team_id: team?.team_id, ...values });
       setOpen(false);
       form.reset();
       toast({

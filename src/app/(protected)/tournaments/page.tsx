@@ -5,7 +5,8 @@ import AllTournaments from "@/components/tournaments/all-tournaments";
 import { Suspense } from "react";
 import AllTournamentsSkeleton from "@/components/ui/skeletons/all-tournaments-skeleton";
 import BackLink from "@/components/ui/back-link";
-import {getWorkOsUser} from "@/lib/utils";
+
+import {getWorkOsUser} from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "Tournaments",

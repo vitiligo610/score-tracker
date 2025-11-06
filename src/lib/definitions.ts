@@ -139,7 +139,7 @@ export interface Tournament extends Competition {
   total_teams?: number;
 }
 
-export type TournamentWithoutId = Omit<Tournament, "tournament_id">;
+export type TournamentWithoutId = Omit<Tournament, "user_id" | "tournament_id">;
 
 export interface TournamentMatch extends Match {
   tournament_id: string;
@@ -152,7 +152,7 @@ export interface Series extends Competition {
   type: SeriesType;
 }
 
-export type SeriesWithoutId = Omit<Series, "series_id">;
+export type SeriesWithoutId = Omit<Series, "user_id" | "series_id">;
 
 export interface SeriesMatch extends Match {
   [x: string]: any;

@@ -9,7 +9,8 @@ import {
 } from "@/lib/actions";
 import { PageIdProps } from "@/lib/definitions";
 import { notFound } from "next/navigation";
-import {getWorkOsUser} from "@/lib/utils";
+
+import {getWorkOsUser} from "@/lib/auth";
 
 export const generateMetadata = async ({ params }: PageIdProps) => {
   const team_id = (await params).id;

@@ -5,7 +5,8 @@ import BackLink from "@/components/ui/back-link";
 import AllSeriesSkeleton from "@/components/ui/skeletons/all-series-skeleton";
 import { Metadata } from "next";
 import { Suspense } from "react";
-import {getWorkOsUser} from "@/lib/utils";
+
+import {getWorkOsUser} from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "Series",

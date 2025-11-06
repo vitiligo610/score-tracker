@@ -86,7 +86,7 @@ const PlayerFormDialog = ({ userId, player, children }: PlayerDialogProps) => {
     try {
       !player
         ? await insertPlayer(userId, values)
-        : await updatePlayer({ player_id: player.player_id, ...values });
+        : await updatePlayer({ player_id: player.player_id, user_id: userId, ...values });
       setOpen(false);
       if (!player) form.reset();
       toast({

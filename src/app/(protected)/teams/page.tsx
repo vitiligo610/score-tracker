@@ -7,7 +7,8 @@ import TeamsSkeleton from "@/components/ui/skeletons/teams-skeleton";
 import { PlusIcon } from "lucide-react";
 import { Metadata } from "next";
 import { Suspense } from "react";
-import {getWorkOsUser} from "@/lib/utils";
+
+import {getWorkOsUser} from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "Teams",
@@ -43,6 +44,7 @@ const Teams = async ({
       </div>
       <Suspense fallback={<TeamsSkeleton />}>
         <TeamsInfo
+          userId={userId}
           query={searchQuery}
           page={currentPage}
         />

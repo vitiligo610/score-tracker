@@ -8,7 +8,8 @@ import MatchSchedule from "@/components/matches-schedule/matches-schedule";
 import { Suspense } from "react";
 import CompetitionSkeleton from "@/components/ui/skeletons/competition-skeleton";
 import { PageIdProps } from "@/lib/definitions";
-import {getWorkOsUser} from "@/lib/utils";
+
+import {getWorkOsUser} from "@/lib/auth";
 
 export const generateMetadata = async ({ params }: PageIdProps) => {
   const tournament_id = (await params).id;
