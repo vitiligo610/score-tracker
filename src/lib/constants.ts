@@ -54,4 +54,4 @@ export const OVERS_FOR_FORMAT = {
   Test: 100,
 };
 
-export const TOTAL_WICKETS = 2;
+export const TOTAL_WICKETS = 10;
