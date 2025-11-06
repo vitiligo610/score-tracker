@@ -11,6 +11,7 @@ import {
 import { PageIdProps } from "@/lib/definitions";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { getWorkOsUser } from "@/lib/utils"
 
 export const generateMetadata = async ({ params }: PageIdProps) => {
   const series_id = (await params).id;
@@ -24,8 +25,9 @@ export const generateMetadata = async ({ params }: PageIdProps) => {
 
 const SeriesPage = async ({ params }: PageIdProps) => {
   const series_id = (await params).id;
+  const { id: userId } = await getWorkOsUser();
 
-  const { series } = await fetchSeriesById(series_id);
+  const { series } = await fetchSeriesById(userId, series_id);
   const { matches } = await fetchSeriesMatches(series_id);
 
   if (!series) {

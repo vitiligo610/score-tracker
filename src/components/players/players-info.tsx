@@ -1,17 +1,10 @@
 import { fetchPlayers } from "@/lib/actions";
 import { PlayerInfo } from "@/components/players/player-info";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-  PaginationNext,
-  PaginationPrevious,
-} from "@/components/ui/pagination";
 import { PLAYERS_PER_PAGE } from "@/lib/constants";
-import { createPageUrl } from "@/lib/utils";
 import BottomPagiation from "../layout/bottom-pagination";
 
 interface Props {
+  userId: string;
   query: string;
   page: number;
   roles: string[];
@@ -19,8 +12,8 @@ interface Props {
   bowlingStyles: string[];
 }
 
-const PlayersInfo = async ({ query, page, roles, battingStyles, bowlingStyles }: Props) => {
-  const result = await fetchPlayers(query, page, roles, battingStyles, bowlingStyles);
+const PlayersInfo = async ({ userId, query, page, roles, battingStyles, bowlingStyles }: Props) => {
+  const result = await fetchPlayers(userId, query, page, roles, battingStyles, bowlingStyles);
 
   if (!result.success) {
     throw new Error(result.error || "Failed to fetch players.");
@@ -32,7 +25,7 @@ const PlayersInfo = async ({ query, page, roles, battingStyles, bowlingStyles }:
     <div className="space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
         {players.map((player) => (
-          <PlayerInfo key={player.player_id} player={player} />
+          <PlayerInfo key={player.player_id} player={player} userId={userId} />
         ))}
       </div>
 

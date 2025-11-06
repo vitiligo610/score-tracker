@@ -16,6 +16,7 @@ export interface PageIdProps {
 };
 
 export type Team = {
+  user_id: string;
   team_id: string;
   name: string;
   logo_url?: string;
@@ -25,13 +26,14 @@ export type Team = {
   captain_id?: string;
 };
 
-export type TeamWithoutId = Omit<Team, "team_id">;
+export type TeamWithoutId = Omit<Team, "user_id" | "team_id">;
 
 type BattingStyle = (typeof BATTING_STYLES)[number];
 type BowlingStyle = (typeof BOWLING_STYLES)[number];
 type PlayerRole = (typeof PLAYER_ROLES)[number];
 
 export type Player = {
+  user_id: string
   player_id: string;
   first_name: string;
   last_name: string;
@@ -45,7 +47,7 @@ export type Player = {
   dismissed?: boolean;
 };
 
-export type PlayerWithoutId = Omit<Player, "player_id">;
+export type PlayerWithoutId = Omit<Player, "user_id" | "player_id">;
 
 export interface PlayerWithTeam extends Player {
   team_id: string;
@@ -121,6 +123,7 @@ export interface OngoingMatch extends Match {
 type MatchFormat = (typeof MATCH_FORMATS)[number];
 
 interface Competition {
+  user_id: string;
   name: string;
   start_date: Date;
   end_date: Date;

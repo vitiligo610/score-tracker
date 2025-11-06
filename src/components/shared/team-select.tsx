@@ -23,19 +23,20 @@ import { Team } from "@/lib/definitions";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface TeamSelectProps {
+  user_id: string;
   value: string[];
   onChange: (value: string[]) => void;
   maxTeams?: number;
 }
 
-const TeamSelect = ({ value, onChange, maxTeams }: TeamSelectProps) => {
+const TeamSelect = ({ userId, value, onChange, maxTeams }: TeamSelectProps) => {
   const [open, setOpen] = useState(false);
   const [teams, setTeams] = useState<Team[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchTeams = async () => {
-      const { allTeams } = await fetchAllTeams();
+      const { allTeams } = await fetchAllTeams(userId);
       setTeams(allTeams);
       setLoading(false);
     };

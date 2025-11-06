@@ -51,11 +51,12 @@ const formSchema = z.object({
 });
 
 interface PlayerDialogProps {
+  userId: string;
   player?: Player;
   children: React.ReactNode;
 }
 
-const PlayerFormDialog = ({ player, children }: PlayerDialogProps) => {
+const PlayerFormDialog = ({ userId, player, children }: PlayerDialogProps) => {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -84,7 +85,7 @@ const PlayerFormDialog = ({ player, children }: PlayerDialogProps) => {
     setIsSubmitting(true);
     try {
       !player
-        ? await insertPlayer(values)
+        ? await insertPlayer(userId, values)
         : await updatePlayer({ player_id: player.player_id, ...values });
       setOpen(false);
       if (!player) form.reset();

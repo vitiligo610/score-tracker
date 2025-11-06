@@ -7,6 +7,7 @@ import { Suspense } from "react";
 import { PlusIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import BackLink from "@/components/ui/back-link";
+import {getWorkOsUser} from "@/lib/utils";
 
 const Players = async ({
   searchParams
@@ -26,12 +27,14 @@ const Players = async ({
   const battingStyles = params?.batting || [];
   const bowlingStyles = params?.bowling || [];
 
+  const { id: userId } = await getWorkOsUser();
+
   return (
     <div className="container mx-auto pb-8 space-y-8">
       <BackLink href="/home" label="Home" />
       <div className="w-full flex justify-between items-center mb-12">
         <h1 className="text-7xl text-primary font-bold">Players</h1>
-        <PlayerFormDialog>
+        <PlayerFormDialog userId={userId}>
           <Button>
             <PlusIcon className="mr-2 h-4 w-4" /> Add Player
           </Button>
@@ -43,6 +46,7 @@ const Players = async ({
       </div>
       <Suspense fallback={<PlayersSkeleton />}>
         <PlayersInfo
+          userId={userId}
           query={searchQuery}
           page={currentPage}
           roles={roles}

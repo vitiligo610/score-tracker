@@ -7,6 +7,7 @@ import TeamsSkeleton from "@/components/ui/skeletons/teams-skeleton";
 import { PlusIcon } from "lucide-react";
 import { Metadata } from "next";
 import { Suspense } from "react";
+import {getWorkOsUser} from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Teams",
@@ -24,12 +25,14 @@ const Teams = async ({
   const searchQuery = params?.query || "";
   const currentPage = Number(params?.page) || 1;
 
+  const { id: userId } = await getWorkOsUser();
+
   return (
     <div className="container mx-auto pb-8 space-y-8">
       <BackLink href="/home" label="Home" />
       <div className="w-full flex justify-between items-center mb-12">
         <h1 className="text-7xl text-primary font-bold">Teams</h1>
-        <TeamFormDialog>
+        <TeamFormDialog userId={userId}>
           <Button>
             <PlusIcon className="mr-2 h-4 w-4" /> Add Team
           </Button>

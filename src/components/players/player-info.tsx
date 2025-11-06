@@ -15,8 +15,10 @@ import {
 import DeletePlayerButton from "./delete-player-button";
 import PlayerFormDialog from "./player-form-dialog";
 import Link from "next/link";
+import {userInfo} from "node:os";
 
 interface PlayerInfoProps {
+  userId: string;
   player: Player;
 }
 
@@ -35,7 +37,7 @@ const getPlayerRoleIcon = (role: string) => {
   }
 };
 
-export function PlayerInfo({ player }: PlayerInfoProps) {
+export function PlayerInfo({ userId, player }: PlayerInfoProps) {
   return (
     <Card className="w-full max-w-2xl mx-auto hover:shadow-lg transition-shadow">
       <CardHeader className="flex flex-row justify-between items-center">
@@ -44,7 +46,7 @@ export function PlayerInfo({ player }: PlayerInfoProps) {
             <User2 className="w-6 h-6 text-primary" />
           </div>
           <div>
-            <Link href={`/src/app/(protected)/players/${player.player_id}`}>
+            <Link href={`/players/${player.player_id}`}>
               <div className="flex items-center hover:text-primary transition-colors">
                 <h2 className="text-2xl font-bold">{`${player.first_name} ${player.last_name}`}</h2>
                 {getPlayerRoleIcon(player.player_role)}
@@ -54,7 +56,7 @@ export function PlayerInfo({ player }: PlayerInfoProps) {
           </div>
         </div>
         <div className="flex gap-3">
-          <PlayerFormDialog player={player}>
+          <PlayerFormDialog userId={userId} player={player}>
             <Button variant="default" size="icon">
               <EditIcon />
             </Button>

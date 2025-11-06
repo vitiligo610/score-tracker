@@ -25,7 +25,7 @@ const TournamentCard = ({ tournament }: TournamentCardProps) => {
 
   return (
     <Link
-      href={`/src/app/(protected)/tournaments/${tournament.tournament_id}`}
+      href={`/tournaments/${tournament.tournament_id}`}
       className="block transform hover:scale-[1.01] transition-all duration-200 ease-in-out"
     >
       <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300 h-[270px] flex flex-col">

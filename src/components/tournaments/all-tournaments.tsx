@@ -1,8 +1,8 @@
 import { fetchTournaments } from "@/lib/actions";
 import TournamentCard from "@/components/tournaments/tournament-card";
 
-const AllTournaments = async ({ filter }: { filter?: string }) => {
-  const { tournaments } = await fetchTournaments(filter || "all");
+const AllTournaments = async ({ userId, filter }: { userId: string, filter?: string }) => {
+  const { tournaments } = await fetchTournaments(userId, filter || "all");
 
   return (
     <>

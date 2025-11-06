@@ -81,7 +81,7 @@ const formSchema = z
 
 type SeriesFormValues = z.infer<typeof formSchema>;
 
-const CreateSeriesDialog = () => {
+const CreateSeriesDialog = ({ userId }: { userId: string }) => {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [locationInput, setLocationInput] = useState("");
@@ -108,7 +108,7 @@ const CreateSeriesDialog = () => {
   const onSubmit = async (values: SeriesFormValues) => {
     try {
       setIsSubmitting(true);
-      await insertSeries({
+      await insertSeries(userId, {
         ...values,
         start_date: values.dateRange.from,
         end_date: values.dateRange.to,
@@ -301,6 +301,7 @@ const CreateSeriesDialog = () => {
                   <FormLabel>Select Teams</FormLabel>
                   <FormControl>
                     <TeamSelect
+                      userId={userId}
                       value={field.value}
                       onChange={(values: any) =>
                         field.onChange(values.map(Number))

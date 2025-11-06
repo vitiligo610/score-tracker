@@ -36,6 +36,7 @@ import { Textarea } from "../ui/textarea";
 import { Loader } from "lucide-react";
 
 interface TeamDialogProps {
+  userId: string;
   team?: Team;
   children: React.ReactNode;
 }
@@ -48,7 +49,7 @@ const formSchema = z.object({
   description: z.string(),
 });
 
-const TeamFormDialog = ({ team, children }: TeamDialogProps) => {
+const TeamFormDialog = ({ userId, team, children }: TeamDialogProps) => {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
@@ -70,7 +71,7 @@ const TeamFormDialog = ({ team, children }: TeamDialogProps) => {
     setIsSubmitting(true);
     try {
       !team
-        ? await insertTeam(values)
+        ? await insertTeam(userId, values)
         : await updateTeam({ team_id: team?.team_id, ...values });
       setOpen(false);
       form.reset();

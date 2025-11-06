@@ -7,53 +7,61 @@ import {
 } from "@/lib/definitions";
 import { v4 as uuidv4 } from "uuid";
 
-const teamIds = {
-  1: uuidv4(),
-  2: uuidv4(),
-  3: uuidv4(),
-  4: uuidv4(),
-  5: uuidv4()
+export const getPlaceholderTeams = (): {
+  teams: (Omit<Team, "user_id">)[];
+  teamIds: Record<number | string, string>;
+} => {
+  const teamIds = {
+    1: uuidv4(),
+    2: uuidv4(),
+    3: uuidv4(),
+    4: uuidv4(),
+    5: uuidv4()
+  }
+
+  return {
+    teams: [
+      {
+        team_id: teamIds[1],
+        name: "Lions United",
+        logo_url: "https://example.com/logos/lions_united.png",
+        founded_year: 1990,
+        description: "A formidable team known for their aggressive play style.",
+      },
+      {
+        team_id: teamIds[2],
+        name: "Eagle Eyes",
+        logo_url: "https://example.com/logos/eagle_eyes.png",
+        founded_year: 1985,
+        description: "Renowned for their precise and strategic gameplay.",
+      },
+      {
+        team_id: teamIds[3],
+        name: "Warrior Kings",
+        logo_url: "https://example.com/logos/warrior_kings.png",
+        founded_year: 2000,
+        description: "A young team with a lot of potential and spirit.",
+      },
+      {
+        team_id: teamIds[4],
+        name: "Thunderbolts",
+        logo_url: "https://example.com/logos/thunderbolts.png",
+        founded_year: 1975,
+        description: "Veteran team with a history of championship titles.",
+      },
+      {
+        team_id: teamIds[5],
+        name: "Dragon Slayers",
+        logo_url: "https://example.com/logos/dragon_slayers.png",
+        founded_year: 1995,
+        description: "Known for their fierce competitiveness and teamwork.",
+      },
+    ],
+    teamIds
+  }
 }
 
-export const teams: Team[] = [
-  {
-    team_id: teamIds[1],
-    name: "Lions United",
-    logo_url: "https://example.com/logos/lions_united.png",
-    founded_year: 1990,
-    description: "A formidable team known for their aggressive play style.",
-  },
-  {
-    team_id: teamIds[2],
-    name: "Eagle Eyes",
-    logo_url: "https://example.com/logos/eagle_eyes.png",
-    founded_year: 1985,
-    description: "Renowned for their precise and strategic gameplay.",
-  },
-  {
-    team_id: teamIds[3],
-    name: "Warrior Kings",
-    logo_url: "https://example.com/logos/warrior_kings.png",
-    founded_year: 2000,
-    description: "A young team with a lot of potential and spirit.",
-  },
-  {
-    team_id: teamIds[4],
-    name: "Thunderbolts",
-    logo_url: "https://example.com/logos/thunderbolts.png",
-    founded_year: 1975,
-    description: "Veteran team with a history of championship titles.",
-  },
-  {
-    team_id: teamIds[5],
-    name: "Dragon Slayers",
-    logo_url: "https://example.com/logos/dragon_slayers.png",
-    founded_year: 1995,
-    description: "Known for their fierce competitiveness and teamwork.",
-  },
-];
-
-export const players: Player[] = [
+export const getPlaceholderPlayers = (): (Omit<Player, "user_id">)[] => ([
   {
     player_id: uuidv4(),
     first_name: "John",
@@ -679,9 +687,9 @@ export const players: Player[] = [
     player_role: "Batsman",
     jersey_number: 33,
   },
-];
+]);
 
-export const team_players: TeamPlayer[] = [
+export const getPlaceholderTeamPlayers = (players: (Omit<Player, "user_id">)[], teamIds: Record<number | string, string>): TeamPlayer[] => ([
   ...players.slice(0, 12).map((player, index) => ({
     team_id: teamIds[1],
     player_id: player.player_id,
@@ -712,14 +720,14 @@ export const team_players: TeamPlayer[] = [
     batting_order: (index % 12) + 1,
     bowling_order: player.bowling_order ?? undefined,
   })),
-];
+]);
 
-export const tournaments: Tournament[] = [
+export const getPlaceholderTournaments = (teamIds: Record<number | string, string>): (Omit<Tournament, "user_id">)[] => ([
   {
     tournament_id: uuidv4(),
-    name: "Premier Cricket League 2024",
-    start_date: new Date("2024-09-01"),
-    end_date: new Date("2024-10-30"),
+    name: "Premier Cricket League 2025",
+    start_date: new Date("2025-09-01"),
+    end_date: new Date("2025-10-30"),
     format: "T20",
     locations: ["Oval Stadium", "Central Ground", "City Arena"],
     team_ids: [teamIds[1], teamIds[2], teamIds[3], teamIds[4], teamIds[5]],
@@ -728,23 +736,23 @@ export const tournaments: Tournament[] = [
   },
   {
     tournament_id: uuidv4(),
-    name: "National Cup 2024",
-    start_date: new Date("2024-09-15"),
-    end_date: new Date("2024-10-15"),
+    name: "National Cup 2025",
+    start_date: new Date("2025-09-15"),
+    end_date: new Date("2025-10-15"),
     format: "ODI",
     locations: ["National Stadium", "Sports Complex"],
     team_ids: [teamIds[1], teamIds[2], teamIds[3], teamIds[4]],
     total_rounds: 2,
     total_teams: 4,
   },
-];
+]);
 
-export const series: Series[] = [
+export const getPlaceholderSeries = (teamIds: Record<number | string, string>): (Omit<Series, "user_id">)[] => ([
   {
     series_id: uuidv4(),
     name: "Australia vs England Series",
-    start_date: new Date("2024-11-01"),
-    end_date: new Date("2024-12-15"),
+    start_date: new Date("2025-11-01"),
+    end_date: new Date("2025-12-15"),
     format: "T20",
     locations: ["Melbourne Cricket Ground", "Sydney Cricket Ground"],
     team_ids: [teamIds[1], teamIds[2]],
@@ -754,8 +762,8 @@ export const series: Series[] = [
   {
     series_id: uuidv4(),
     name: "Asian Cricket Cup",
-    start_date: new Date("2024-11-01"),
-    end_date: new Date("2024-12-20"),
+    start_date: new Date("2025-11-01"),
+    end_date: new Date("2025-12-20"),
     format: "ODI",
     locations: [
       "Dubai International Stadium",
@@ -766,4 +774,4 @@ export const series: Series[] = [
     total_rounds: 2,
     type: "trilateral",
   },
-];
+]);

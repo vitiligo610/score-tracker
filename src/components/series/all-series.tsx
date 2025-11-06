@@ -1,8 +1,8 @@
 import { fetchSeries } from "@/lib/actions";
 import SeriesCard from "@/components/series/series-card";
 
-const AllSeries = async ({ filter }: { filter?: string }) => {
-  const { series } = await fetchSeries(filter || "all");
+const AllSeries = async ({ userId, filter }: { userId: string, filter?: string }) => {
+  const { series } = await fetchSeries(userId, filter || "all");
 
   // console.log("fetched series: ", series);
 

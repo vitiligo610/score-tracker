@@ -13,16 +13,17 @@ import DeleteTeamButton from "./delete-team-button";
 import Link from "next/link";
 
 interface TeamInfoProps {
+  userId: string;
   team: Team;
 }
 
-const TeamInfo = ({ team }: TeamInfoProps) => {
+const TeamInfo = ({ userId, team }: TeamInfoProps) => {
   return (
     <Card className="group overflow-hidden transition-all duration-300 hover:shadow-lg">
       <CardHeader className="border-b">
         <div className="">
           <Link
-            href={`/src/app/(protected)/teams/${team.team_id}`}
+            href={`/teams/${team.team_id}`}
             className="text-primary transition-all hover:text-primary/90"
           >
             <h3 className="text-3xl font-bold mb-2">{team.name}</h3>
@@ -44,7 +45,7 @@ const TeamInfo = ({ team }: TeamInfoProps) => {
       </CardContent>
 
       <CardFooter className="flex justify-end space-x-2">
-        <TeamFormDialog team={team}>
+        <TeamFormDialog userId={userId} team={team}>
           <Button variant="default">
             <EditIcon /> Edit
           </Button>

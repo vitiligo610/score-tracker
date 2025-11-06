@@ -10,10 +10,13 @@ import {
   OngoingInnings,
   Team,
 } from "@/lib/definitions";
+import { withAuth } from "@workos-inc/authkit-nextjs";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
+
+export const getWorkOsUser = async () => (await withAuth({ ensureSignedIn: true })).user;
 
 export const createPageUrl = (path: string, pageNum: number) => {
   const params = new URLSearchParams();
@@ -22,7 +25,7 @@ export const createPageUrl = (path: string, pageNum: number) => {
 };
 
 export const getInitials = (str: string) => {
-  var names = str.split(" "),
+  let names = str.split(" "),
     initials = names[0].substring(0, 1).toUpperCase();
 
   if (names.length > 1) {

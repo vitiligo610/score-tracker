@@ -11,7 +11,7 @@ interface SeriesCardProps {
 
 const SeriesCard = ({ series }: SeriesCardProps) => {
   return (
-    <Link href={`/src/app/(protected)/series/${series.series_id}`}>
+    <Link href={`/series/${series.series_id}`}>
       <Card className="overflow-hidden hover:shadow-lg transition-shadow duration-300 h-[280px] flex flex-col">
         <div className="relative z-10 h-full flex flex-col space-y-1">
           <CardHeader className="space-y-2 pb-4 flex-shrink-0">

@@ -9,6 +9,7 @@ import {
 } from "@/lib/actions";
 import { PageIdProps } from "@/lib/definitions";
 import { notFound } from "next/navigation";
+import {getWorkOsUser} from "@/lib/utils";
 
 export const generateMetadata = async ({ params }: PageIdProps) => {
   const team_id = (await params).id;
@@ -22,7 +23,8 @@ export const generateMetadata = async ({ params }: PageIdProps) => {
 
 const TeamPage = async ({ params }: PageIdProps) => {
   const team_id = (await params).id;
-  const { team } = await fetchTeamById(team_id);
+  const { id: userId } = await getWorkOsUser();
+  const { team } = await fetchTeamById(userId, team_id);
   const { teamPlayers } = await fetchTeamPlayers(team_id);
   const bowlers = teamPlayers.filter((player) => player.bowling_order);
 
@@ -40,6 +42,7 @@ const TeamPage = async ({ params }: PageIdProps) => {
           <h1 className="text-4xl font-bold text-primary">{team.name}</h1>
         </div>
         <AddTeamPlayer
+          userId={userId}
           teamId={team_id}
           existingPlayerIds={teamPlayers.map((p) => p.player_id)}
         />

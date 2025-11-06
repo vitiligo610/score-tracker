@@ -35,8 +35,16 @@ import {
 import { getMatchDetails, getTransformedMatch } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 import { v4 as uuidv4 } from "uuid"
+import {
+  getPlaceholderPlayers, getPlaceholderSeries,
+  getPlaceholderTeamPlayers,
+  getPlaceholderTeams,
+  getPlaceholderTournaments
+} from "@/lib/placeholder-data";
+import {PoolConnection} from "mysql2/promise";
 
 export const fetchPlayers = async (
+  userId: string,
   query: string,
   page: number,
   roles: string[],
@@ -66,6 +74,9 @@ export const fetchPlayers = async (
       conditions.push(`(first_name LIKE ? OR last_name LIKE ?)`);
       params.push(`%${query}%`, `%${query}%`);
     }
+
+    conditions.push(`user_id = ?`);
+    params.push(userId)
 
     const whereClause =
       conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
@@ -98,11 +109,13 @@ export const fetchPlayers = async (
   }
 };
 
-export const fetchAllPlayers = async () => {
+export const fetchAllPlayers = async (userId: string) => {
   try {
     const [players] = await pool.query(
       `SELECT * FROM players
-      LEFT JOIN team_players USING (player_id)`
+      LEFT JOIN team_players USING (player_id)
+      WHERE user_id = ?`,
+      [userId]
     );
 
     return { allPlayers: players as PlayerWithTeam[] };
@@ -112,12 +125,13 @@ export const fetchAllPlayers = async () => {
   }
 };
 
-export const insertPlayer = async (player: PlayerWithoutId) => {
+export const insertPlayer = async (userId: string, player: PlayerWithoutId) => {
   try {
     await pool.query(
-      `INSERT INTO players (player_id, first_name, last_name, date_of_birth, batting_style, bowling_style, player_role, jersey_number)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO players (user_id, player_id, first_name, last_name, date_of_birth, batting_style, bowling_style, player_role, jersey_number)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
+        userId,
         uuidv4(),
         player.first_name,
         player.last_name,
@@ -174,7 +188,7 @@ export const deletePlayer = async (player_id: string) => {
   }
 };
 
-export const fetchTeams = async (query: string, page: number) => {
+export const fetchTeams = async (userId: string, query: string, page: number) => {
   try {
     const conditions = [];
     const params = [];
@@ -185,6 +199,9 @@ export const fetchTeams = async (query: string, page: number) => {
       );
       params.push(`%${query}%`, `%${query}%`, `%${query}%`);
     }
+
+    conditions.push("user_id = ?");
+    params.push(userId)
 
     const whereClause =
       conditions.length > 0 ? `WHERE ${conditions.join(" AND ")}` : "";
@@ -216,7 +233,7 @@ export const fetchTeams = async (query: string, page: number) => {
   }
 };
 
-export const fetchAllTeams = async () => {
+export const fetchAllTeams = async (userId: string) => {
   try {
     const [teams] = await pool.query(`
       SELECT 
@@ -228,13 +245,14 @@ export const fetchAllTeams = async () => {
         COUNT(tp.player_id) AS players_count
       FROM teams t
       LEFT JOIN team_players tp ON tp.team_id = t.team_id
+      WHERE t.user_id = ?
       GROUP BY
         t.team_id,
         t.name,
         t.logo_url,
         t.founded_year,
         t.description
-    `);
+    `, [userId]);
 
     // console.log("all teams is ", teams);
 
@@ -260,12 +278,13 @@ export const fetchTeamNameById = async (team_id: string) => {
   }
 };
 
-export const fetchTeamById = async (team_id: string) => {
+export const fetchTeamById = async (userId: string, team_id: string) => {
   try {
     const [data]: any = await pool.query(
       `SELECT * FROM teams
-      WHERE team_id = ?`,
-      [team_id]
+      WHERE team_id = ?
+      AND user_id = ?`,
+      [team_id, userId]
     );
 
     return { team: data[0] as Team };
@@ -275,12 +294,12 @@ export const fetchTeamById = async (team_id: string) => {
   }
 };
 
-export const insertTeam = async (team: TeamWithoutId) => {
+export const insertTeam = async (userId: string, team: TeamWithoutId) => {
   try {
     await pool.query(
-      `INSERT INTO teams (team_id, name, founded_year, description)
-      VALUES (?, ?, ?, ?)`,
-      [uuidv4(), team.name, team.founded_year, team.description]
+      `INSERT INTO teams (userId, team_id, name, founded_year, description)
+      VALUES (?, ?, ?, ?, ?)`,
+      [userId, uuidv4(), team.name, team.founded_year, team.description]
     );
     // revalidatePath("/teams");
   } catch (error) {
@@ -470,23 +489,33 @@ export const removePlayerFromTeam = async (
   }
 };
 
-export const fetchTournaments = async (filter: string) => {
+export const fetchTournaments = async (userId: string, filter: string) => {
   try {
-    const whereClause =
-      !filter || filter === "all"
-        ? ""
-        : `WHERE finished IS ${filter === "finished" ? "TRUE" : "FALSE"}`;
+    const conditions = [];
+    const params = [];
+
+    if (filter && filter !== "all") {
+      conditions.push(`finished IS ${filter === "finished" ? "TRUE" : "FALSE"}`);
+    }
+
+    conditions.push("user_id = ?");
+    params.push(userId);
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join("AND")}` : "";
+
     const [data]: any = await pool.query(
       `SELECT * FROM tournaments
       LEFT JOIN tournament_teams USING (tournament_id)
       LEFT JOIN tournament_locations USING (tournament_id)
-      ${whereClause}`
+      ${whereClause}`,
+      params
     );
 
     const dataSet = data.reduce((acc: any[], current: any) => {
       const key = current.tournament_id;
       if (acc[key] == undefined) {
         acc[key] = {
+          user_id: current.user_id,
           tournament_id: current.tournament_id,
           name: current.name,
           start_date: current.start_date,
@@ -524,14 +553,15 @@ const getLastInsertedId = async () => {
   return data[0].last_id as number;
 };
 
-export const insertTournament = async (tournament: TournamentWithoutId) => {
+export const insertTournament = async (userId: string, tournament: TournamentWithoutId) => {
   try {
     const tournament_id = uuidv4();
     
     await pool.query(
-      `INSERT INTO tournaments (tournament_id, name, start_date, end_date, format)
-      VALUES (?, ?, ?, ?)`,
+      `INSERT INTO tournaments (user_id, tournament_id, name, start_date, end_date, format)
+      VALUES (?, ?, ?, ?, ?, ?)`,
       [
+        userId,
         tournament_id,
         tournament.name,
         tournament.start_date,
@@ -569,14 +599,15 @@ export const insertTournament = async (tournament: TournamentWithoutId) => {
   }
 };
 
-export const updateTournamentNextMatchIds = async (tournamentId: string) => {
+export const updateTournamentNextMatchIds = async (tournamentId: string, poolConnection?: PoolConnection) => {
   try {
-    const [round1Matches] = (await pool.query(
+    const executeQuery = poolConnection ? poolConnection.execute.bind(poolConnection) : pool.query.bind(pool);
+    const [round1Matches] = (await executeQuery(
       "SELECT match_id FROM matches WHERE tournament_id = ? AND round = 1 ORDER BY match_id",
       [tournamentId]
     )) as [Array<{ match_id: number }>, any];
 
-    const [round2Matches] = (await pool.query(
+    const [round2Matches] = (await executeQuery(
       "SELECT match_id FROM matches WHERE tournament_id = ? AND round = 2 AND team2_id IS NULL ORDER BY match_id",
       [tournamentId]
     )) as [Array<{ match_id: number }>, any];
@@ -588,7 +619,7 @@ export const updateTournamentNextMatchIds = async (tournamentId: string) => {
           const round1MatchId = round1Matches[i].match_id;
           const round2MatchId = round2Matches[i].match_id;
 
-          await pool.query(
+          await executeQuery(
             "UPDATE matches SET next_match_id = ? WHERE match_id = ?",
             [round2MatchId, round1MatchId]
           );
@@ -598,14 +629,14 @@ export const updateTournamentNextMatchIds = async (tournamentId: string) => {
     }
 
     while (true) {
-      const [currentRoundMatches] = (await pool.query(
+      const [currentRoundMatches] = (await executeQuery(
         "SELECT match_id, match_number FROM matches WHERE tournament_id = ? AND round = ? ORDER BY match_id",
         [tournamentId, currentRound]
       )) as [Array<{ match_id: number; match_number: number }>, any];
 
       if (currentRoundMatches.length === 0) break;
 
-      const [nextRoundMatches] = (await pool.query(
+      const [nextRoundMatches] = (await executeQuery(
         "SELECT match_id, match_number FROM matches WHERE tournament_id = ? AND round = ? ORDER BY match_id",
         [tournamentId, currentRound + 1]
       )) as [Array<{ match_id: number; match_number: number }>, any];
@@ -619,7 +650,7 @@ export const updateTournamentNextMatchIds = async (tournamentId: string) => {
         );
 
         if (nextMatch) {
-          await pool.query(
+          await executeQuery(
             "UPDATE matches SET next_match_id = ? WHERE match_id = ?",
             [nextMatch.match_id, match.match_id]
           );
@@ -651,19 +682,21 @@ export const fetchTournamentNameById = async (tournament_id: string) => {
   }
 };
 
-export const fetchTournamentById = async (tournament_id: string) => {
+export const fetchTournamentById = async (userId: string, tournament_id: string) => {
   try {
     const [data]: any = await pool.query(
       `SELECT * FROM tournaments
       LEFT JOIN tournament_locations USING (tournament_id)
-      WHERE tournament_id = ?`,
-      [tournament_id]
+      WHERE tournament_id = ?
+      AND user_id = ?`,
+      [tournament_id, userId]
     );
 
     const dataSet = data.reduce((acc: any[], current: any) => {
       const key = current.tournament_id;
       if (acc[key] == undefined) {
         acc[key] = {
+          user_id: current.user_id,
           tournament_id: current.tournament_id,
           name: current.name,
           start_date: current.start_date,
@@ -751,16 +784,25 @@ export const setMatchDetails = async (
   }
 };
 
-export const fetchSeries = async (filter: string) => {
+export const fetchSeries = async (userId: string, filter: string) => {
   try {
-    const whereClause =
-      !filter || filter === "all"
-        ? ""
-        : `WHERE finished IS ${filter === "finished" ? "TRUE" : "FALSE"}`;
+    const conditions = [];
+    const params = [];
+
+    if (filter && filter !== "all") {
+      conditions.push(`finished IS ${filter === "finished" ? "TRUE" : "FALSE"}`);
+    }
+
+    conditions.push("user_id = ?");
+    params.push(userId);
+
+    const whereClause = conditions.length > 0 ? `WHERE ${conditions.join("AND")}` : "";
+
     const [data]: any = await pool.query(
       `SELECT * FROM series
       LEFT JOIN series_locations USING (series_id)
-      ${whereClause}`
+      ${whereClause}`,
+      params
     );
 
     const dataSet = data.reduce((acc: any[], current: any) => {
@@ -799,14 +841,15 @@ export const fetchSeries = async (filter: string) => {
   }
 };
 
-export const insertSeries = async (series: SeriesWithoutId) => {
+export const insertSeries = async (userId: string, series: SeriesWithoutId) => {
   try {
     const series_id = uuidv4();
     
     await pool.query(
-      `INSERT INTO series (series_id, name, format, type, start_date, end_date, total_rounds)
-      VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO series (user_id, series_id, name, format, type, start_date, end_date, total_rounds)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
+        userId,
         series_id,
         series.name,
         series.format,
@@ -859,13 +902,14 @@ export const fetchSeriesNameById = async (series_id: string) => {
   }
 };
 
-export const fetchSeriesById = async (series_id: string) => {
+export const fetchSeriesById = async (userId: string, series_id: string) => {
   try {
     const [data]: any = await pool.query(
       `SELECT * FROM series
       LEFT JOIN series_locations USING (series_id)
-      WHERE series_id = ?`,
-      [series_id]
+      WHERE series_id = ?
+      AND user_id = ?`,
+      [series_id, userId]
     );
 
     const dataSet = data.reduce((acc: any[], current: any) => {
@@ -1813,3 +1857,171 @@ export const fetchPlayerPerformances = async (player_id: string) => {
     throw error;
   }
 };
+
+export const isDataGeneratedForUser = async (userId: string): Promise<boolean> => {
+  const [data]: any = await pool.query(
+    `SELECT * FROM data_generated
+    WHERE user_id = ?`,
+    [userId]
+  );
+
+  return !!data?.[0]?.user_id;
+}
+
+export const generateSampleData = async (userId: string): Promise<{
+  success: boolean | null;
+  message: string;
+}> => {
+  let connection: PoolConnection | null = null;
+
+  try {
+    connection = await pool.getConnection();
+    const poolConnection = connection;
+
+    await connection.beginTransaction();
+    console.log("Started transaction...");
+
+    console.log("Seeding teams...");
+    const { teams, teamIds } = getPlaceholderTeams();
+    await Promise.all(
+      teams.map((team) =>
+        poolConnection.execute(
+          `INSERT INTO teams (user_id, team_id, name, logo_url, founded_year, description)
+           VALUES (?, ?, ?, ?, ?, ?)`,
+          [userId, team.team_id, team.name, team.logo_url, team.founded_year, team.description]
+        )
+      )
+    );
+
+    console.log("Seeding players...");
+    const players = getPlaceholderPlayers();
+    await Promise.all(
+      players.map((player) =>
+        poolConnection.execute(
+          `INSERT INTO players (user_id, player_id, first_name, last_name, date_of_birth, batting_style, bowling_style, player_role, jersey_number)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            userId,
+            player.player_id,
+            player.first_name,
+            player.last_name,
+            player.date_of_birth,
+            player.batting_style,
+            player.bowling_style,
+            player.player_role,
+            player.jersey_number,
+          ]
+        )
+      )
+    );
+
+    console.log("Seeding team players...");
+    const team_players = getPlaceholderTeamPlayers(players, teamIds);
+    for (const team_player of team_players) {
+      await poolConnection.execute(
+        `INSERT INTO team_players (team_id, player_id, batting_order, bowling_order)
+        VALUES (?, ?, ?, ?)`,
+        [
+          team_player.team_id,
+          team_player.player_id,
+          team_player.batting_order,
+          team_player.bowling_order ?? null,
+        ]
+      );
+    }
+
+    console.log("Seeding tournaments...");
+    const tournaments = getPlaceholderTournaments(teamIds);
+    for (const tournament of tournaments) {
+      // 4. Insert Tournament main record
+      await poolConnection.execute(
+        `INSERT INTO tournaments (user_id, tournament_id, name, start_date, end_date, format)
+        VALUES (?, ?, ?, ?, ?, ?)`,
+        [
+          userId,
+          tournament.tournament_id,
+          tournament.name,
+          tournament.start_date,
+          tournament.end_date,
+          tournament.format,
+        ]
+      );
+
+      await Promise.all([
+        ...tournament.locations.map((location) =>
+          poolConnection.execute(
+            `INSERT INTO tournament_locations (tournament_id, location_name) VALUES (?, ?)`,
+            [tournament.tournament_id, location]
+          )
+        ),
+        ...tournament.team_ids.map((team_id) =>
+          poolConnection.execute(
+            `INSERT INTO tournament_teams (tournament_id, team_id) VALUES (?, ?)`,
+            [tournament.tournament_id, team_id]
+          )
+        ),
+      ]);
+
+      await poolConnection.execute("CALL SetTournamentDetails(?)", [
+        tournament.tournament_id,
+      ]);
+      await poolConnection.execute("CALL CreateTournamentSchedule(?)", [
+        tournament.tournament_id,
+      ]);
+
+      await updateTournamentNextMatchIds(tournament.tournament_id, poolConnection);
+    }
+
+    console.log("Seeding series...");
+    const series = getPlaceholderSeries(teamIds);
+    for (const s of series) {
+      await connection.execute(
+        `INSERT INTO series (user_id, series_id, name, start_date, end_date, format, type, total_rounds)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [userId, s.series_id, s.name, s.start_date, s.end_date, s.format, s.type, s.total_rounds]
+      );
+
+      await Promise.all([
+        ...s.locations.map((location) =>
+          poolConnection.execute(
+            `INSERT INTO series_locations (series_id, location_name) VALUES (?, ?)`,
+            [s.series_id, location]
+          )
+        ),
+        ...s.team_ids.map((team_id) =>
+          poolConnection.execute(
+            `INSERT INTO series_teams (series_id, team_id) VALUES (?, ?)`,
+            [s.series_id, team_id]
+          )
+        ),
+      ]);
+
+      await connection.execute("CALL CreateSeriesSchedule(?)", [s.series_id]);
+    }
+
+    await connection.execute(`
+      INSERT INTO data_generated(user_id)
+      VALUES(?)
+      ON DUPLICATE KEY UPDATE
+        user_id = VALUES(user_id)`,
+      [userId]
+    )
+
+    await connection.commit();
+    console.log("Transaction committed successfully!");
+
+    return {
+      success: true,
+      message: "Sample data generated successfully!"
+    };
+  } catch (error) {
+    console.error("Error generating sample data, rolling back transaction:", error);
+    if (connection) connection.rollback();
+    return {
+      success: false,
+      message: "Failed to generate sample data."
+    };
+  } finally {
+    if (connection) connection.release();
+  }
+}

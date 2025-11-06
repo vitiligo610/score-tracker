@@ -29,11 +29,13 @@ import { PLAYER_ROLES } from "@/lib/constants";
 import { useRouter } from "next/navigation";
 
 interface AddTeamPlayerProps {
+  userId: string;
   teamId: string;
   existingPlayerIds: string[];
 }
 
 export default function AddTeamPlayer({
+  userId,
   teamId,
   existingPlayerIds,
 }: AddTeamPlayerProps) {
@@ -50,7 +52,7 @@ export default function AddTeamPlayer({
   const loadPlayers = async () => {
     setLoading(true);
     try {
-      const { allPlayers } = await fetchAllPlayers();
+      const { allPlayers } = await fetchAllPlayers(userId);
       setPlayers(allPlayers);
     } catch (error) {
       toast({

@@ -25,7 +25,7 @@ const AboutDialog = () => (
     </DialogTrigger>
     <DialogContent>
       <DialogHeader>
-        <DialogTitle>CricScore - Cloud Computing Project</DialogTitle>
+        <DialogTitle>CricScore</DialogTitle>
       </DialogHeader>
       <div className="space-y-4">
         <p>
@@ -50,7 +50,7 @@ export async function Navbar() {
   const signInUrl = await getSignInUrl();
 
   return (
-    <header className="px-16 border-b">
+    <header className="px-16 border-b flex mx-auto">
       <div className="container flex h-14 items-center">
         <div className="mr-4 flex">
           <Link href="/" className="flex items-center space-x-2">

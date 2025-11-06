@@ -5,6 +5,7 @@ import AllTournaments from "@/components/tournaments/all-tournaments";
 import { Suspense } from "react";
 import AllTournamentsSkeleton from "@/components/ui/skeletons/all-tournaments-skeleton";
 import BackLink from "@/components/ui/back-link";
+import {getWorkOsUser} from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Tournaments",
@@ -16,6 +17,7 @@ const Tournaments = async ({
   searchParams: Promise<{ filter?: string }>;
 }) => {
   const params = await searchParams;
+  const { id: userId } = await getWorkOsUser();
 
   return (
     <div className="container mx-auto pb-8 space-y-8">
@@ -24,12 +26,12 @@ const Tournaments = async ({
         <h1 className="text-4xl lg:text-7xl text-primary font-bold">
           Tournaments
         </h1>
-        <CreateTournamentDialog />
+        <CreateTournamentDialog userId={userId} />
       </div>
       <CompetitionFilters />
 
       <Suspense fallback={<AllTournamentsSkeleton />}>
-        <AllTournaments filter={params.filter} />
+        <AllTournaments userId={userId} filter={params.filter} />
       </Suspense>
     </div>
   );

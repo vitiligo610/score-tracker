@@ -1,17 +1,10 @@
-import { updateTournamentNextMatchIds } from "@/lib/actions";
 import { pool } from "@/lib/db";
-import {
-  players,
-  series,
-  team_players,
-  teams,
-  tournaments,
-} from "@/lib/placeholder-data";
 
 const seedTeams = async () => {
   console.log("Creating teams table...");
   await pool.query(`
     CREATE TABLE IF NOT EXISTS teams (
+      user_id VARCHAR(255) NOT NULL,
       team_id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
       name VARCHAR(100) NOT NULL,
       logo_url VARCHAR(255),
@@ -20,23 +13,13 @@ const seedTeams = async () => {
       captain_id VARCHAR(36)
     )
   `);
-
-  console.log("Seeding teams...");
-  await Promise.all(
-    teams.map((team) =>
-      pool.query(
-        `INSERT INTO teams (team_id, name, logo_url, founded_year, description)
-          VALUES (?, ?, ?, ?, ?)`,
-        [team.team_id, team.name, team.logo_url, team.founded_year, team.description]
-      )
-    )
-  );
 };
 
 const seedPlayers = async () => {
   console.log("Creating players table...");
   await pool.query(`
     CREATE TABLE IF NOT EXISTS players (
+      user_id VARCHAR(255) NOT NULL,
       player_id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
       first_name VARCHAR(50) NOT NULL,
       last_name VARCHAR(50) NOT NULL,
@@ -51,26 +34,6 @@ const seedPlayers = async () => {
   console.log("Adding FK constraint to teams table for captain_id...");
   await pool.query(
     `ALTER TABLE teams ADD FOREIGN KEY (captain_id) REFERENCES players (player_id) ON DELETE SET NULL`
-  );
-
-  console.log("Seeding players...");
-  await Promise.all(
-    players.map((player) =>
-      pool.query(
-        `INSERT INTO players (player_id, first_name, last_name, date_of_birth, batting_style, bowling_style, player_role, jersey_number)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          player.player_id,
-          player.first_name,
-          player.last_name,
-          player.date_of_birth,
-          player.batting_style,
-          player.bowling_style,
-          player.player_role,
-          player.jersey_number,
-        ]
-      )
-    )
   );
 };
 
@@ -87,22 +50,6 @@ const seedTeamPlayers = async () => {
       PRIMARY KEY (team_id, player_id)
     )
   `);
-
-  console.log("Seeding team players...");
-  await Promise.all(
-    team_players.map((team_player) =>
-      pool.query(
-        `INSERT INTO team_players (team_id, player_id, batting_order, bowling_order)
-        VALUES (?, ?, ?, ?)`,
-        [
-          team_player.team_id,
-          team_player.player_id,
-          team_player.batting_order,
-          team_player.bowling_order ?? null,
-        ]
-      )
-    )
-  );
 
   console.log("Creating teams_players trigger....");
   await createSetBattingOrderTrigger();
@@ -155,6 +102,7 @@ const seedTournaments = async () => {
   console.log("Creating tournaments table...");
   await pool.query(`
     CREATE TABLE IF NOT EXISTS tournaments (
+      user_id VARCHAR(255) NOT NULL,
       tournament_id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
       name VARCHAR(100) NOT NULL,
       start_date DATE,
@@ -196,46 +144,6 @@ const seedTournaments = async () => {
   await createSetTournamentDetailsProc();
   await createTournamentScheduleProc();
   await createUpdateNextMatchWinnerProc();
-
-  console.log("Seeding tournaments...");
-
-  for (const tournament of tournaments) {
-    await pool.query(
-      `INSERT INTO tournaments (tournament_id, name, start_date, end_date, format)
-      VALUES (?, ?, ?, ?, ?)`,
-      [
-        tournament.tournament_id,
-        tournament.name,
-        tournament.start_date,
-        tournament.end_date,
-        tournament.format,
-      ]
-    );
-
-    for (const location of tournament.locations) {
-      await pool.query(
-        `INSERT INTO tournament_locations (tournament_id, location_name)
-        VALUES (?, ?)`,
-        [tournament.tournament_id, location]
-      );
-    }
-
-    for (const team_id of tournament.team_ids) {
-      await pool.query(
-        `INSERT INTO tournament_teams (tournament_id, team_id)
-        VALUES (?, ?)`,
-        [tournament.tournament_id, team_id]
-      );
-    }
-
-    await pool.query("CALL SetTournamentDetails(?)", [
-      tournament.tournament_id,
-    ]);
-    await pool.query("CALL CreateTournamentSchedule(?)", [
-      tournament.tournament_id,
-    ]);
-    await updateTournamentNextMatchIds(tournament.tournament_id);
-  }
 };
 
 const createSetTournamentDetailsProc = async () => {
@@ -438,6 +346,7 @@ const seedSeries = async () => {
   console.log("Creating series table...");
   await pool.query(
     `CREATE TABLE IF NOT EXISTS series (
+      user_id VARCHAR(255) NOT NULL,
       series_id VARCHAR(36) PRIMARY KEY DEFAULT (UUID()),
       name VARCHAR (100) NOT NULL,
       format ENUM('T20', 'ODI', 'Test'),
@@ -496,33 +405,6 @@ const seedSeries = async () => {
   console.log("Creating series procedures...");
   await createSeriesScheduleProc();
   await createSeriesPointsForTeamsTrigger();
-
-  console.log("Seeding series...");
-  for (const s of series) {
-    await pool.query(
-      `INSERT INTO series (series_id, name, start_date, end_date, format, type, total_rounds)
-      VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [s.series_id, s.name, s.start_date, s.end_date, s.format, s.type, s.total_rounds]
-    );
-
-    for (const location of s.locations) {
-      await pool.query(
-        `INSERT INTO series_locations (series_id, location_name)
-        VALUES (?, ?)`,
-        [s.series_id, location]
-      );
-    }
-
-    for (const team_id of s.team_ids) {
-      await pool.query(
-        `INSERT INTO series_teams (series_id, team_id)
-        VALUES (?, ?)`,
-        [s.series_id, team_id]
-      );
-    }
-
-    await pool.query("CALL CreateSeriesSchedule(?)", [s.series_id]);
-  }
 };
 
 const createSeriesScheduleProc = async () => {
@@ -1147,6 +1029,15 @@ const seedRemainingTriggers = async () => {
   await createOnMatchCompleteTrigger();
 };
 
+const seedDataGenerated = async () => {
+  console.log("Creating data_generated table...");
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS data_generated (
+      user_id VARCHAR(255) PRIMARY KEY
+    )
+  `);
+}
+
 const main = async () => {
   console.log("🌱 Starting database seed...");
 
@@ -1170,7 +1061,8 @@ const main = async () => {
                            tournaments,
                            team_players,
                            teams,
-                           players
+                           players,
+                           data_generated
     `);
 
     await seedTeams();
@@ -1184,6 +1076,7 @@ const main = async () => {
     await seedBalls();
     await seedPerformances();
     await seedRemainingTriggers();
+    await seedDataGenerated();
 
     console.log("✅ Database seeded successfully");
     process.exit(0);

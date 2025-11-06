@@ -57,7 +57,7 @@ const formSchema = z.object({
 
 type TournamentFormValues = z.infer<typeof formSchema>;
 
-export default function CreateTournamentDialog() {
+export default function CreateTournamentDialog({ userId }: { userId: string }) {
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [locationInput, setLocationInput] = useState("");
@@ -81,7 +81,7 @@ export default function CreateTournamentDialog() {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
       setIsSubmitting(true);
-      await insertTournament({
+      await insertTournament(userId, {
         ...values,
         start_date: values.dateRange.from,
         end_date: values.dateRange.to,
@@ -214,6 +214,7 @@ export default function CreateTournamentDialog() {
                   <FormLabel>Select Teams</FormLabel>
                   <FormControl>
                     <TeamSelect
+                      userId={userId}
                       value={field.value}
                       onChange={(values: any) =>
                         field.onChange(values.map(String))

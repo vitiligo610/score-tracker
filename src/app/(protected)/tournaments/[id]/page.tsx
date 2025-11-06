@@ -8,6 +8,7 @@ import MatchSchedule from "@/components/matches-schedule/matches-schedule";
 import { Suspense } from "react";
 import CompetitionSkeleton from "@/components/ui/skeletons/competition-skeleton";
 import { PageIdProps } from "@/lib/definitions";
+import {getWorkOsUser} from "@/lib/utils";
 
 export const generateMetadata = async ({ params }: PageIdProps) => {
   const tournament_id = (await params).id;
@@ -21,8 +22,9 @@ export const generateMetadata = async ({ params }: PageIdProps) => {
 
 const TournamentPage = async ({ params }: PageIdProps) => {
   const tournament_id = (await params).id;
+  const { id: userId } = await getWorkOsUser();
 
-  const { tournament } = await fetchTournamentById(tournament_id);
+  const { tournament } = await fetchTournamentById(userId, tournament_id);
   const { matches } = await fetchTournamentMatches(tournament_id);
 
   if (!tournament) {

@@ -1,8 +1,11 @@
 import { OptionCard } from "@/components/home/option-card";
-import {withAuth} from "@workos-inc/authkit-nextjs";
+import { withAuth } from "@workos-inc/authkit-nextjs";
+import { GenerateDataButton } from "@/components/home/generate-data"
+import { isDataGeneratedForUser } from "@/lib/actions";
 
 export default async function Home() {
   const { user } = await withAuth({ ensureSignedIn: true });
+  const isDataGenerated = await isDataGeneratedForUser(user.id);
 
   const fullName = `${user.firstName || ""} ${user.lastName || ""}`.trim() || "User";
 
@@ -46,6 +49,10 @@ export default async function Home() {
           />
         </div>
       </div>
+
+      {!isDataGenerated && <div className="px-4">
+        <GenerateDataButton userId={user.id}/>
+      </div>}
     </div>
   );
 }
