@@ -297,7 +297,7 @@ export const fetchTeamById = async (userId: string, team_id: string) => {
 export const insertTeam = async (userId: string, team: TeamWithoutId) => {
   try {
     await pool.query(
-      `INSERT INTO teams (userId, team_id, name, founded_year, description)
+      `INSERT INTO teams (user_id, team_id, name, founded_year, description)
       VALUES (?, ?, ?, ?, ?)`,
       [userId, uuidv4(), team.name, team.founded_year, team.description]
     );
